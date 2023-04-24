@@ -1,4 +1,4 @@
-# wolfwomen
+# wolfhuman
 狼人杀！
 
 ？：改了端口号之后连接网络失败，改的是packdef中的宏
