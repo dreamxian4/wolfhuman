@@ -3,7 +3,7 @@
 #include<QMessageBox>
 
 LoginDialog::LoginDialog(QWidget *parent) :
-    QDialog(parent),
+    CustomMoveDialog(parent),
     ui(new Ui::LoginDialog)
 {
     ui->setupUi(this);
@@ -59,5 +59,17 @@ void LoginDialog::on_pb_feedback_clicked()
     //弹出反馈框
     //获取用户输入的文字
     //以信号形式发送
+}
+
+
+void LoginDialog::on_pb_close_clicked()
+{
+    this->slot_close();
+}
+
+
+void LoginDialog::on_pb_min_clicked()
+{
+    this->showMinimized();
 }
 

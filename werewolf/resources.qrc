@@ -1,0 +1,7 @@
+<RCC>
+    <qresource prefix="/">
+        <file>tupian/register.png</file>
+        <file>tupian/startBackGround.jpg</file>
+        <file>tupian/empty.png</file>
+    </qresource>
+</RCC>

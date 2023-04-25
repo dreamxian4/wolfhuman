@@ -58,6 +58,8 @@ public slots:
     void slot_DealLoginRs( unsigned int lSendIP , char* buf , int nlen );
     //强制退出登录
     void slot_DealQuitLoginRs( unsigned int lSendIP , char* buf , int nlen );
+    //自己的信息
+    void slot_DealUserInfoRs( unsigned int lSendIP , char* buf , int nlen );
 
 
 

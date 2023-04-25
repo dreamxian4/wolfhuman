@@ -14,8 +14,10 @@ class mainDialog : public QDialog
 public:
     mainDialog(QWidget *parent = nullptr);
     ~mainDialog();
+    void slot_setInfo(int userid,int icon,QString name,QString sex,QString username);
 
 private:
     Ui::mainDialog *ui;
+    int m_userid;
 };
 #endif // MAINDIALOG_H

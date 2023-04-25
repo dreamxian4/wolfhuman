@@ -5,8 +5,22 @@
 #include<QMessageBox>
 #include<qDebug>
 #include<QDate>
+#include"MD5/md5.h"
 
 #define netMap(a) m_netMap[a-_DEF_PACK_BASE]
+#define MD5_KEY 1234
+
+/// 拼凑规则：
+/// passwd_1234
+/// \brief GetMD5
+/// \param str
+/// \return
+
+static std::string GetMD5(QString str){
+    std::string tmp=QString("%1_%2").arg(str).arg(MD5_KEY).toStdString();
+    MD5 md5(tmp);
+    return md5.toString();
+}
 
 ckernel::ckernel(QObject *parent) : QObject(parent)
 {
@@ -101,7 +115,7 @@ void ckernel::slot_sendRegisterRq(QString username, QString passwd, QString name
     STRU_REGISTER_RQ rq;
     strcpy(rq.username,username.toStdString().c_str());
     strcpy(rq.name,name.toStdString().c_str());
-    strcpy(rq.password,passwd.toStdString().c_str());
+    strcpy(rq.password,GetMD5(passwd).c_str());
     strcpy(rq.sex,sex.toStdString().c_str());
     //生日
     //    QString year=QString::number(date.year());
@@ -115,7 +129,7 @@ void ckernel::slot_sendLoginRq(QString name, QString passwd)
     //封装成数据包，发送给服务端
     STRU_LOGIN_RQ rq;
     strcpy(rq.username,name.toStdString().c_str());
-    strcpy(rq.password,passwd.toStdString().c_str());
+    strcpy(rq.password,GetMD5(passwd).c_str());
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
@@ -137,10 +151,11 @@ void ckernel::slot_DealRegisterRs(unsigned int lSendIP, char *buf, int nlen)
         QMessageBox::about(m_registerDialog,"提示","用户名已存在~~");
         return;
     }else if(rs->result==register_success){
-        //成功，直接进入主界面
+        //成功,返回登录界面（如果直接登录的话，服务端不会走登录模块，没有做在线设置和发送个人信息包）
+
         QMessageBox::about(m_registerDialog,"提示","注册成功！！");
         m_registerDialog->hide();
-        m_mainDialog->showNormal();
+        m_loginDialog->showNormal();
     }
 }
 
@@ -159,7 +174,6 @@ void ckernel::slot_DealLoginRs(unsigned int lSendIP, char *buf, int nlen)
     }
     //登录成功，隐藏登录窗口，显示主界面
     if(rs->result==login_success){
-        QMessageBox::about(m_loginDialog,"提示","登录成功！！！");
         m_loginDialog->hide();
         m_mainDialog->showNormal();
         //设置成员信息
@@ -173,6 +187,19 @@ void ckernel::slot_DealQuitLoginRs(unsigned int lSendIP, char *buf, int nlen)
     QMessageBox::about(m_mainDialog,"提示","本账号已在其他客户端登录");
     m_mainDialog->hide();
     m_loginDialog->showNormal();
+}
+
+void ckernel::slot_DealUserInfoRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //拆包
+    STRU_USER_INFO_RQ* rq=(STRU_USER_INFO_RQ*)buf;
+    int icon=rq->m_iconid;
+    QString name=QString::fromStdString(rq->m_name);
+    QString sex=QString::fromStdString(rq->m_sex);
+    int userid=rq->m_UserID;
+    QString username=QString::fromStdString(rq->m_username);
+    //设置主界面的个人信息
+    m_mainDialog->slot_setInfo(userid,icon,name,sex,username);
 }
 
 void ckernel::initConfig()
@@ -216,4 +243,5 @@ void ckernel::setNetMap()
     netMap(_DEF_PACK_REGISTER_RS)=&ckernel::slot_DealRegisterRs;
     netMap(_DEF_PACK_LOGIN_RS)=&ckernel::slot_DealLoginRs;
     netMap(DEF_PACK_QUIT_LOGIN_RQ)=&ckernel::slot_DealQuitLoginRs;
+    netMap(DEF_PACK_USER_INFO)=&ckernel::slot_DealUserInfoRs;
 }

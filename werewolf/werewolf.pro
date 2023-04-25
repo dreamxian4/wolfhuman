@@ -30,11 +30,18 @@ FORMS += \
     startdialog.ui
 
 include(./netapi/netapi.pri)
+include(./uiapi/uiapi.pri)
+include(./MD5/md5.pri)
 
 INCLUDE += \
-    ./netapi
+    ./netapi \
+    ./uiapi \
+    ./MD5
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+RESOURCES += \
+    resources.qrc

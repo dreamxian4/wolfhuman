@@ -3,10 +3,11 @@
 #include<QMessageBox>
 
 startDialog::startDialog(QWidget *parent) :
-    QDialog(parent),
+    CustomMoveDialog(parent),
     ui(new Ui::startDialog)
 {
     ui->setupUi(this);
+    this->setWindowFlags(Qt::FramelessWindowHint);
 }
 
 startDialog::~startDialog()
@@ -26,5 +27,17 @@ void startDialog::on_pb_joinGame_clicked()
 {
     //发送信号，ckernel连接网络
     Q_EMIT SIG_joinGame();
+}
+
+
+void startDialog::on_pb_close_clicked()
+{
+    this->slot_close();
+}
+
+
+void startDialog::on_pb_min_clicked()
+{
+    this->showMinimized();
 }
 

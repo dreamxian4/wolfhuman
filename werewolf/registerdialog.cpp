@@ -5,7 +5,7 @@
 #include<QMessageBox>
 
 RegisterDialog::RegisterDialog(QWidget *parent) :
-    QDialog(parent),
+    CustomMoveDialog(parent),
     ui(new Ui::RegisterDialog)
 {
     ui->setupUi(this);
@@ -92,5 +92,17 @@ void RegisterDialog::on_pb_return_clicked()
 {
     //发送信号，回到登录界面
     Q_EMIT SIG_return();
+}
+
+
+void RegisterDialog::on_pb_min_clicked()
+{
+    this->showMinimized();
+}
+
+
+void RegisterDialog::on_pb_close_clicked()
+{
+    this->slot_close();
 }
 

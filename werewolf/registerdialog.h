@@ -3,12 +3,13 @@
 
 #include <QDialog>
 #include<QDate>
+#include"uiapi/customwidget.h"
 
 namespace Ui {
 class RegisterDialog;
 }
 
-class RegisterDialog : public QDialog
+class RegisterDialog : public CustomMoveDialog
 {
     Q_OBJECT
 
@@ -27,6 +28,10 @@ private slots:
     void on_pb_register_clicked();
 
     void on_pb_return_clicked();
+
+    void on_pb_min_clicked();
+
+    void on_pb_close_clicked();
 
 private:
     Ui::RegisterDialog *ui;

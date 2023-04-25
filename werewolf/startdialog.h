@@ -2,12 +2,13 @@
 #define STARTDIALOG_H
 
 #include <QDialog>
+#include"uiapi/customwidget.h"
 
 namespace Ui {
 class startDialog;
 }
 
-class startDialog : public QDialog
+class startDialog : public CustomMoveDialog
 {
     Q_OBJECT
 
@@ -23,6 +24,10 @@ private slots:
     void on_pb_notice_clicked();
 
     void on_pb_joinGame_clicked();
+
+    void on_pb_close_clicked();
+
+    void on_pb_min_clicked();
 
 private:
     Ui::startDialog *ui;
