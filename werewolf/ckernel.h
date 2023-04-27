@@ -8,6 +8,7 @@
 #include"logindialog.h"
 #include"registerdialog.h"
 #include"maindialog.h"
+#include"createroomform.h"
 
 class ckernel;
 typedef void (ckernel::*PFUN)(unsigned int,char*,int);
@@ -35,10 +36,14 @@ public slots:
     //页面之间的槽
     //启动界面->加入房间
     void slot_joinGame();
-    //注册
+    //启动界面->注册
     void slot_register();
-    //从注册界面切回登录界面
+    //注册界面->登录界面
     void slot_returnLogin();
+    //主界面->创建房间界面
+    void slot_createRoomButton();
+    //创建房间->主界面
+    void slot_CR_cancel();
 
 
 
@@ -46,7 +51,8 @@ public slots:
     void slot_sendRegisterRq(QString username,QString passwd,
                              QString name,QString sex,QDate date);
     void slot_sendLoginRq(QString name,QString passwd);
-
+    void slot_sendCreateRoomRQ(int mode,int method,int playerNum,
+                               int level,bool pass,QString password);
 
 
     //网络接收处理槽
@@ -70,12 +76,15 @@ public slots:
     void SendData( unsigned int lSendIP , char* buf , int nlen );
     //设置协议
     void setNetMap();
+    //退出客户端
+    void slot_quitLogin();
 
 private:
     startDialog* m_startDialog;//启动窗口
     LoginDialog* m_loginDialog;//登录窗口
     RegisterDialog* m_registerDialog;//注册窗口
     mainDialog* m_mainDialog;//主窗口
+    createRoomForm* m_createRoomDialog;//创建房间窗口
     TcpClientMediator* m_client;//网络
     PFUN m_netMap[_DEF_PROTOCOL_COUNT];//协议映射表
     QString m_serverIp;//服务端ip地址

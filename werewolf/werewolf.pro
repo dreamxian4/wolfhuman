@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     ckernel.cpp \
+    createroomform.cpp \
     logindialog.cpp \
     main.cpp \
     maindialog.cpp \
@@ -18,12 +19,14 @@ SOURCES += \
 
 HEADERS += \
     ckernel.h \
+    createroomform.h \
     logindialog.h \
     maindialog.h \
     registerdialog.h \
     startdialog.h
 
 FORMS += \
+    createroomform.ui \
     logindialog.ui \
     maindialog.ui \
     registerdialog.ui \

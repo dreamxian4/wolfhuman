@@ -32,6 +32,7 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
     m_loginDialog=new LoginDialog;
     m_registerDialog=new RegisterDialog;
     m_mainDialog=new mainDialog;
+    m_createRoomDialog=new createRoomForm;
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
             this,SLOT(slot_joinGame()));
@@ -48,6 +49,14 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
             this,SLOT(slot_sendRegisterRq(QString,QString,QString,QString,QDate)));
     connect(m_registerDialog,SIGNAL(SIG_return()),
             this,SLOT(slot_returnLogin()));
+
+    connect(m_mainDialog,SIGNAL(SIG_createRoomButton()),
+            this,SLOT(slot_createRoomButton()));
+
+    connect(m_createRoomDialog,SIGNAL(SIG_CANCEL()),
+            this,SLOT(slot_CR_cancel()));
+    connect(m_createRoomDialog,SIGNAL(SIG_createRoom(int,int,int,int,bool,QString)),
+            this,SLOT(slot_sendCreateRoomRQ(int,int,int,int,bool,QString)));
 }
 
 ckernel::~ckernel()
@@ -59,6 +68,7 @@ ckernel::~ckernel()
         m_startDialog=nullptr;
     }
     if(m_client){
+        slot_quitLogin();
         m_client->CloseNet();
         delete m_client;
         m_client=nullptr;
@@ -77,6 +87,11 @@ ckernel::~ckernel()
         m_mainDialog->hide();
         delete m_mainDialog;
         m_mainDialog=nullptr;
+    }
+    if(m_createRoomDialog){
+        m_createRoomDialog->hide();
+        delete m_createRoomDialog;
+        m_createRoomDialog=nullptr;
     }
 }
 
@@ -109,6 +124,22 @@ void ckernel::slot_returnLogin()
     m_loginDialog->showNormal();
 }
 
+void ckernel::slot_createRoomButton()
+{
+    //隐藏主界面
+    m_mainDialog->hide();
+    //显示创建房间界面
+    m_createRoomDialog->showNormal();
+}
+
+void ckernel::slot_CR_cancel()
+{
+    //隐藏创建房间界面
+    m_createRoomDialog->hide();
+    //显示主界面
+    m_mainDialog->showNormal();
+}
+
 void ckernel::slot_sendRegisterRq(QString username, QString passwd, QString name, QString sex, QDate date)
 {
     //封装成数据包，发送给服务端
@@ -130,6 +161,19 @@ void ckernel::slot_sendLoginRq(QString name, QString passwd)
     STRU_LOGIN_RQ rq;
     strcpy(rq.username,name.toStdString().c_str());
     strcpy(rq.password,GetMD5(passwd).c_str());
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+void ckernel::slot_sendCreateRoomRQ(int mode, int method, int playerNum, int level, bool pass, QString password)
+{
+    STRU_CREATEROOM_RQ rq;
+    rq.m_UserID=m_id;
+    rq.level=level;
+    rq.lock=pass;
+    rq.maxcount=playerNum;
+    rq.mode=mode;
+    strcpy(rq.passwd,password.toStdString().c_str());
+    rq.playMethod=method;
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
@@ -244,4 +288,11 @@ void ckernel::setNetMap()
     netMap(_DEF_PACK_LOGIN_RS)=&ckernel::slot_DealLoginRs;
     netMap(DEF_PACK_QUIT_LOGIN_RQ)=&ckernel::slot_DealQuitLoginRs;
     netMap(DEF_PACK_USER_INFO)=&ckernel::slot_DealUserInfoRs;
+}
+
+void ckernel::slot_quitLogin()
+{
+    STRU_CLIENTQUITLOGIN_RQ rq;
+    rq.m_UserID=m_id;
+    SendData(0,(char*)&rq,sizeof(rq));
 }

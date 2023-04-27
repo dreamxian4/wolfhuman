@@ -21,3 +21,10 @@ void mainDialog::slot_setInfo(int userid, int icon, QString name, QString sex, Q
     //头像和性别都是设置图片
 }
 
+
+void mainDialog::on_pb_createRoom_clicked()
+{
+    //发送信号、弹出房间配置界面
+    Q_EMIT SIG_createRoomButton();
+}
+

@@ -11,10 +11,16 @@ class mainDialog : public QDialog
 {
     Q_OBJECT
 
+signals:
+    void SIG_createRoomButton();
+
 public:
     mainDialog(QWidget *parent = nullptr);
     ~mainDialog();
     void slot_setInfo(int userid,int icon,QString name,QString sex,QString username);
+
+private slots:
+    void on_pb_createRoom_clicked();
 
 private:
     Ui::mainDialog *ui;

@@ -5,6 +5,17 @@
 #define _DEF_CONTENT_SIZE	(1024)
 #define _MAX_SIZE	(40)
 
+////玩法
+//视频模式
+#define _GAME_MODE_VIDEO (0)
+//语音模式
+#define _GAME_MODE_AUDIO (1)
+//基础玩法
+#define _GAME_BASE (0)
+
+
+
+
 //自定义协议   先写协议头 再写协议结构
 //登录 注册 获取好友信息 添加好友 聊天 发文件 下线请求
 #define _DEF_PACK_BASE	(10000)
@@ -16,13 +27,15 @@
 //登录
 #define  _DEF_PACK_LOGIN_RQ    (_DEF_PACK_BASE + 2)
 #define  _DEF_PACK_LOGIN_RS    (_DEF_PACK_BASE + 3)
-//强制退出登录
+//强制退出登录请求（服务端发来的）
 #define DEF_PACK_QUIT_LOGIN_RQ (_DEF_PACK_BASE + 4)
 //用户信息 用于设置和登录时获取状态
 #define DEF_PACK_USER_INFO (_DEF_PACK_BASE + 5)
-////创建房间
-//#define DEF_PACK_CREATEROOM_RQ  (_DEF_PACK_BASE + 4)
-//#define DEF_PACK_CREATEROOM_RS  (_DEF_PACK_BASE + 5)
+//创建房间
+#define DEF_PACK_CREATEROOM_RQ  (_DEF_PACK_BASE + 6)
+#define DEF_PACK_CREATEROOM_RS  (_DEF_PACK_BASE + 7)
+//客户端退出
+#define DEF_PACK_CLIENTQUITLOGIN_RQ  (_DEF_PACK_BASE + 8)
 ////加入房间
 //#define DEF_PACK_JOINROOM_RQ  (_DEF_PACK_BASE + 6)
 //#define DEF_PACK_JOINROOM_RS  (_DEF_PACK_BASE + 7)
@@ -55,7 +68,7 @@
 //#define user_online         (3)
 
 //创建房间结果
-#define room_is_exist        0
+#define room_is_maxed        0
 #define create_success       1
 
 //加入房间结果
@@ -164,34 +177,71 @@ typedef struct STRU_QUITLOGIN_RQ
 
 }STRU_QUITLOGIN_RQ;
 
-////创建房间请求
-//typedef struct STRU_CREATEROOM_RQ
-//{
-//    STRU_CREATEROOM_RQ()
-//    {
-//        m_nType = DEF_PACK_CREATEROOM_RQ;
-//        m_UserID = 0;
-//    }
+//创建房间请求
+typedef struct STRU_CREATEROOM_RQ
+{
+    STRU_CREATEROOM_RQ()
+    {
+        m_nType = DEF_PACK_CREATEROOM_RQ;
+        m_UserID = 0;
+        mode       =0;
+        playMethod =0;
+        level      =0;
+        lock       =0;
+        maxcount      =0;
+        memset(passwd,0,_MAX_SIZE);
+    }
 
-//    PackType m_nType;   //包类型
-//    int m_UserID;
+    //模式（语音、视频）、玩法（基础、进阶）、人数、等级限制（无限制、xx级）、加密（是、否）、密码
+    //语音的基础一个表、视频的基础一个表、语音的进阶一个表、...
+    PackType m_nType;   //包类型
+    int m_UserID;
+    int  mode       ;
+    int  playMethod ;
+    int  level      ;
+    bool lock       ;
+    int maxcount;
+    char passwd[_MAX_SIZE];
 
-//}STRU_CREATEROOM_RQ;
+}STRU_CREATEROOM_RQ;
 
-////创建房间回复
-//typedef struct STRU_CREATEROOM_RS
-//{
-//    STRU_CREATEROOM_RS()
-//    {
-//        m_nType= DEF_PACK_CREATEROOM_RS;
-//        m_lResult = 0;
-//        m_RoomId = 0;
-//    }
-//    PackType m_nType;   //包类型
-//    int  m_lResult ;    //创建结果
-//    int  m_RoomId;
+//创建房间回复
+typedef struct STRU_CREATEROOM_RS
+{
+    STRU_CREATEROOM_RS()
+    {
+        m_nType= DEF_PACK_CREATEROOM_RS;
+        m_lResult = 0;
+        m_RoomId = 0;
+        mode       =0;
+        lock       =0;
+        maxcount      =0;
+        memset(passwd,0,_MAX_SIZE);
+    }
+    //房间号、模式、人数、加密、密码
+    PackType m_nType;   //包类型
+    int  m_lResult ;    //创建结果
+    int  m_RoomId;
+    int  mode       ;
+    bool lock       ;
+    int maxcount;
+    char passwd[_MAX_SIZE];
 
-//}STRU_CREATEROOM_RS;
+}STRU_CREATEROOM_RS;
+
+
+//退出登录
+typedef struct STRU_CLIENTQUITLOGIN_RQ
+{
+    STRU_CLIENTQUITLOGIN_RQ()
+    {
+        m_nType = DEF_PACK_CLIENTQUITLOGIN_RQ;
+        m_UserID = 0;
+    }
+    PackType m_nType;   //包类型
+    int m_UserID;
+
+}STRU_CLIENTQUITLOGIN_RQ;
 
 ////加入房间请求
 //typedef struct STRU_JOINROOM_RQ
