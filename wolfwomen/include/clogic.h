@@ -23,7 +23,8 @@ public:
     /************** 网络处理 *********************/
     void RegisterRq( sock_fd clientfd, char*szbuf, int nlen );
     void LoginRq( sock_fd clientfd, char*szbuf, int nlen );
-
+    void QuitLogin( sock_fd clientfd, char*szbuf, int nlen );
+    void CreateRoom( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

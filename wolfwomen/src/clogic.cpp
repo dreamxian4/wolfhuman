@@ -5,6 +5,8 @@ void CLogic::setNetPackMap()
 {
     NetPackMap(DEF_PACK_REGISTER_RQ)    = &CLogic::RegisterRq;
     NetPackMap(DEF_PACK_LOGIN_RQ)    = &CLogic::LoginRq;
+    NetPackMap(DEF_PACK_CLIENTQUITLOGIN_RQ)    = &CLogic::QuitLogin;
+    NetPackMap(DEF_PACK_CREATEROOM_RQ)    = &CLogic::CreateRoom;
 }
 
 void CLogic::RegisterRq(sock_fd clientfd, char *szbuf, int nlen)
@@ -89,4 +91,21 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
     }
     //返回结果
     SendData(clientfd,(char*)&rs,sizeof(rs));
+}
+
+void CLogic::QuitLogin(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("QuitLogin:%d\n",clientfd);
+    STRU_CLIENTQUITLOGIN_RQ* rq=(STRU_CLIENTQUITLOGIN_RQ*)szbuf;
+    int id=rq->m_UserID;
+    if(m_mapIdToUserInfo.IsExist(id))m_mapIdToUserInfo.erase(id);
+    //TODO:给好友发送离线申请
+}
+
+void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("CreateRoom:%d\n",clientfd);
+    //语音房基础模式表
+    //视频房基础模式表
+    //表属性：房间id（6位数），房主，开始人数，当前人数，房间状态，等级，是否加密，密码
 }
