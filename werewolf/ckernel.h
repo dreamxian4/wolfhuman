@@ -9,6 +9,8 @@
 #include"registerdialog.h"
 #include"maindialog.h"
 #include"createroomform.h"
+#include"roomdialog.h"
+#include"roomplayerform.h"
 
 class ckernel;
 typedef void (ckernel::*PFUN)(unsigned int,char*,int);
@@ -44,6 +46,8 @@ public slots:
     void slot_createRoomButton();
     //创建房间->主界面
     void slot_CR_cancel();
+    //房间->主界面
+    void slot_r_quitRoom();
 
 
 
@@ -66,6 +70,8 @@ public slots:
     void slot_DealQuitLoginRs( unsigned int lSendIP , char* buf , int nlen );
     //自己的信息
     void slot_DealUserInfoRs( unsigned int lSendIP , char* buf , int nlen );
+    //创建房间回复
+    void slot_DealCreateRoomRs( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -85,6 +91,7 @@ private:
     RegisterDialog* m_registerDialog;//注册窗口
     mainDialog* m_mainDialog;//主窗口
     createRoomForm* m_createRoomDialog;//创建房间窗口
+    roomDialog* m_roomDialog;//房间窗口
     TcpClientMediator* m_client;//网络
     PFUN m_netMap[_DEF_PROTOCOL_COUNT];//协议映射表
     QString m_serverIp;//服务端ip地址

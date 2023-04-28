@@ -59,6 +59,12 @@
      <height>28</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>华光淡古印_CNKI</family>
+     <pointsize>13</pointsize>
+    </font>
+   </property>
    <property name="text">
     <string>登录</string>
    </property>
@@ -71,6 +77,12 @@
      <width>51</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="font">
+    <font>
+     <family>华光胖头鱼_CNKI</family>
+     <pointsize>12</pointsize>
+    </font>
    </property>
    <property name="text">
     <string>反馈</string>
@@ -85,6 +97,12 @@
      <height>28</height>
     </rect>
    </property>
+   <property name="font">
+    <font>
+     <family>华光淡古印_CNKI</family>
+     <pointsize>13</pointsize>
+    </font>
+   </property>
    <property name="text">
     <string>注册</string>
    </property>
@@ -92,9 +110,9 @@
   <widget class="QLabel" name="lb_passwd">
    <property name="geometry">
     <rect>
-     <x>80</x>
+     <x>70</x>
      <y>560</y>
-     <width>41</width>
+     <width>51</width>
      <height>31</height>
     </rect>
    </property>
@@ -106,27 +124,28 @@
     </font>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#ffffff;&quot;&gt;密码&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#ffffff;&quot;&gt;密码&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="lb_username">
    <property name="geometry">
     <rect>
-     <x>70</x>
+     <x>50</x>
      <y>510</y>
-     <width>61</width>
+     <width>81</width>
      <height>31</height>
     </rect>
    </property>
    <property name="font">
     <font>
      <family>黑体</family>
+     <pointsize>12</pointsize>
      <weight>75</weight>
      <bold>true</bold>
     </font>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:10pt; color:#ffffff;&quot;&gt;用户名&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#ffffff;&quot;&gt;用户名&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="le_username">
@@ -184,6 +203,11 @@
         <height>31</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>方正粗黑宋简体</family>
+       </font>
+      </property>
       <property name="text">
        <string>^_^</string>
       </property>
@@ -200,6 +224,12 @@
     </item>
     <item>
      <widget class="QLabel" name="lb_title">
+      <property name="font">
+       <font>
+        <family>华文新魏</family>
+        <pointsize>15</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>登录</string>
       </property>

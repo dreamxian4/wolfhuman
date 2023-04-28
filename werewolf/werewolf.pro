@@ -15,6 +15,8 @@ SOURCES += \
     main.cpp \
     maindialog.cpp \
     registerdialog.cpp \
+    roomdialog.cpp \
+    roomplayerform.cpp \
     startdialog.cpp
 
 HEADERS += \
@@ -23,6 +25,8 @@ HEADERS += \
     logindialog.h \
     maindialog.h \
     registerdialog.h \
+    roomdialog.h \
+    roomplayerform.h \
     startdialog.h
 
 FORMS += \
@@ -30,6 +34,8 @@ FORMS += \
     logindialog.ui \
     maindialog.ui \
     registerdialog.ui \
+    roomdialog.ui \
+    roomplayerform.ui \
     startdialog.ui
 
 include(./netapi/netapi.pri)

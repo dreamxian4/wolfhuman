@@ -7,6 +7,7 @@ createRoomForm::createRoomForm(QWidget *parent) :
     QWidget(parent),
     ui(new Ui::createRoomForm)
 {
+    this->setWindowFlags(Qt::FramelessWindowHint);
     ui->setupUi(this);
     ui->le_passwd->setReadOnly(true);
     ui->le_passwd->setPlaceholderText("xxxxxxx");

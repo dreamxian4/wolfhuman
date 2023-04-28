@@ -33,30 +33,41 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
     m_registerDialog=new RegisterDialog;
     m_mainDialog=new mainDialog;
     m_createRoomDialog=new createRoomForm;
+    m_roomDialog=new roomDialog;
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
             this,SLOT(slot_joinGame()));
 
+
     connect(m_client,SIGNAL(SIG_ReadyData(uint,char*,int)),
             this,SLOT(dealData(uint,char*,int)));
+
 
     connect(m_loginDialog,SIGNAL(SIG_register()),
             this,SLOT(slot_register()));
     connect(m_loginDialog,SIGNAL(SIG_login(QString,QString)),
             this,SLOT(slot_sendLoginRq(QString,QString)));
 
+
     connect(m_registerDialog,SIGNAL(SIG_submit(QString,QString,QString,QString,QDate)),
             this,SLOT(slot_sendRegisterRq(QString,QString,QString,QString,QDate)));
     connect(m_registerDialog,SIGNAL(SIG_return()),
             this,SLOT(slot_returnLogin()));
 
+
     connect(m_mainDialog,SIGNAL(SIG_createRoomButton()),
             this,SLOT(slot_createRoomButton()));
+
 
     connect(m_createRoomDialog,SIGNAL(SIG_CANCEL()),
             this,SLOT(slot_CR_cancel()));
     connect(m_createRoomDialog,SIGNAL(SIG_createRoom(int,int,int,int,bool,QString)),
             this,SLOT(slot_sendCreateRoomRQ(int,int,int,int,bool,QString)));
+
+
+    connect(m_roomDialog,SIGNAL(SIG_quitRoom()),
+            this,SLOT(slot_r_quitRoom()));
+
 }
 
 ckernel::~ckernel()
@@ -92,6 +103,11 @@ ckernel::~ckernel()
         m_createRoomDialog->hide();
         delete m_createRoomDialog;
         m_createRoomDialog=nullptr;
+    }
+    if(m_roomDialog){
+        m_roomDialog->hide();
+        delete m_roomDialog;
+        m_roomDialog=nullptr;
     }
 }
 
@@ -138,6 +154,13 @@ void ckernel::slot_CR_cancel()
     m_createRoomDialog->hide();
     //显示主界面
     m_mainDialog->showNormal();
+}
+
+void ckernel::slot_r_quitRoom()
+{
+    //发包TODO
+    //隐藏房间界面
+    //显示主界面
 }
 
 void ckernel::slot_sendRegisterRq(QString username, QString passwd, QString name, QString sex, QDate date)
@@ -246,6 +269,19 @@ void ckernel::slot_DealUserInfoRs(unsigned int lSendIP, char *buf, int nlen)
     m_mainDialog->slot_setInfo(userid,icon,name,sex,username);
 }
 
+void ckernel::slot_DealCreateRoomRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //拆包
+    STRU_CREATEROOM_RS* rs=(STRU_CREATEROOM_RS*)buf;
+    qDebug()<<rs->m_RoomId;
+    //给房间界面传递信息
+    m_roomDialog->slot_setInfo(rs->m_RoomId,rs->mode,0,rs->lock,
+                               QString::fromStdString(rs->passwd),rs->maxcount);
+    m_roomDialog->slot_setPlayer(1,2);
+    //把自己放到房间内
+    m_roomDialog->showNormal();
+}
+
 void ckernel::initConfig()
 {
     m_serverIp=_DEF_SERVER_IP;
@@ -288,6 +324,7 @@ void ckernel::setNetMap()
     netMap(_DEF_PACK_LOGIN_RS)=&ckernel::slot_DealLoginRs;
     netMap(DEF_PACK_QUIT_LOGIN_RQ)=&ckernel::slot_DealQuitLoginRs;
     netMap(DEF_PACK_USER_INFO)=&ckernel::slot_DealUserInfoRs;
+    netMap(DEF_PACK_CREATEROOM_RS)=&ckernel::slot_DealCreateRoomRs;
 }
 
 void ckernel::slot_quitLogin()
