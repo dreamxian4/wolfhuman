@@ -16,34 +16,6 @@
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
 --
--- Table structure for table `audio_base_room`
---
-
-DROP TABLE IF EXISTS `audio_base_room`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `audio_base_room` (
-  `room_id` int(11) DEFAULT NULL,
-  `master_id` int(11) DEFAULT NULL,
-  `beginNum` int(11) DEFAULT NULL,
-  `currentNum` int(11) DEFAULT NULL,
-  `state` int(11) DEFAULT NULL,
-  `level` int(11) DEFAULT NULL,
-  `pass` tinyint(1) DEFAULT NULL,
-  `passwd` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `audio_base_room`
---
-
-LOCK TABLES `audio_base_room` WRITE;
-/*!40000 ALTER TABLE `audio_base_room` DISABLE KEYS */;
-/*!40000 ALTER TABLE `audio_base_room` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
 -- Table structure for table `t_user`
 --
 
@@ -70,34 +42,6 @@ LOCK TABLES `t_user` WRITE;
 INSERT INTO `t_user` VALUES (9,'worldd','f9b77d488ca8463fa2f8bdb44863159d','男',1,'出发');
 /*!40000 ALTER TABLE `t_user` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `video_base_room`
---
-
-DROP TABLE IF EXISTS `video_base_room`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!40101 SET character_set_client = utf8 */;
-CREATE TABLE `video_base_room` (
-  `room_id` int(11) DEFAULT NULL,
-  `master_id` int(11) DEFAULT NULL,
-  `beginNum` int(11) DEFAULT NULL,
-  `currentNum` int(11) DEFAULT NULL,
-  `state` int(11) DEFAULT NULL,
-  `level` int(11) DEFAULT NULL,
-  `pass` tinyint(1) DEFAULT NULL,
-  `passwd` varchar(50) DEFAULT NULL
-) ENGINE=InnoDB DEFAULT CHARSET=utf8;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
---
--- Dumping data for table `video_base_room`
---
-
-LOCK TABLES `video_base_room` WRITE;
-/*!40000 ALTER TABLE `video_base_room` DISABLE KEYS */;
-/*!40000 ALTER TABLE `video_base_room` ENABLE KEYS */;
-UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
 
 /*!40101 SET SQL_MODE=@OLD_SQL_MODE */;
@@ -108,4 +52,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-27  7:47:12
+-- Dump completed on 2023-04-28  0:15:19

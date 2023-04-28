@@ -159,6 +159,33 @@ typedef struct UserInfo
 
 }UserInfo;
 
+// roomid->RoomInfo
+typedef struct RoomInfo
+{
+    RoomInfo()
+    {
+        m_roomid  =0;
+        m_beginNum  =0;
+        m_currentNum=0;
+        m_playing   =false;
+        m_minLevel  =0;
+        m_lock      =false;
+        m_mode=0;
+        m_playMethod=0;
+        memset(m_passwd,0,MAX_SIZE);
+    }
+    //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
+    int  m_roomid   ;
+    int  m_beginNum   ;
+    int  m_currentNum ;
+    bool m_playing    ;    //0准备阶段 1游戏中
+    int  m_minLevel   ;
+    bool m_lock       ;
+    char m_passwd[MAX_SIZE];
+    int  m_mode;//0语音 1视频
+    int  m_playMethod;//0基础玩法
+}RoomInfo;
+
 //登录
 typedef struct STRU_LOGIN_RQ
 {

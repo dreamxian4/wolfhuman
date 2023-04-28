@@ -1,5 +1,6 @@
 #include "clogic.h"
 #include<string>
+#include<random>
 
 void CLogic::setNetPackMap()
 {
@@ -105,7 +106,36 @@ void CLogic::QuitLogin(sock_fd clientfd, char *szbuf, int nlen)
 void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
 {
     printf("CreateRoom:%d\n",clientfd);
-    //语音房基础模式表
-    //视频房基础模式表
-    //表属性：房间id（6位数），房主，开始人数，当前人数，房间状态，等级，是否加密，密码
+    STRU_CREATEROOM_RQ* rq=(STRU_CREATEROOM_RQ*)szbuf;
+    //房间信息结构体
+    //房间id（6位数），房主，开始人数，当前人数，房间状态，等级，是否加密，密码
+    //保存映射
+    /*    int  m_roomid   ;
+    int  m_beginNum   ;
+    int  m_currentNum ;
+    bool m_playing    ;    //0准备阶段 1游戏中
+    int  m_minLevel   ;
+    bool m_lock       ;
+    char m_passwd[MAX_SIZE];*/
+    RoomInfo* room=new RoomInfo;
+    int id=(rand()%899999)+100000;
+    while(m_mapRoomidToRoomInfo.IsExist(id))id=(rand()%899999)+100000;
+    room->m_roomid=id;
+    room->m_lock=rq->lock;
+    if(room->m_lock)strcpy(room->m_passwd,rq->passwd);
+    room->m_playing=false;
+    room->m_beginNum=rq->maxcount;
+    room->m_currentNum=1;
+    room->m_minLevel=rq->level;
+    room->m_mode=rq->mode;
+    room->m_playMethod=rq->playMethod;
+    m_mapRoomidToRoomInfo.insert(room->m_roomid,room);
+    STRU_CREATEROOM_RS rs;
+    rs.m_RoomId=room->m_roomid;
+    rs.lock=room->m_lock;
+    rs.mode=room->m_mode;
+    strcpy(rs.passwd,room->m_passwd);
+    rs.maxcount=room->m_beginNum;
+    rs.m_lResult=create_success;
+    SendData(clientfd,(char*)&rs,sizeof(rs));
 }

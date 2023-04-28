@@ -32,6 +32,7 @@ private:
     CMysql * m_sql;
     Block_Epoll_Net * m_tcp;
     MyMap<int,UserInfo*>m_mapIdToUserInfo;//id->socket的映射，保存在线用户
+    MyMap<int,RoomInfo*>m_mapRoomidToRoomInfo;//roomid->roominfo的映射，保存房间
 };
 
 #endif // CLOGIC_H
