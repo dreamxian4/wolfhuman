@@ -29,8 +29,9 @@ CREATE TABLE `t_user` (
   `sex` varchar(5) DEFAULT NULL,
   `icon` int(11) DEFAULT NULL,
   `name` varchar(25) DEFAULT NULL,
+  `level` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -39,7 +40,7 @@ CREATE TABLE `t_user` (
 
 LOCK TABLES `t_user` WRITE;
 /*!40000 ALTER TABLE `t_user` DISABLE KEYS */;
-INSERT INTO `t_user` VALUES (9,'worldd','f9b77d488ca8463fa2f8bdb44863159d','男',1,'出发');
+INSERT INTO `t_user` VALUES (9,'worldd','f9b77d488ca8463fa2f8bdb44863159d','男',1,'出发',5),(10,'worlddd','f9b77d488ca8463fa2f8bdb44863159d','女',5,'天线宝宝',1),(12,'worldddd','f9b77d488ca8463fa2f8bdb44863159d','男',8,'别错了！',1);
 /*!40000 ALTER TABLE `t_user` ENABLE KEYS */;
 UNLOCK TABLES;
 /*!40103 SET TIME_ZONE=@OLD_TIME_ZONE */;
@@ -52,4 +53,4 @@ UNLOCK TABLES;
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*!40111 SET SQL_NOTES=@OLD_SQL_NOTES */;
 
--- Dump completed on 2023-04-28  0:15:19
+-- Dump completed on 2023-04-29 23:51:07

@@ -79,11 +79,14 @@
 #define DEF_PACK_CREATEROOM_RS  (DEF_PACK_BASE + 7)
 //客户端退出
 #define DEF_PACK_CLIENTQUITLOGIN_RQ  (DEF_PACK_BASE + 8)
-////加入房间
-//#define DEF_PACK_JOINROOM_RQ  (DEF_PACK_BASE + 6)
-//#define DEF_PACK_JOINROOM_RS  (DEF_PACK_BASE + 7)
-////房间列表请求
-//#define DEF_PACK_ROOM_MEMBER    (DEF_PACK_BASE + 8)
+//房间列表请求
+#define DEF_PACK_ROOMLIST_RQ    (DEF_PACK_BASE + 9)
+#define DEF_PACK_ROOMLIST_RS    (DEF_PACK_BASE + 10)
+//加入房间
+#define DEF_PACK_JOINROOM_RQ  (DEF_PACK_BASE + 11)
+#define DEF_PACK_JOINROOM_RS  (DEF_PACK_BASE + 12)
+//房间成员信息
+#define DEF_PACK_ROOM_MEMBER    (DEF_PACK_BASE + 13)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
@@ -116,6 +119,7 @@
 //加入房间结果
 #define room_no_exist        0
 #define join_success         1
+#define level_unqualified    2
 
 
 #define MAX_PATH            (260 )
@@ -147,13 +151,14 @@ typedef struct UserInfo
          memset(m_userName, 0 , MAX_SIZE);
 //        m_videofd = 0;
 //        m_audiofd = 0;
+         m_seat=0;
     }
 //    struct bufferevent*  m_sockfd;
     int m_sockfd;
     int  m_id;
 //    int  m_roomid;//方便下线的时候从房间移出
     char m_userName[MAX_SIZE];
-
+    int  m_seat;
 //    int  m_videofd;
 //    int  m_audiofd;
 
@@ -173,6 +178,7 @@ typedef struct RoomInfo
         m_mode=0;
         m_playMethod=0;
         memset(m_passwd,0,MAX_SIZE);
+        memset(m_seat,0,13*sizeof(bool));
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -184,6 +190,7 @@ typedef struct RoomInfo
     char m_passwd[MAX_SIZE];
     int  m_mode;//0语音 1视频
     int  m_playMethod;//0基础玩法
+    bool m_seat[13];
 }RoomInfo;
 
 //登录
@@ -232,6 +239,7 @@ typedef struct STRU_USER_INFO_RQ
         m_nType= DEF_PACK_USER_INFO;
         m_UserID =0;
         m_iconid=0;
+        m_level=1;
         memset(m_username,0,MAX_SIZE);
         memset(m_sex,0,MAX_SIZE);
         memset(m_name,0,MAX_SIZE);
@@ -239,6 +247,7 @@ typedef struct STRU_USER_INFO_RQ
     PackType m_nType;   //包类型
     int m_UserID;
     int m_iconid;
+    int m_level;
     char m_username[MAX_SIZE];
     char m_sex[MAX_SIZE];
     char m_name[MAX_SIZE];
@@ -301,7 +310,6 @@ typedef struct STRU_CREATEROOM_RQ
     }
 
     //模式（语音、视频）、玩法（基础、进阶）、人数、等级限制（无限制、xx级）、加密（是、否）、密码
-    //语音的基础一个表、视频的基础一个表、语音的进阶一个表、...
     PackType m_nType;   //包类型
     int m_UserID;
     int  mode       ;
@@ -350,50 +358,127 @@ typedef struct STRU_CLIENTQUITLOGIN_RQ
 
 }STRU_CLIENTQUITLOGIN_RQ;
 
-////加入房间请求
-//typedef struct STRU_JOINROOM_RQ
-//{
-//    STRU_JOINROOM_RQ()
-//    {
-//        m_nType = DEF_PACK_JOINROOM_RQ;
-//        m_UserID = 0;
-//        m_RoomID = 0;
-//    }
 
-//    PackType m_nType;   //包类型
-//    int m_UserID;
-//    int m_RoomID;
+//房间列表请求
+typedef struct STRU_ROOMLIST_RQ
+{
+    STRU_ROOMLIST_RQ()
+    {
+        m_nType = DEF_PACK_ROOMLIST_RQ;
+        m_UserID = 0;
+        mode=0;
+        method=0;
+        roomid=0;
+    }
+    PackType m_nType;   //包类型
+    int mode;//模式
+    int method;//玩法
+    int roomid;//点搜索给roomid赋值，点刷新roomid为0
+    int m_UserID;
 
-//}STRU_JOINROOM_RQ;
+}STRU_ROOMLIST_RQ;
 
-////加入房间回复
-//typedef struct STRU_JOINROOM_RS
-//{
-//    STRU_JOINROOM_RS()
-//    {
-//        m_nType= DEF_PACK_JOINROOM_RS;
-//        m_lResult = 0;
-//        m_RoomID = 0;
-//    }
-//    PackType m_nType;   //包类型
-//    int  m_lResult ;    //注册结果
-//    int m_RoomID;
-//}STRU_JOINROOM_RS;
+//房间列表回复
+typedef struct STRU_ROOMLIST_RS
+{
+    STRU_ROOMLIST_RS()
+    {
+        m_nType = DEF_PACK_ROOMLIST_RS;
+        mode=0;
+        method=0;
+        roomid=0;
+        count      =0;
+        currentCou =0;
+        pass       =false;
+        memset(roomName,0,MAX_SIZE);
+        memset(passwd,0,MAX_SIZE);
+        state=false;
+        level=0;
+    }
+    PackType m_nType;   //包类型
+    int     mode        ;//模式
+    int     method      ;//玩法
+    int     roomid      ;
+    char    roomName[MAX_SIZE]    ;
+    int     count       ;
+    int     currentCou  ;
+    bool    pass        ;
+    char    passwd[MAX_SIZE];
+    bool state;
+    int level;
 
-////房间成员请求
-//typedef struct STRU_ROOM_MEMBER_RQ
-//{
-//    STRU_ROOM_MEMBER_RQ()
-//    {
-//        m_nType= DEF_PACK_ROOM_MEMBER;
-//        m_UserID =0;
-//        memset(m_szUser,0,MAX_SIZE);
-//    }
-//    PackType m_nType;   //包类型
-//    int m_UserID;
-//    char m_szUser[MAX_SIZE];
+}STRU_ROOMLIST_RS;
 
-//}STRU_ROOM_MEMBER_RQ;
+
+//加入房间请求
+typedef struct STRU_JOINROOM_RQ
+{
+    STRU_JOINROOM_RQ()
+    {
+        m_nType = DEF_PACK_JOINROOM_RQ;
+        m_UserID = 0;
+        m_RoomID = 0;
+    }
+
+    PackType m_nType;   //包类型
+    int m_UserID;
+    int m_RoomID;
+
+}STRU_JOINROOM_RQ;
+
+//加入房间回复
+typedef struct STRU_JOINROOM_RS
+{
+    STRU_JOINROOM_RS()
+    {
+        m_nType= DEF_PACK_JOINROOM_RS;
+        m_lResult = 0;
+        m_RoomID = 0;
+        m_lResult =0;
+        m_RoomID  =0;
+        mode      =0;
+        lock      =false;
+        maxcount  =0;
+        memset(passwd,0,MAX_SIZE);
+        look      =false;
+    }
+    PackType m_nType;   //包类型
+    int  m_lResult  ;    //注册结果
+    int  m_RoomID    ;
+    int  mode       ;
+    bool lock       ;
+    int  maxcount    ;
+    char passwd         [MAX_SIZE];
+    bool look       ;          //是否观战
+}STRU_JOINROOM_RS;
+
+
+
+
+//房间成员请求
+typedef struct STRU_ROOM_MEMBER_RQ
+{
+    STRU_ROOM_MEMBER_RQ()
+    {
+        m_nType= DEF_PACK_ROOM_MEMBER;
+        m_UserID =0;
+        memset(m_szUser,0,MAX_SIZE);
+        memset(m_sex,0,MAX_SIZE);
+        m_icon=0;
+        m_level=0;
+        m_seat=0;
+    }
+    //头像、昵称、id、等级、性别、座位号
+    PackType m_nType;   //包类型
+    int m_UserID;
+    char m_szUser[MAX_SIZE];
+    int     m_icon;
+    int     m_level;
+    char    m_sex[MAX_SIZE];
+    int     m_seat;
+
+
+}STRU_ROOM_MEMBER_RQ;
 
 
 ////离开房间请求

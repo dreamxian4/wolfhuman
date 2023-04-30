@@ -2,6 +2,7 @@
 #define CLOGIC_H
 
 #include"TCPKernel.h"
+#include<list>
 
 class CLogic
 {
@@ -25,6 +26,8 @@ public:
     void LoginRq( sock_fd clientfd, char*szbuf, int nlen );
     void QuitLogin( sock_fd clientfd, char*szbuf, int nlen );
     void CreateRoom( sock_fd clientfd, char*szbuf, int nlen );
+    void RoomList( sock_fd clientfd, char*szbuf, int nlen );
+    void JoinRoom( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
@@ -33,6 +36,8 @@ private:
     Block_Epoll_Net * m_tcp;
     MyMap<int,UserInfo*>m_mapIdToUserInfo;//id->socket的映射，保存在线用户
     MyMap<int,RoomInfo*>m_mapRoomidToRoomInfo;//roomid->roominfo的映射，保存房间
+    std::list<int>m_roomList;//房间号列表
+    MyMap<int,list<int>>m_mapRoomidToMemberlist;//roomid->房间成员列表的映射
 };
 
 #endif // CLOGIC_H

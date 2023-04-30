@@ -8,7 +8,10 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_LOGIN_RQ)    = &CLogic::LoginRq;
     NetPackMap(DEF_PACK_CLIENTQUITLOGIN_RQ)    = &CLogic::QuitLogin;
     NetPackMap(DEF_PACK_CREATEROOM_RQ)    = &CLogic::CreateRoom;
+    NetPackMap(DEF_PACK_ROOMLIST_RQ)    = &CLogic::RoomList;
+    NetPackMap(DEF_PACK_JOINROOM_RQ)    = &CLogic::JoinRoom;
 }
+
 
 void CLogic::RegisterRq(sock_fd clientfd, char *szbuf, int nlen)
 {
@@ -27,7 +30,7 @@ void CLogic::RegisterRq(sock_fd clientfd, char *szbuf, int nlen)
     }else{//不存在，写入数据库，返回注册成功
         rs.result=register_success;
         sprintf(strsql,
-                "insert into t_user(username,password,sex,icon,name)values('%s','%s','%s',1,'%s')"
+                "insert into t_user(username,password,sex,icon,name,level)values('%s','%s','%s',1,'%s',1)"
                 ,rq->username,rq->password,rq->sex,rq->name);
         if(!m_sql->UpdataMysql(strsql)){
             printf("update fail:%s\n",strsql);
@@ -74,9 +77,9 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
             m_mapIdToUserInfo.insert(id,user);
             //给客户发送个人信息
             STRU_USER_INFO_RQ userRq;
-            sprintf(sql,"select id,username,name,sex,icon from t_user where username='%s'",
+            sprintf(sql,"select id,username,name,sex,icon,level from t_user where username='%s'",
                     rq->username);
-            m_sql->SelectMysql(sql,5,lst);
+            m_sql->SelectMysql(sql,6,lst);
             userRq.m_UserID=atoi(lst.front().c_str());
             lst.pop_front();
             strcpy(userRq.m_username,lst.front().c_str());
@@ -86,6 +89,8 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
             strcpy(userRq.m_sex,lst.front().c_str());
             lst.pop_front();
             userRq.m_iconid=atoi(lst.front().c_str());
+            lst.pop_front();
+            userRq.m_level=atoi(lst.front().c_str());
             lst.pop_front();
             SendData(clientfd,(char*)&userRq,sizeof(userRq));
         }else rs.result=password_error;
@@ -117,6 +122,7 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     int  m_minLevel   ;
     bool m_lock       ;
     char m_passwd[MAX_SIZE];*/
+    //保存映射
     RoomInfo* room=new RoomInfo;
     int id=(rand()%899999)+100000;
     while(m_mapRoomidToRoomInfo.IsExist(id))id=(rand()%899999)+100000;
@@ -129,7 +135,18 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     room->m_minLevel=rq->level;
     room->m_mode=rq->mode;
     room->m_playMethod=rq->playMethod;
+
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->m_UserID,user))return;
+    user->m_seat=1;
+    room->m_seat[1]=1;
     m_mapRoomidToRoomInfo.insert(room->m_roomid,room);
+    m_roomList.push_back(room->m_roomid);
+    list<int>lst;
+    lst.push_back(rq->m_UserID);
+    m_mapRoomidToMemberlist.insert(room->m_roomid,lst);
+
+    //回复
     STRU_CREATEROOM_RS rs;
     rs.m_RoomId=room->m_roomid;
     rs.lock=room->m_lock;
@@ -138,4 +155,162 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     rs.maxcount=room->m_beginNum;
     rs.m_lResult=create_success;
     SendData(clientfd,(char*)&rs,sizeof(rs));
+
+    STRU_ROOM_MEMBER_RQ myrq;
+    list<string>infolst;
+    char mysql[1024];
+    sprintf(mysql,"select icon,name,id,level,sex from t_user where id=%d",rq->m_UserID);
+    m_sql->SelectMysql(mysql,5,infolst);
+    myrq.m_icon=atoi(infolst.front().c_str());
+    infolst.pop_front();
+    strcpy(myrq.m_szUser,infolst.front().c_str());
+    infolst.pop_front();
+    myrq.m_UserID=atoi(infolst.front().c_str());
+    infolst.pop_front();
+    myrq.m_level=atoi(infolst.front().c_str());
+    infolst.pop_front();
+    strcpy(myrq.m_sex,infolst.front().c_str());
+    infolst.pop_front();
+    myrq.m_seat=user->m_seat;
+    SendData(clientfd,(char*)&myrq,sizeof(myrq));
+
+}
+
+void CLogic::RoomList(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("RoomList:%d\n",clientfd);
+    //拆包
+    STRU_ROOMLIST_RQ* rq=(STRU_ROOMLIST_RQ*)szbuf;
+    //判断房间id是否有值，如果有，按照房间号在映射中获取房间信息
+    STRU_ROOMLIST_RS rs;
+    RoomInfo* room=nullptr;
+    if(rq->roomid>0){
+        m_mapRoomidToRoomInfo.find(rq->roomid,room);
+        //发送
+        if(room){
+            rs.mode=room->m_mode;
+            rs.pass=room->m_lock;
+            rs.count=room->m_beginNum;
+            rs.method=room->m_playMethod;
+            strcpy(rs.passwd,room->m_passwd);
+            rs.roomid=room->m_roomid;
+            rs.level=room->m_minLevel;
+            rs.state=room->m_playing;
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+        return;
+    }
+
+    //如果没有，按照模式和玩法发送房间信息
+    for(auto ite=m_roomList.begin();ite!=m_roomList.end();ite++){
+        m_mapRoomidToRoomInfo.find(*ite,room);
+        if(room&&(room->m_mode==rq->mode||rq->mode==-1)&&
+                (room->m_playMethod==rq->method||rq->method==-1)){
+            rs.mode=room->m_mode;
+            rs.pass=room->m_lock;
+            rs.count=room->m_beginNum;
+            rs.method=room->m_playMethod;
+            strcpy(rs.passwd,room->m_passwd);
+            rs.roomid=room->m_roomid;
+            rs.level=room->m_minLevel;
+            rs.state=room->m_playing;
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+    }
+}
+
+void CLogic::JoinRoom(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("JoinRoom:%d\n",clientfd);
+    //拆包
+    STRU_JOINROOM_RQ* rq=(STRU_JOINROOM_RQ*)szbuf;
+    STRU_JOINROOM_RS rs;
+    //查找个人信息
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->m_UserID,user))return;
+    //查找房间信息
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rq->m_RoomID,room))rs.m_lResult=room_no_exist;
+    else{
+        //判断等级是否符合
+        list<string>levellst;
+        char levelsql[1024];
+        sprintf(levelsql,"select level from t_user where id=%d",rq->m_UserID);
+        m_sql->SelectMysql(levelsql,1,levellst);
+        if(atoi(levellst.front().c_str())<room->m_minLevel)rs.m_lResult=level_unqualified;
+        else{
+            list<int>memerlst;
+            m_mapRoomidToMemberlist.find(rq->m_RoomID,memerlst);
+            //写入房间成员
+            for(int i=1;i<13;i++){
+                if(room->m_seat[i]==0){
+                    user->m_seat=i;
+                    room->m_seat[i]=1;
+                    break;
+                }
+            }
+            memerlst.push_back(rq->m_UserID);
+            m_mapRoomidToMemberlist.insert(room->m_roomid,memerlst);
+
+            //加入房间回复
+            rs.m_lResult=join_success;
+            rs.lock=room->m_lock;
+            rs.look=room->m_playing||++(room->m_currentNum)>room->m_beginNum?true:false;
+            rs.mode=room->m_mode;
+            strcpy(rs.passwd,room->m_passwd);
+            rs.maxcount=room->m_beginNum;
+            rs.m_RoomID=room->m_roomid;
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+            //TODO:观战模式写了一办，如果是观战的话，有些映射不能加，有些成员信息不能发
+
+            //新成员信息包
+            STRU_ROOM_MEMBER_RQ myrq;
+            list<string>infolst;
+            char mysql[1024];
+            sprintf(mysql,"select icon,name,id,level,sex from t_user where id=%d",rq->m_UserID);
+            m_sql->SelectMysql(mysql,5,infolst);
+            myrq.m_icon=atoi(infolst.front().c_str());
+            infolst.pop_front();
+            strcpy(myrq.m_szUser,infolst.front().c_str());
+            infolst.pop_front();
+            myrq.m_UserID=atoi(infolst.front().c_str());
+            infolst.pop_front();
+            myrq.m_level=atoi(infolst.front().c_str());
+            infolst.pop_front();
+            strcpy(myrq.m_sex,infolst.front().c_str());
+            infolst.pop_front();
+            myrq.m_seat=user->m_seat;
+            SendData(clientfd,(char*)&myrq,sizeof(myrq));
+
+
+
+            //原有成员信息包
+            for(auto ite=memerlst.begin();ite!=memerlst.end();ite++){
+                if(*ite!=rq->m_UserID){
+                    //头像、昵称、id、等级、性别、座位号
+                    char sql[1024];
+                    sprintf(sql,"select icon,name,id,level,sex from t_user where id=%d",*ite);
+                    m_sql->SelectMysql(sql,5,infolst);
+                    STRU_ROOM_MEMBER_RQ memrq;
+                    memrq.m_icon=atoi(infolst.front().c_str());
+                    infolst.pop_front();
+                    strcpy(memrq.m_szUser,infolst.front().c_str());
+                    infolst.pop_front();
+                    memrq.m_UserID=atoi(infolst.front().c_str());
+                    infolst.pop_front();
+                    memrq.m_level=atoi(infolst.front().c_str());
+                    infolst.pop_front();
+                    strcpy(memrq.m_sex,infolst.front().c_str());
+                    infolst.pop_front();
+                    UserInfo* memuser=nullptr;
+                    if(!m_mapIdToUserInfo.find(*ite,memuser))break;
+                    memrq.m_seat=memuser->m_seat;
+                    //给改用户发送其他成员信息
+                    SendData(clientfd,(char*)&memrq,sizeof(memrq));
+                    //给其他成员发送该用户信息
+                    SendData(memuser->m_sockfd,(char*)&myrq,sizeof(myrq));
+                }
+            }
+        }
+    }
 }
