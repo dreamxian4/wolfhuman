@@ -21,11 +21,9 @@ signals:
 public:
     explicit roomDialog(QWidget *parent = nullptr);
     ~roomDialog();
-    void slot_addPlayer(QWidget* player,int id);
-    void slot_removePlayer(QWidget* player,int id);
     void slot_setInfo(int roomid,int mode,int method,bool lock,
                      QString password,int num);
-    void slot_setPlayer(int id,int icon);
+    void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
 
 private slots:
     void on_pb_min_clicked();
@@ -33,6 +31,8 @@ private slots:
     void on_pb_close_clicked();
 
     void on_pb_quitroom_clicked();
+    void slot_addPlayer(QWidget* player,int id);
+    void slot_removePlayer(QWidget* player,int id);
 
 private:
     Ui::roomDialog *ui;

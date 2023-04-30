@@ -21,9 +21,14 @@ public:
 //    void paintEvent(QPaintEvent *event);
     void setInfo(int id,int identify,int jing);
     void setImage(int icon);
+    void setZiLiao(int level,QString sex,QString name,int userid);
 
 private:
     Ui::roomPlayerform *ui;
+    int         m_level  ;
+    QString     m_sex    ;
+    QString     m_name   ;
+    int         m_userid ;
 };
 
 #endif // ROOMPLAYERFORM_H

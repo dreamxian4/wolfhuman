@@ -46,7 +46,7 @@ void createRoomForm::on_pb_commit_clicked()
     int mode=ui->rb_audio->isChecked()?_GAME_MODE_AUDIO:_GAME_MODE_VIDEO;
     int method=ui->cmb_playMethod->currentIndex();
     int playerNum=ui->sb_playerNum->value();
-    int level=ui->cmb_level->currentIndex();
+    int level=ui->cmb_level->currentIndex()*10;
     bool pass=ui->cb_passwd->isChecked();
     QString password="";
     if(pass)password=ui->le_passwd->text();

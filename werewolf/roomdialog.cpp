@@ -44,6 +44,7 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
         //头像：小于人数的编号：+ 大于人数的编号：锁
         roomPlayerform* player=new roomPlayerform;
         player->setInfo(i,0,0);
+        //锁
         if(i>num)player->setImage(1);
         m_mapIdToPlayer[i]=player;
         slot_addPlayer(player,i);
@@ -51,9 +52,11 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
     //设置TODO
 }
 
-void roomDialog::slot_setPlayer(int id,int icon)
+void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QString name, int userid)
 {
+    //设置成员信息
     m_mapIdToPlayer[id]->setImage(icon);
+    m_mapIdToPlayer[id]->setZiLiao(level,sex,name,userid);
 }
 
 roomDialog::~roomDialog()

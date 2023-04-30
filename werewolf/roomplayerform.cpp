@@ -40,3 +40,11 @@ void roomPlayerform::setImage(int icon)
     ui->pb_icon->setIconSize(QSize(50,40));
 }
 
+void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid)
+{
+    m_level =level;
+    m_sex   =sex;
+    m_name  =name;
+    m_userid=userid;
+}
+

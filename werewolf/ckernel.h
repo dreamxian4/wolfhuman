@@ -11,6 +11,7 @@
 #include"createroomform.h"
 #include"roomdialog.h"
 #include"roomplayerform.h"
+#include"roomlistdialog.h"
 
 class ckernel;
 typedef void (ckernel::*PFUN)(unsigned int,char*,int);
@@ -51,12 +52,15 @@ public slots:
 
 
 
+
     //网络发送槽
     void slot_sendRegisterRq(QString username,QString passwd,
                              QString name,QString sex,QDate date);
     void slot_sendLoginRq(QString name,QString passwd);
     void slot_sendCreateRoomRQ(int mode,int method,int playerNum,
                                int level,bool pass,QString password);
+    void slot_sendroomListRQ(int method,int mode,int roomid);
+    void slot_sendJoinRoomRq(int roomid);
 
 
     //网络接收处理槽
@@ -68,10 +72,16 @@ public slots:
     void slot_DealLoginRs( unsigned int lSendIP , char* buf , int nlen );
     //强制退出登录
     void slot_DealQuitLoginRs( unsigned int lSendIP , char* buf , int nlen );
-    //自己的信息
+    //自己的个人信息
     void slot_DealUserInfoRs( unsigned int lSendIP , char* buf , int nlen );
     //创建房间回复
     void slot_DealCreateRoomRs( unsigned int lSendIP , char* buf , int nlen );
+    //房间列表
+    void slot_DealRoomListRs( unsigned int lSendIP , char* buf , int nlen );
+    //房间成员信息
+    void slot_DealRoomMemberRq( unsigned int lSendIP , char* buf , int nlen );
+    //加入房间
+    void slot_DealJoinRoomRq( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -92,8 +102,11 @@ private:
     mainDialog* m_mainDialog;//主窗口
     createRoomForm* m_createRoomDialog;//创建房间窗口
     roomDialog* m_roomDialog;//房间窗口
+    roomListDialog* m_roomListDialog;//房间列表窗口
     TcpClientMediator* m_client;//网络
+
     PFUN m_netMap[_DEF_PROTOCOL_COUNT];//协议映射表
+
     QString m_serverIp;//服务端ip地址
     int m_id;//用户id
 };

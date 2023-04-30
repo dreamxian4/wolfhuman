@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>roomDialog</class>
- <widget class="QDialog" name="roomDialog">
+ <class>roomListDialog</class>
+ <widget class="QDialog" name="roomListDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>401</width>
+    <width>400</width>
     <height>741</height>
    </rect>
   </property>
@@ -55,6 +55,12 @@
         <height>31</height>
        </size>
       </property>
+      <property name="font">
+       <font>
+        <family>华文新魏</family>
+        <pointsize>9</pointsize>
+       </font>
+      </property>
       <property name="text">
        <string>^_^</string>
       </property>
@@ -71,11 +77,14 @@
     </item>
     <item>
      <widget class="QLabel" name="lb_title">
-      <property name="text">
-       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;房间&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      <property name="font">
+       <font>
+        <family>华文新魏</family>
+        <pointsize>14</pointsize>
+       </font>
       </property>
-      <property name="buddy">
-       <cstring></cstring>
+      <property name="text">
+       <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;房间列表&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
       </property>
      </widget>
     </item>
@@ -150,147 +159,196 @@
     </item>
    </layout>
   </widget>
-  <widget class="QPushButton" name="pb_day">
+  <widget class="QPushButton" name="pb_search">
    <property name="geometry">
     <rect>
-     <x>150</x>
+     <x>180</x>
      <y>30</y>
-     <width>93</width>
-     <height>41</height>
+     <width>31</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>第几天</string>
+    <string>搜</string>
    </property>
   </widget>
-  <widget class="QLabel" name="lb_num">
+  <widget class="QLineEdit" name="le_roomNum">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>40</y>
-     <width>61</width>
-     <height>16</height>
+     <x>210</x>
+     <y>30</y>
+     <width>141</width>
+     <height>31</height>
     </rect>
    </property>
-   <property name="text">
-    <string>房间号：</string>
-   </property>
   </widget>
-  <widget class="QLabel" name="lb_roomNum">
+  <widget class="QPushButton" name="pb_joinRoom">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>60</y>
+     <x>350</x>
+     <y>30</y>
      <width>51</width>
-     <height>16</height>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>000000</string>
+    <string>搜索</string>
    </property>
   </widget>
-  <widget class="QLabel" name="lb_type">
+  <widget class="QPushButton" name="pb_return">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>40</y>
-     <width>81</width>
-     <height>16</height>
+     <x>0</x>
+     <y>30</y>
+     <width>51</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>房间类型：</string>
+    <string>返回</string>
    </property>
   </widget>
-  <widget class="QLabel" name="lb_roomType">
+  <widget class="QComboBox" name="cmb_method">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>60</y>
-     <width>81</width>
-     <height>16</height>
+     <x>260</x>
+     <y>70</y>
+     <width>91</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>全部</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>基础玩法</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="lb_method">
+   <property name="geometry">
+    <rect>
+     <x>190</x>
+     <y>70</y>
+     <width>71</width>
+     <height>31</height>
     </rect>
    </property>
    <property name="text">
-    <string>xx人xx板</string>
+    <string>游戏玩法</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pb_set">
+  <widget class="QComboBox" name="cmb_mode">
+   <property name="geometry">
+    <rect>
+     <x>80</x>
+     <y>70</y>
+     <width>91</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <item>
+    <property name="text">
+     <string>全部</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>语音模式</string>
+    </property>
+   </item>
+   <item>
+    <property name="text">
+     <string>视频模式</string>
+    </property>
+   </item>
+  </widget>
+  <widget class="QLabel" name="lb_mode">
+   <property name="geometry">
+    <rect>
+     <x>10</x>
+     <y>70</y>
+     <width>71</width>
+     <height>31</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>游戏模式</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_refresh">
    <property name="geometry">
     <rect>
      <x>362</x>
-     <y>40</y>
+     <y>70</y>
      <width>31</width>
      <height>28</height>
     </rect>
    </property>
    <property name="text">
-    <string>设置</string>
+    <string>刷</string>
    </property>
   </widget>
-  <widget class="roomPlayerform" name="wdg_left" native="true">
+  <widget class="QScrollArea" name="scrollArea">
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>100</y>
-     <width>90</width>
-     <height>500</height>
+     <y>110</y>
+     <width>401</width>
+     <height>631</height>
     </rect>
    </property>
-  </widget>
-  <widget class="roomPlayerform" name="wdg_right" native="true">
-   <property name="geometry">
-    <rect>
-     <x>310</x>
-     <y>100</y>
-     <width>90</width>
-     <height>501</height>
-    </rect>
+   <property name="widgetResizable">
+    <bool>true</bool>
    </property>
-  </widget>
-  <widget class="QPushButton" name="pb_quitroom">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>40</y>
-     <width>71</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>退出房间</string>
-   </property>
-  </widget>
-  <widget class="QPushButton" name="pb_look">
-   <property name="geometry">
-    <rect>
-     <x>150</x>
-     <y>60</y>
-     <width>93</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>6</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>您处于观战模式</string>
-   </property>
-   <property name="flat">
-    <bool>false</bool>
-   </property>
+   <widget class="QWidget" name="haha">
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>399</width>
+      <height>629</height>
+     </rect>
+    </property>
+    <layout class="QVBoxLayout" name="verticalLayout">
+     <property name="spacing">
+      <number>0</number>
+     </property>
+     <property name="leftMargin">
+      <number>0</number>
+     </property>
+     <property name="topMargin">
+      <number>0</number>
+     </property>
+     <property name="rightMargin">
+      <number>0</number>
+     </property>
+     <property name="bottomMargin">
+      <number>0</number>
+     </property>
+     <item>
+      <widget class="QWidget" name="wdg_roomList" native="true"/>
+     </item>
+     <item>
+      <spacer name="verticalSpacer">
+       <property name="orientation">
+        <enum>Qt::Vertical</enum>
+       </property>
+       <property name="sizeHint" stdset="0">
+        <size>
+         <width>20</width>
+         <height>616</height>
+        </size>
+       </property>
+      </spacer>
+     </item>
+    </layout>
+   </widget>
   </widget>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>roomPlayerform</class>
-   <extends>QWidget</extends>
-   <header>roomplayerform.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

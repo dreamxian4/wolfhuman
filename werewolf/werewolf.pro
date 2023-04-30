@@ -16,6 +16,8 @@ SOURCES += \
     maindialog.cpp \
     registerdialog.cpp \
     roomdialog.cpp \
+    roomlistdialog.cpp \
+    roomlistform.cpp \
     roomplayerform.cpp \
     startdialog.cpp
 
@@ -26,6 +28,8 @@ HEADERS += \
     maindialog.h \
     registerdialog.h \
     roomdialog.h \
+    roomlistdialog.h \
+    roomlistform.h \
     roomplayerform.h \
     startdialog.h
 
@@ -35,6 +39,8 @@ FORMS += \
     maindialog.ui \
     registerdialog.ui \
     roomdialog.ui \
+    roomlistdialog.ui \
+    roomlistform.ui \
     roomplayerform.ui \
     startdialog.ui
 

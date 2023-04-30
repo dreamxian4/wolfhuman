@@ -34,6 +34,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
     m_mainDialog=new mainDialog;
     m_createRoomDialog=new createRoomForm;
     m_roomDialog=new roomDialog;
+    m_roomListDialog=new roomListDialog;
+
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
             this,SLOT(slot_joinGame()));
@@ -57,6 +59,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
 
     connect(m_mainDialog,SIGNAL(SIG_createRoomButton()),
             this,SLOT(slot_createRoomButton()));
+    connect(m_mainDialog,SIGNAL(SIG_roomListButton(int,int,int)),
+            this,SLOT(slot_sendroomListRQ(int,int,int)));
 
 
     connect(m_createRoomDialog,SIGNAL(SIG_CANCEL()),
@@ -67,6 +71,12 @@ ckernel::ckernel(QObject *parent) : QObject(parent)
 
     connect(m_roomDialog,SIGNAL(SIG_quitRoom()),
             this,SLOT(slot_r_quitRoom()));
+
+
+    connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
+            this,SLOT(slot_sendroomListRQ(int,int,int)));
+    connect(m_roomListDialog,SIGNAL(SIG_joinroom(int)),
+            this,SLOT(slot_sendJoinRoomRq(int)));
 
 }
 
@@ -108,6 +118,11 @@ ckernel::~ckernel()
         m_roomDialog->hide();
         delete m_roomDialog;
         m_roomDialog=nullptr;
+    }
+    if(m_roomListDialog){
+        m_roomListDialog->hide();
+        delete m_roomListDialog;
+        m_roomListDialog==nullptr;
     }
 }
 
@@ -163,6 +178,8 @@ void ckernel::slot_r_quitRoom()
     //显示主界面
 }
 
+
+
 void ckernel::slot_sendRegisterRq(QString username, QString passwd, QString name, QString sex, QDate date)
 {
     //封装成数据包，发送给服务端
@@ -197,6 +214,29 @@ void ckernel::slot_sendCreateRoomRQ(int mode, int method, int playerNum, int lev
     rq.mode=mode;
     strcpy(rq.passwd,password.toStdString().c_str());
     rq.playMethod=method;
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+void ckernel::slot_sendroomListRQ(int method,int mode,int roomid)
+{
+    //发送包
+    STRU_ROOMLIST_RQ rq;
+    rq.method=method;
+    rq.mode=mode;
+    rq.roomid=roomid;
+    SendData(0,(char*)&rq,sizeof(rq));
+    //隐藏主窗口
+    m_mainDialog->hide();
+    //显示房间列表（正在获取....）
+    m_roomListDialog->showNormal();
+}
+
+void ckernel::slot_sendJoinRoomRq(int roomid)
+{
+    //发送加入房间包
+    STRU_JOINROOM_RQ rq;
+    rq.m_UserID=m_id;
+    rq.m_RoomID=roomid;
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
@@ -265,8 +305,9 @@ void ckernel::slot_DealUserInfoRs(unsigned int lSendIP, char *buf, int nlen)
     QString sex=QString::fromStdString(rq->m_sex);
     int userid=rq->m_UserID;
     QString username=QString::fromStdString(rq->m_username);
+    int level=rq->m_level;
     //设置主界面的个人信息
-    m_mainDialog->slot_setInfo(userid,icon,name,sex,username);
+    m_mainDialog->slot_setInfo(userid,icon,name,sex,username,level);
 }
 
 void ckernel::slot_DealCreateRoomRs(unsigned int lSendIP, char *buf, int nlen)
@@ -277,8 +318,54 @@ void ckernel::slot_DealCreateRoomRs(unsigned int lSendIP, char *buf, int nlen)
     //给房间界面传递信息
     m_roomDialog->slot_setInfo(rs->m_RoomId,rs->mode,0,rs->lock,
                                QString::fromStdString(rs->passwd),rs->maxcount);
-    m_roomDialog->slot_setPlayer(1,2);
     //把自己放到房间内
+    m_roomDialog->showNormal();
+}
+
+void ckernel::slot_DealRoomListRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //拆包
+    STRU_ROOMLIST_RS* rs=(STRU_ROOMLIST_RS*)buf;
+    //设置列表信息
+    int mode   =rs->mode;
+    int method =rs->method;
+    int roomid =rs->roomid;
+    int count =rs->count;
+    int current=rs->currentCou;
+    bool pass   =rs->pass;
+    QString passwd =QString::fromStdString(rs->passwd);
+    bool state  =rs->state;
+    int level  =rs->level;
+    m_roomListDialog->slot_setlist(mode,method,roomid,count,current,pass,passwd,state,level);
+}
+
+void ckernel::slot_DealRoomMemberRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    qDebug()<<"1";
+    //拆包
+    STRU_ROOM_MEMBER_RQ* rq=(STRU_ROOM_MEMBER_RQ*)buf;
+    //将该成员添加到对应的控件上
+    m_roomDialog->slot_setPlayer(rq->m_seat,rq->m_icon,rq->m_level,QString::fromStdString(rq->m_sex)
+                                 ,QString::fromStdString(rq->m_szUser),rq->m_UserID);
+}
+
+void ckernel::slot_DealJoinRoomRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //拆包
+    //判断结果，如果加入失败，提示信息
+    STRU_JOINROOM_RS* rs=(STRU_JOINROOM_RS*)buf;
+    if(rs->m_lResult==room_no_exist){
+        QMessageBox::about(m_roomListDialog,"提示","房间不存在，加入失败");
+        return;
+    }
+    if(rs->m_lResult==level_unqualified){
+        QMessageBox::about(m_roomListDialog,"提示","不满足等级条件，加入失败");
+        return;
+    }
+    //加入成功，隐藏房间列表界面，显示房间界面
+    m_roomDialog->slot_setInfo(rs->m_RoomID,rs->mode,0,rs->lock,
+                               QString::fromStdString(rs->passwd),rs->maxcount);
+    m_roomListDialog->hide();
     m_roomDialog->showNormal();
 }
 
@@ -325,6 +412,9 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_QUIT_LOGIN_RQ)=&ckernel::slot_DealQuitLoginRs;
     netMap(DEF_PACK_USER_INFO)=&ckernel::slot_DealUserInfoRs;
     netMap(DEF_PACK_CREATEROOM_RS)=&ckernel::slot_DealCreateRoomRs;
+    netMap(DEF_PACK_ROOMLIST_RS)=&ckernel::slot_DealRoomListRs;
+    netMap(DEF_PACK_ROOM_MEMBER)=&ckernel::slot_DealRoomMemberRq;
+    netMap(DEF_PACK_JOINROOM_RS)=&ckernel::slot_DealJoinRoomRq;
 }
 
 void ckernel::slot_quitLogin()
