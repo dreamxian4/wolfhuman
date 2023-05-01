@@ -22,6 +22,7 @@ public:
     void setInfo(int id,int identify,int jing);
     void setImage(int icon);
     void setZiLiao(int level,QString sex,QString name,int userid);
+    int getUserid();
 
 private:
     Ui::roomPlayerform *ui;

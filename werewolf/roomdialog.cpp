@@ -1,5 +1,6 @@
 #include "roomdialog.h"
 #include "ui_roomdialog.h"
+#include<QMessageBox>
 
 
 roomDialog::roomDialog(QWidget *parent) :
@@ -52,6 +53,13 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
     //设置TODO
 }
 
+void roomDialog::slot_destroyRoom(){
+    for(int i=1;i<13;i++){
+        roomPlayerform* player= m_mapIdToPlayer[i];
+        slot_removePlayer(player,i);
+    }
+}
+
 void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QString name, int userid)
 {
     //设置成员信息
@@ -72,13 +80,19 @@ void roomDialog::on_pb_min_clicked()
 
 void roomDialog::on_pb_close_clicked()
 {
-    //发送退出房间信号
-    Q_EMIT SIG_quitRoom();
+    if( QMessageBox::question( this , "退出提示","确定退出游戏?" ) == QMessageBox::Yes )
+    {
+        //发送退出房间信号
+        on_pb_quitroom_clicked();
+         //发送退出登录信号
+        Q_EMIT SIG_QUIT();
+    }
 }
 
 
 void roomDialog::on_pb_quitroom_clicked()
 {
-    on_pb_close_clicked();
+    //发送退出房间信号，如果是房主，就退出到主界面，如果不是，退出到房间列表
+    Q_EMIT SIG_quitRoom(m_mapIdToPlayer[1]->getUserid());
 }
 

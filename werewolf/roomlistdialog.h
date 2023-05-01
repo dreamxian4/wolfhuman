@@ -18,6 +18,8 @@ class roomListDialog : public CustomMoveDialog
 signals:
     void SIG_REFRESH(int,int,int);
     void SIG_joinroom(int);
+    void SIG_QUIT();
+    void SIG_returnMain();
 
 public:
     explicit roomListDialog(QWidget *parent = nullptr);
@@ -38,6 +40,8 @@ private slots:
 
     void on_pb_close_clicked();
     void slot_dealJoinRoom(int roomid);
+
+    void on_pb_return_clicked();
 
 private:
     Ui::roomListDialog *ui;

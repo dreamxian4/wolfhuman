@@ -16,7 +16,8 @@ class roomDialog : public CustomMoveDialog
     Q_OBJECT
 
 signals:
-    void SIG_quitRoom();
+    void SIG_quitRoom(int);//id是房主的userid
+    void SIG_QUIT();
 
 public:
     explicit roomDialog(QWidget *parent = nullptr);
@@ -24,6 +25,7 @@ public:
     void slot_setInfo(int roomid,int mode,int method,bool lock,
                      QString password,int num);
     void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
+    void slot_destroyRoom();
 
 private slots:
     void on_pb_min_clicked();

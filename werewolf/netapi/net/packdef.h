@@ -44,15 +44,15 @@
 #define DEF_PACK_JOINROOM_RS  (_DEF_PACK_BASE + 12)
 //房间成员信息
 #define DEF_PACK_ROOM_MEMBER    (_DEF_PACK_BASE + 13)
-
+//退出房间请求
+#define DEF_PACK_LEAVEROOM_RQ   (_DEF_PACK_BASE + 14)
+//退出房间回复
+#define DEF_PACK_LEAVEROOM_RS   (_DEF_PACK_BASE + 15)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
 ////视频数据
 //#define DEF_PACK_VIDEO_FRAME    (_DEF_PACK_BASE + 10)
-////退出房间请求
-//#define DEF_PACK_LEAVEROOM_RQ   (_DEF_PACK_BASE + 11)
-////退出房间回复
-//#define DEF_PACK_LEAVEROOM_RS   (_DEF_PACK_BASE + 12)
+
 ////音频注册
 //#define DEF_PACK_AUDIO_REGISTER (_DEF_PACK_BASE + 13)
 ////视频注册
@@ -367,38 +367,33 @@ typedef struct STRU_ROOM_MEMBER_RQ
     int     m_seat;
 }STRU_ROOM_MEMBER_RQ;
 
-////房间成员列表
-//typedef struct STRU_ROOM_MEMBER_RQ
-//{
-//    STRU_ROOM_MEMBER_RQ()
-//    {
-//        m_nType= DEF_PACK_ROOM_MEMBER;
-//        m_UserID =0;
-//        memset(m_szUser,0,_MAX_SIZE);
-//    }
-//    PackType m_nType;   //包类型
-//    int m_UserID;
-//    char m_szUser[_MAX_SIZE];
 
-//}STRU_ROOM_MEMBER_RQ;
+//离开房间请求
+typedef struct STRU_LEAVEROOM_RQ
+{
+    STRU_LEAVEROOM_RQ()
+    {
+        m_nType = DEF_PACK_LEAVEROOM_RQ;
+        m_nUserId = 0;
+        m_RoomId = 0;
+    }
+    PackType   m_nType;   //包类型
+    int    m_nUserId; //用户ID
+    int    m_RoomId;
+}STRU_LEAVEROOM_RQ;
 
-
-////离开房间请求
-//typedef struct STRU_LEAVEROOM_RQ
-//{
-//    STRU_LEAVEROOM_RQ()
-//    {
-//        m_nType = DEF_PACK_LEAVEROOM_RQ;
-//        m_nUserId = 0;
-//        m_RoomId = 0;
-//        memset(szUserName,0,_MAX_SIZE);
-//    }
-//    PackType   m_nType;   //包类型
-//    int    m_nUserId; //用户ID
-//    int    m_RoomId;
-//    char   szUserName[_MAX_SIZE];
-//}STRU_LEAVEROOM_RQ;
-
+typedef struct STRU_LEAVEROOM_RS
+{
+    STRU_LEAVEROOM_RS()
+    {
+        m_nType = DEF_PACK_LEAVEROOM_RS;
+        m_roomisExist = true;
+        m_id = 0;
+    }
+    PackType   m_nType;   //包类型
+    bool m_roomisExist;
+    int m_id;
+}STRU_LEAVEROOM_RS;
 
 
 ////注册音频

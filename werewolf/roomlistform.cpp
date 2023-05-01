@@ -41,11 +41,13 @@ void roomListForm::up()
     //TODO根据阶段设置按钮
     QString state=m_state?"已开始":"准备阶段";
     QString num=QString("%1/%2人").arg(m_currentCou).arg(m_count);
+    QString roomid=QString("房间号：%1").arg(m_roomid);
     //TODO设置进入图片
     ui->lb_method->setText(method);
     ui->lb_level->setText(level);
     ui->lb_num->setText(num);
     ui->lb_state->setText(state);
+    ui->lb_roomid->setText(roomid);
 }
 
 void roomListForm::on_pb_joinRoom_clicked()

@@ -38,17 +38,20 @@ public slots:
 
     //页面之间的槽
     //启动界面->加入房间
-    void slot_joinGame();
+    void slot_qie_joinGame();
     //启动界面->注册
-    void slot_register();
+    void slot_qie_register();
     //注册界面->登录界面
-    void slot_returnLogin();
+    void slot_qie_returnLogin();
     //主界面->创建房间界面
-    void slot_createRoomButton();
+    void slot_qie_createRoomButton();
     //创建房间->主界面
-    void slot_CR_cancel();
+    void slot_qie_cancel();
     //房间->主界面
-    void slot_r_quitRoom();
+    void slot_qie_quitRoom(int id);
+    //房间列表->主界面
+    void slot_qie_listMain();
+
 
 
 
@@ -81,7 +84,9 @@ public slots:
     //房间成员信息
     void slot_DealRoomMemberRq( unsigned int lSendIP , char* buf , int nlen );
     //加入房间
-    void slot_DealJoinRoomRq( unsigned int lSendIP , char* buf , int nlen );
+    void slot_DealJoinRoomRs( unsigned int lSendIP , char* buf , int nlen );
+    //离开房间
+    void slot_DealLeaveRoomRs( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -94,6 +99,8 @@ public slots:
     void setNetMap();
     //退出客户端
     void slot_quitLogin();
+    //退出登录
+    void slot_quitClogin();
 
 private:
     startDialog* m_startDialog;//启动窗口
@@ -109,6 +116,8 @@ private:
 
     QString m_serverIp;//服务端ip地址
     int m_id;//用户id
+    int m_roomid;//房间id
+    int m_zuowei;//座位号
 };
 
 #endif // CKERNEL_H

@@ -1,6 +1,7 @@
 #include "roomlistdialog.h"
 #include "ui_roomlistdialog.h"
 #include<qDebug>
+#include<QMessageBox>
 
 roomListDialog::roomListDialog(QWidget *parent) :
     CustomMoveDialog(parent),
@@ -75,11 +76,23 @@ void roomListDialog::on_pb_min_clicked()
 
 void roomListDialog::on_pb_close_clicked()
 {
-    this->slot_close();
+    if( QMessageBox::question( this , "退出提示","确定退出游戏?" ) == QMessageBox::Yes )
+    {
+         //发送退出登录信号
+        Q_EMIT SIG_QUIT();
+    }
+//    this->slot_close();
 }
 
 void roomListDialog::slot_dealJoinRoom(int roomid)
 {
     Q_EMIT SIG_joinroom(roomid);
+}
+
+
+void roomListDialog::on_pb_return_clicked()
+{
+    slot_clearList();
+    Q_EMIT SIG_returnMain();
 }
 

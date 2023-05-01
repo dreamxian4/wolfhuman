@@ -48,3 +48,8 @@ void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid)
     m_userid=userid;
 }
 
+int roomPlayerform::getUserid()
+{
+    return m_userid;
+}
+

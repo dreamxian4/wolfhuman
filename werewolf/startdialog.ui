@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>401</width>
-    <height>741</height>
+    <width>480</width>
+    <height>1000</height>
    </rect>
   </property>
   <property name="font">
@@ -19,11 +19,20 @@
   <property name="windowTitle">
    <string>Dialog</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true"/>
+  </property>
+  <property name="sizeGripEnabled">
+   <bool>false</bool>
+  </property>
+  <property name="modal">
+   <bool>false</bool>
+  </property>
   <widget class="QPushButton" name="pb_joinGame">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>600</y>
+     <x>150</x>
+     <y>810</y>
      <width>181</width>
      <height>51</height>
     </rect>
@@ -34,6 +43,9 @@
      <pointsize>15</pointsize>
     </font>
    </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <property name="text">
     <string>进入游戏</string>
    </property>
@@ -41,8 +53,8 @@
   <widget class="QPushButton" name="pb_notice">
    <property name="geometry">
     <rect>
-     <x>350</x>
-     <y>160</y>
+     <x>420</x>
+     <y>180</y>
      <width>51</width>
      <height>41</height>
     </rect>
@@ -61,10 +73,13 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>30</y>
-     <width>401</width>
-     <height>711</height>
+     <y>40</y>
+     <width>481</width>
+     <height>961</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border-color: rgb(170, 0, 0);</string>
    </property>
    <property name="text">
     <string/>
@@ -81,8 +96,8 @@
     <rect>
      <x>-1</x>
      <y>-1</y>
-     <width>405</width>
-     <height>31</height>
+     <width>481</width>
+     <height>41</height>
     </rect>
    </property>
    <property name="styleSheet">
