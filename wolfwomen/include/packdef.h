@@ -87,14 +87,15 @@
 #define DEF_PACK_JOINROOM_RS  (DEF_PACK_BASE + 12)
 //房间成员信息
 #define DEF_PACK_ROOM_MEMBER    (DEF_PACK_BASE + 13)
+//退出房间请求
+#define DEF_PACK_LEAVEROOM_RQ   (DEF_PACK_BASE + 14)
+//退出房间回复
+#define DEF_PACK_LEAVEROOM_RS   (DEF_PACK_BASE + 15)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
 //#define DEF_PACK_VIDEO_FRAME    (DEF_PACK_BASE + 10)
-////退出房间请求
-//#define DEF_PACK_LEAVEROOM_RQ   (DEF_PACK_BASE + 11)
-////退出房间回复
-//#define DEF_PACK_LEAVEROOM_RS   (DEF_PACK_BASE + 12)
+
 ////音频注册
 //#define DEF_PACK_AUDIO_REGISTER (DEF_PACK_BASE + 13)
 ////视频注册
@@ -147,7 +148,7 @@ typedef struct UserInfo
     {
          m_sockfd = 0;
          m_id = 0;
-//         m_roomid = 0;
+         m_roomid = 0;
          memset(m_userName, 0 , MAX_SIZE);
 //        m_videofd = 0;
 //        m_audiofd = 0;
@@ -156,7 +157,7 @@ typedef struct UserInfo
 //    struct bufferevent*  m_sockfd;
     int m_sockfd;
     int  m_id;
-//    int  m_roomid;//方便下线的时候从房间移出
+    int  m_roomid;//方便下线的时候从房间移出
     char m_userName[MAX_SIZE];
     int  m_seat;
 //    int  m_videofd;
@@ -480,25 +481,33 @@ typedef struct STRU_ROOM_MEMBER_RQ
 
 }STRU_ROOM_MEMBER_RQ;
 
-
-////离开房间请求
-//typedef struct STRU_LEAVEROOM_RQ
-//{
-//    STRU_LEAVEROOM_RQ()
-//    {
-//        m_nType = DEF_PACK_LEAVEROOM_RQ;
-//        m_nUserId = 0;
-//        m_RoomId = 0;
-//        memset(szUserName,0,MAX_SIZE);
-//    }
-//    PackType   m_nType;   //包类型
-//    int    m_nUserId; //用户ID
-//    int    m_RoomId;
-//    char   szUserName[MAX_SIZE];
-//}STRU_LEAVEROOM_RQ;
+//离开房间请求
+typedef struct STRU_LEAVEROOM_RQ
+{
+    STRU_LEAVEROOM_RQ()
+    {
+        m_nType = DEF_PACK_LEAVEROOM_RQ;
+        m_nUserId = 0;
+        m_RoomId = 0;
+    }
+    PackType   m_nType;   //包类型
+    int    m_nUserId; //用户ID
+    int    m_RoomId;
+}STRU_LEAVEROOM_RQ;
 
 
-
+typedef struct STRU_LEAVEROOM_RS
+{
+    STRU_LEAVEROOM_RS()
+    {
+        m_nType = DEF_PACK_LEAVEROOM_RS;
+        m_roomisExist = true;
+        m_id = 0;
+    }
+    PackType   m_nType;   //包类型
+    bool m_roomisExist;
+    int m_id;
+}STRU_LEAVEROOM_RS;
 
 
 

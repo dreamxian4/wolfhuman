@@ -28,6 +28,7 @@ public:
     void CreateRoom( sock_fd clientfd, char*szbuf, int nlen );
     void RoomList( sock_fd clientfd, char*szbuf, int nlen );
     void JoinRoom( sock_fd clientfd, char*szbuf, int nlen );
+    void LeaveRoom( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

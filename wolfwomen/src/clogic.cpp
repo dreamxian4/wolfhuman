@@ -10,6 +10,7 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_CREATEROOM_RQ)    = &CLogic::CreateRoom;
     NetPackMap(DEF_PACK_ROOMLIST_RQ)    = &CLogic::RoomList;
     NetPackMap(DEF_PACK_JOINROOM_RQ)    = &CLogic::JoinRoom;
+    NetPackMap(DEF_PACK_LEAVEROOM_RQ)    = &CLogic::LeaveRoom;
 }
 
 
@@ -67,6 +68,38 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
                 //如果用户已经在线，给上一个客户端发送离线申请
                 STRU_QUITLOGIN_RQ quitRq;
                 SendData(user->m_sockfd,(char*)&quitRq,sizeof(quitRq));
+                //判断是否在房间内
+                if(user->m_roomid>0){
+                    //判断是不是房主
+                    list<int>memlst;
+                    if(!m_mapRoomidToMemberlist.find(user->m_roomid,memlst))return;
+                    STRU_LEAVEROOM_RS lers;
+                    if(user->m_seat==1){
+                        //给房间的每个成员发送房间不存在包
+                        lers.m_roomisExist=false;
+                        //如果是，将房间销毁，从三个映射表中将该房间删除
+                        m_mapRoomidToRoomInfo.erase(user->m_roomid);
+                        m_mapRoomidToMemberlist.erase(user->m_roomid);
+                        m_roomList.remove(user->m_roomid);
+                        memlst.remove(user->m_roomid);
+                    }else{
+                        //如果不是，在房间信息中更新当前人数、空闲座位
+                        RoomInfo* room=nullptr;
+                        if(!m_mapRoomidToRoomInfo.find(user->m_roomid,room))return;
+                        room->m_currentNum--;
+                        room->m_seat[user->m_seat]=0;
+                        //将该用户从房间成员列表中删除，给该房间的其他成员发送退出包
+                        lers.m_roomisExist=true;
+                        lers.m_id=user->m_seat;
+                        memlst.remove(user->m_roomid);
+                        m_mapRoomidToMemberlist.insert(user->m_roomid,memlst);
+                    }
+                    for(auto ite=memlst.begin();ite!=memlst.end();ite++){
+                        UserInfo* muser;
+                        if(!m_mapIdToUserInfo.find(*ite,muser))continue;
+                        SendData(muser->m_sockfd,(char*)&lers,sizeof(lers));
+                    }
+                }
                 delete user;
                 return;
             }
@@ -112,16 +145,6 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
 {
     printf("CreateRoom:%d\n",clientfd);
     STRU_CREATEROOM_RQ* rq=(STRU_CREATEROOM_RQ*)szbuf;
-    //房间信息结构体
-    //房间id（6位数），房主，开始人数，当前人数，房间状态，等级，是否加密，密码
-    //保存映射
-    /*    int  m_roomid   ;
-    int  m_beginNum   ;
-    int  m_currentNum ;
-    bool m_playing    ;    //0准备阶段 1游戏中
-    int  m_minLevel   ;
-    bool m_lock       ;
-    char m_passwd[MAX_SIZE];*/
     //保存映射
     RoomInfo* room=new RoomInfo;
     int id=(rand()%899999)+100000;
@@ -131,7 +154,7 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     if(room->m_lock)strcpy(room->m_passwd,rq->passwd);
     room->m_playing=false;
     room->m_beginNum=rq->maxcount;
-    room->m_currentNum=1;
+    room->m_currentNum++;
     room->m_minLevel=rq->level;
     room->m_mode=rq->mode;
     room->m_playMethod=rq->playMethod;
@@ -140,6 +163,7 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     if(!m_mapIdToUserInfo.find(rq->m_UserID,user))return;
     user->m_seat=1;
     room->m_seat[1]=1;
+    user->m_roomid=id;
     m_mapRoomidToRoomInfo.insert(room->m_roomid,room);
     m_roomList.push_back(room->m_roomid);
     list<int>lst;
@@ -196,6 +220,7 @@ void CLogic::RoomList(sock_fd clientfd, char *szbuf, int nlen)
             rs.roomid=room->m_roomid;
             rs.level=room->m_minLevel;
             rs.state=room->m_playing;
+            rs.currentCou=room->m_currentNum;
             SendData(clientfd,(char*)&rs,sizeof(rs));
         }
         return;
@@ -214,6 +239,7 @@ void CLogic::RoomList(sock_fd clientfd, char *szbuf, int nlen)
             rs.roomid=room->m_roomid;
             rs.level=room->m_minLevel;
             rs.state=room->m_playing;
+            rs.currentCou=room->m_currentNum;
             SendData(clientfd,(char*)&rs,sizeof(rs));
         }
     }
@@ -230,14 +256,21 @@ void CLogic::JoinRoom(sock_fd clientfd, char *szbuf, int nlen)
     if(!m_mapIdToUserInfo.find(rq->m_UserID,user))return;
     //查找房间信息
     RoomInfo* room=nullptr;
-    if(!m_mapRoomidToRoomInfo.find(rq->m_RoomID,room))rs.m_lResult=room_no_exist;
+    if(!m_mapRoomidToRoomInfo.find(rq->m_RoomID,room)){
+        rs.m_lResult=room_no_exist;
+        SendData(clientfd,(char*)&rs,sizeof(rs));
+        return;
+    }
     else{
         //判断等级是否符合
         list<string>levellst;
         char levelsql[1024];
         sprintf(levelsql,"select level from t_user where id=%d",rq->m_UserID);
         m_sql->SelectMysql(levelsql,1,levellst);
-        if(atoi(levellst.front().c_str())<room->m_minLevel)rs.m_lResult=level_unqualified;
+        if(atoi(levellst.front().c_str())<room->m_minLevel){
+            rs.m_lResult=level_unqualified;
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
         else{
             list<int>memerlst;
             m_mapRoomidToMemberlist.find(rq->m_RoomID,memerlst);
@@ -246,6 +279,7 @@ void CLogic::JoinRoom(sock_fd clientfd, char *szbuf, int nlen)
                 if(room->m_seat[i]==0){
                     user->m_seat=i;
                     room->m_seat[i]=1;
+                    user->m_roomid=room->m_roomid;
                     break;
                 }
             }
@@ -312,5 +346,44 @@ void CLogic::JoinRoom(sock_fd clientfd, char *szbuf, int nlen)
                 }
             }
         }
+    }
+}
+
+void CLogic::LeaveRoom(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("LeaveRoom:%d\n",clientfd);
+    //判断是不是房主
+    STRU_LEAVEROOM_RQ* rq=(STRU_LEAVEROOM_RQ*)szbuf;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->m_nUserId,user))return;
+    user->m_roomid=0;
+    STRU_LEAVEROOM_RS rs;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rq->m_RoomId,lst))return;
+    if(user->m_seat==1){
+        //给房间的每个成员发送房间不存在包
+        rs.m_roomisExist=false;
+        //如果是，将房间销毁，从三个映射表中将该房间删除
+        m_mapRoomidToRoomInfo.erase(rq->m_RoomId);
+        m_mapRoomidToMemberlist.erase(rq->m_RoomId);
+        m_roomList.remove(rq->m_RoomId);
+        lst.remove(rq->m_nUserId);
+    }else{
+        //如果不是，在房间信息中更新当前人数、空闲座位
+        RoomInfo* room=nullptr;
+        if(!m_mapRoomidToRoomInfo.find(rq->m_RoomId,room))return;
+        room->m_currentNum--;
+        room->m_seat[user->m_seat]=0;
+        //将该用户从房间成员列表中删除，给该房间的其他成员发送退出包
+        rs.m_roomisExist=true;
+        rs.m_id=user->m_seat;
+        lst.remove(rq->m_nUserId);
+        m_mapRoomidToMemberlist.insert(rq->m_RoomId,lst);
+    }
+
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        UserInfo* muser;
+        if(!m_mapIdToUserInfo.find(*ite,muser))continue;
+        SendData(muser->m_sockfd,(char*)&rs,sizeof(rs));
     }
 }
