@@ -46,8 +46,12 @@
 #define DEF_PACK_ROOM_MEMBER    (_DEF_PACK_BASE + 13)
 //退出房间请求
 #define DEF_PACK_LEAVEROOM_RQ   (_DEF_PACK_BASE + 14)
-//退出房间回复
 #define DEF_PACK_LEAVEROOM_RS   (_DEF_PACK_BASE + 15)
+//开始游戏
+#define DEF_PACK_BEGINGAMETEST_RQ   (_DEF_PACK_BASE + 16)
+#define DEF_PACK_BEGINGAMETEST_RS   (_DEF_PACK_BASE + 17)
+#define DEF_PACK_BEGINGAME_RQ   (_DEF_PACK_BASE + 18)
+#define DEF_PACK_BEGINGAME_RS   (_DEF_PACK_BASE + 19)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
 ////视频数据
@@ -395,6 +399,28 @@ typedef struct STRU_LEAVEROOM_RS
     int m_id;
 }STRU_LEAVEROOM_RS;
 
+
+//准备开始游戏
+typedef struct STRU_BEGINGAMETEST_RQ
+{
+    STRU_BEGINGAMETEST_RQ()
+    {
+        m_nType = DEF_PACK_BEGINGAMETEST_RQ;
+        m_RoomId = 0;
+    }
+    PackType   m_nType;   //包类型
+    int    m_RoomId;
+}STRU_BEGINGAMETEST_RQ;
+
+
+typedef struct STRU_BEGINGAMETEST_RS
+{
+    STRU_BEGINGAMETEST_RS()
+    {
+        m_nType = DEF_PACK_BEGINGAMETEST_RS;
+    }
+    PackType   m_nType;   //包类型
+}STRU_BEGINGAMETEST_RS;
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER

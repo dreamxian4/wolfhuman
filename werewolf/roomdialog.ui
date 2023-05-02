@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>401</width>
-    <height>741</height>
+    <width>480</width>
+    <height>1000</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -18,8 +18,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>400</width>
-     <height>31</height>
+     <width>481</width>
+     <height>41</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -153,8 +153,8 @@
   <widget class="QPushButton" name="pb_day">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>30</y>
+     <x>190</x>
+     <y>50</y>
      <width>93</width>
      <height>41</height>
     </rect>
@@ -166,8 +166,8 @@
   <widget class="QLabel" name="lb_num">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>40</y>
+     <x>120</x>
+     <y>60</y>
      <width>61</width>
      <height>16</height>
     </rect>
@@ -179,8 +179,8 @@
   <widget class="QLabel" name="lb_roomNum">
    <property name="geometry">
     <rect>
-     <x>80</x>
-     <y>60</y>
+     <x>120</x>
+     <y>80</y>
      <width>51</width>
      <height>16</height>
     </rect>
@@ -192,8 +192,8 @@
   <widget class="QLabel" name="lb_type">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>40</y>
+     <x>290</x>
+     <y>60</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -205,8 +205,8 @@
   <widget class="QLabel" name="lb_roomType">
    <property name="geometry">
     <rect>
-     <x>250</x>
-     <y>60</y>
+     <x>290</x>
+     <y>80</y>
      <width>81</width>
      <height>16</height>
     </rect>
@@ -218,8 +218,8 @@
   <widget class="QPushButton" name="pb_set">
    <property name="geometry">
     <rect>
-     <x>362</x>
-     <y>40</y>
+     <x>440</x>
+     <y>60</y>
      <width>31</width>
      <height>28</height>
     </rect>
@@ -232,19 +232,19 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>100</y>
-     <width>90</width>
-     <height>500</height>
+     <y>120</y>
+     <width>101</width>
+     <height>711</height>
     </rect>
    </property>
   </widget>
   <widget class="roomPlayerform" name="wdg_right" native="true">
    <property name="geometry">
     <rect>
-     <x>310</x>
-     <y>100</y>
-     <width>90</width>
-     <height>501</height>
+     <x>380</x>
+     <y>120</y>
+     <width>101</width>
+     <height>711</height>
     </rect>
    </property>
   </widget>
@@ -252,7 +252,7 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>40</y>
+     <y>60</y>
      <width>71</width>
      <height>28</height>
     </rect>
@@ -264,8 +264,8 @@
   <widget class="QPushButton" name="pb_look">
    <property name="geometry">
     <rect>
-     <x>150</x>
-     <y>60</y>
+     <x>190</x>
+     <y>80</y>
      <width>93</width>
      <height>20</height>
     </rect>
@@ -280,6 +280,104 @@
    </property>
    <property name="flat">
     <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QWidget" name="widget" native="true">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>940</y>
+     <width>481</width>
+     <height>61</height>
+    </rect>
+   </property>
+   <widget class="QPushButton" name="pb_0_end">
+    <property name="geometry">
+     <rect>
+      <x>380</x>
+      <y>10</y>
+      <width>81</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>结</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb_0_begin">
+    <property name="geometry">
+     <rect>
+      <x>150</x>
+      <y>10</y>
+      <width>161</width>
+      <height>41</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>开始游戏</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="pb_0_keyword">
+    <property name="geometry">
+     <rect>
+      <x>10</x>
+      <y>20</y>
+      <width>31</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>字</string>
+    </property>
+   </widget>
+   <widget class="QPushButton" name="p_0_img">
+    <property name="geometry">
+     <rect>
+      <x>50</x>
+      <y>20</y>
+      <width>31</width>
+      <height>28</height>
+     </rect>
+    </property>
+    <property name="text">
+     <string>表</string>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QLabel" name="lb_tip">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>910</y>
+     <width>481</width>
+     <height>20</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(129, 129, 129);
+color: rgb(255, 255, 255);</string>
+   </property>
+   <property name="text">
+    <string>只有房主可以开始游戏</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lb_ready">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>220</y>
+     <width>261</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
    </property>
   </widget>
  </widget>

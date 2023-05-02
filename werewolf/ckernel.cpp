@@ -77,6 +77,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_qie_quitRoom(int)));
     connect(m_roomDialog,SIGNAL(SIG_QUIT()),
             this,SLOT(slot_quitLogin()));
+    connect(m_roomDialog,SIGNAL(SIG_beginGame()),
+            this,SLOT(slot_sendBeginGameTestRq()));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -273,6 +275,14 @@ void ckernel::slot_sendJoinRoomRq(int roomid)
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
+void ckernel::slot_sendBeginGameTestRq()
+{
+    //发送准备开始游戏包
+    STRU_BEGINGAMETEST_RQ rq;
+    rq.m_RoomId=m_roomid;
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
 {
     int type=*(int*)buf;
@@ -356,7 +366,7 @@ void ckernel::slot_DealCreateRoomRs(unsigned int lSendIP, char *buf, int nlen)
     m_roomid=rs->m_RoomId;
     //给房间界面传递信息
     m_roomDialog->slot_setInfo(rs->m_RoomId,rs->mode,0,rs->lock,
-                               QString::fromStdString(rs->passwd),rs->maxcount);
+                               QString::fromStdString(rs->passwd),rs->maxcount,m_id);
     m_createRoomDialog->hide();
     m_roomDialog->showNormal();
 }
@@ -404,7 +414,7 @@ void ckernel::slot_DealJoinRoomRs(unsigned int lSendIP, char *buf, int nlen)
     //加入成功，隐藏房间列表界面，显示房间界面
     m_roomid=rs->m_RoomID;
     m_roomDialog->slot_setInfo(rs->m_RoomID,rs->mode,0,rs->lock,
-                               QString::fromStdString(rs->passwd),rs->maxcount);
+                               QString::fromStdString(rs->passwd),rs->maxcount,m_id);
     m_roomListDialog->hide();
     m_roomDialog->showNormal();
 }
@@ -424,6 +434,12 @@ void ckernel::slot_DealLeaveRoomRs(unsigned int lSendIP, char *buf, int nlen)
         m_roomDialog->slot_destroyRoom();
         m_roomid=0;
     }
+}
+
+void ckernel::slot_DealBeginGameTestRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //准备开始，5s倒计时
+    m_roomDialog->slot_ready();
 }
 
 void ckernel::initConfig()
@@ -473,6 +489,7 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_ROOM_MEMBER)=&ckernel::slot_DealRoomMemberRq;
     netMap(DEF_PACK_JOINROOM_RS)=&ckernel::slot_DealJoinRoomRs;
     netMap(DEF_PACK_LEAVEROOM_RS)=&ckernel::slot_DealLeaveRoomRs;
+    netMap(DEF_PACK_BEGINGAMETEST_RS)=&ckernel::slot_DealBeginGameTestRs;
 }
 
 void ckernel::slot_quitLogin()

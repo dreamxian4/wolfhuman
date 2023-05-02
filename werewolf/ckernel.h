@@ -64,6 +64,7 @@ public slots:
                                int level,bool pass,QString password);
     void slot_sendroomListRQ(int method,int mode,int roomid);
     void slot_sendJoinRoomRq(int roomid);
+    void slot_sendBeginGameTestRq();
 
 
     //网络接收处理槽
@@ -87,6 +88,9 @@ public slots:
     void slot_DealJoinRoomRs( unsigned int lSendIP , char* buf , int nlen );
     //离开房间
     void slot_DealLeaveRoomRs( unsigned int lSendIP , char* buf , int nlen );
+    //准备开始
+    void slot_DealBeginGameTestRs( unsigned int lSendIP , char* buf , int nlen );
+
 
 
 
