@@ -51,7 +51,8 @@ include(./MD5/md5.pri)
 INCLUDE += \
     ./netapi \
     ./uiapi \
-    ./MD5
+    ./MD5 \
+    ./identify
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

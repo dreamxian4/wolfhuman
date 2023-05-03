@@ -14,6 +14,11 @@
 #define _GAME_BASE (0)
 
 
+//身份牌
+//预言家 女巫 平民 狼人 猎人 守卫
+//typedef enum {YUYANJIA,NVWU,PINGMIN,LANGREN,LIEREN,SHOUWEI} BASEIDENTIFY;
+
+
 
 
 //自定义协议   先写协议头 再写协议结构
@@ -52,6 +57,10 @@
 #define DEF_PACK_BEGINGAMETEST_RS   (_DEF_PACK_BASE + 17)
 #define DEF_PACK_BEGINGAME_RQ   (_DEF_PACK_BASE + 18)
 #define DEF_PACK_BEGINGAME_RS   (_DEF_PACK_BASE + 19)
+//天黑
+#define DEF_PACK_SKYBLACK_RQ     (_DEF_PACK_BASE + 20)
+#define DEF_PACK_SKYBLACK_RS     (_DEF_PACK_BASE + 21)
+
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
 ////视频数据
@@ -421,6 +430,55 @@ typedef struct STRU_BEGINGAMETEST_RS
     }
     PackType   m_nType;   //包类型
 }STRU_BEGINGAMETEST_RS;
+
+
+//正式开始游戏
+typedef struct STRU_BEGINGAME_RQ
+{
+    STRU_BEGINGAME_RQ()
+    {
+        m_nType = DEF_PACK_BEGINGAME_RQ;
+        m_RoomId = 0;
+    }
+    PackType   m_nType;   //包类型
+    int    m_RoomId;
+}STRU_BEGINGAME_RQ;
+
+
+typedef struct STRU_BEGINGAME_RS
+{
+    STRU_BEGINGAME_RS()
+    {
+        m_nType = DEF_PACK_BEGINGAME_RS;
+        m_iden=0;
+    }
+    PackType   m_nType;   //包类型
+    int m_iden;
+}STRU_BEGINGAME_RS;
+
+
+//天黑
+typedef struct STRU_SKYBLACK_RQ
+{
+    STRU_SKYBLACK_RQ()
+    {
+        m_nType = DEF_PACK_SKYBLACK_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_SKYBLACK_RQ;
+
+
+typedef struct STRU_SKYBLACK_RS
+{
+    STRU_SKYBLACK_RS()
+    {
+        m_nType = DEF_PACK_SKYBLACK_RS;
+        m_iden=0;
+    }
+    PackType   m_nType;   //包类型
+    int m_iden;
+}STRU_SKYBLACK_RS;
+
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER

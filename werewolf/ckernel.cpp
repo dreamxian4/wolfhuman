@@ -77,8 +77,10 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_qie_quitRoom(int)));
     connect(m_roomDialog,SIGNAL(SIG_QUIT()),
             this,SLOT(slot_quitLogin()));
-    connect(m_roomDialog,SIGNAL(SIG_beginGame()),
+    connect(m_roomDialog,SIGNAL(SIG_ReadybeginGame()),
             this,SLOT(slot_sendBeginGameTestRq()));
+    connect(m_roomDialog,SIGNAL(SIG_beginGame()),
+            this,SLOT(slot_sendBeginGameRq()));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -283,6 +285,14 @@ void ckernel::slot_sendBeginGameTestRq()
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
+void ckernel::slot_sendBeginGameRq()
+{
+    //发送开始游戏包
+    STRU_BEGINGAME_RQ rq;
+    rq.m_RoomId=m_roomid;
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
 {
     int type=*(int*)buf;
@@ -442,6 +452,18 @@ void ckernel::slot_DealBeginGameTestRs(unsigned int lSendIP, char *buf, int nlen
     m_roomDialog->slot_ready();
 }
 
+void ckernel::slot_DealBeginGameRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_BEGINGAME_RS* rs=(STRU_BEGINGAME_RS*)buf;
+    //显示身份信息
+    m_roomDialog->slot_setIden(rs->m_iden);
+}
+
+void ckernel::slot_DealSkyBlackRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    m_roomDialog->slot_skyBlack();
+}
+
 void ckernel::initConfig()
 {
     m_serverIp=_DEF_SERVER_IP;
@@ -490,6 +512,8 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_JOINROOM_RS)=&ckernel::slot_DealJoinRoomRs;
     netMap(DEF_PACK_LEAVEROOM_RS)=&ckernel::slot_DealLeaveRoomRs;
     netMap(DEF_PACK_BEGINGAMETEST_RS)=&ckernel::slot_DealBeginGameTestRs;
+    netMap(DEF_PACK_BEGINGAME_RS)=&ckernel::slot_DealBeginGameRs;
+    netMap(DEF_PACK_SKYBLACK_RQ)=&ckernel::slot_DealSkyBlackRq;
 }
 
 void ckernel::slot_quitLogin()

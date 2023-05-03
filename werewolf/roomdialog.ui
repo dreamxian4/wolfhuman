@@ -159,6 +159,9 @@
      <height>41</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true"/>
+   </property>
    <property name="text">
     <string>第几天</string>
    </property>
@@ -358,7 +361,7 @@
 color: rgb(255, 255, 255);</string>
    </property>
    <property name="text">
-    <string>只有房主可以开始游戏</string>
+    <string>this</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -374,7 +377,7 @@ color: rgb(255, 255, 255);</string>
     </rect>
    </property>
    <property name="text">
-    <string/>
+    <string>this</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>

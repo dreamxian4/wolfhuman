@@ -8,6 +8,8 @@
 #include"uiapi/customwidget.h"
 #include<QTimer>
 #include<QTimerEvent>
+#include<vector>
+
 
 namespace Ui {
 class roomDialog;
@@ -20,6 +22,7 @@ class roomDialog : public CustomMoveDialog
 signals:
     void SIG_quitRoom(int);//id是房主的userid
     void SIG_QUIT();
+    void SIG_ReadybeginGame();
     void SIG_beginGame();
 
 public:
@@ -30,6 +33,8 @@ public:
     void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
     void slot_destroyRoom();
     void slot_ready();
+    void slot_setIden(int iden);
+    void slot_skyBlack();
 
 private slots:
     void on_pb_min_clicked();
@@ -50,6 +55,7 @@ private:
     QVBoxLayout* m_playerLayoutRight;
     QVBoxLayout* m_playerLayoutLeft;
     std::map<int,roomPlayerform*>m_mapIdToPlayer;
+    //房间信息
     int m_seat;
     int m_userid;
     int m_mode        ;//模式
@@ -60,6 +66,14 @@ private:
     int m_currentCou  ;
     bool m_pass        ;
     QString  m_passwd;
+    bool m_playing;
+    int m_day;
+
+    //身份信息
+    std::vector<QString>BASEIDENTIFY;
+
+    //本人信息
+    int m_user_iden;
 
     //定时器
     int m_timer_tips;

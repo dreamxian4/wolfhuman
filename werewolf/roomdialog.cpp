@@ -4,12 +4,18 @@
 #include<qDebug>
 
 
+
 roomDialog::roomDialog(QWidget *parent) :
     CustomMoveDialog(parent),
     ui(new Ui::roomDialog),m_seat(0),m_userid(0),
     m_mode(0),m_method(0),m_roomid(0),m_count(0),
-    m_currentCou(0),m_pass(false),num(0),state(false)
+    m_currentCou(0),m_pass(false),num(0),state(false),
+    m_playing(false),m_day(0)
 {
+
+    //身份信息初始化
+    BASEIDENTIFY={"预言家","女巫","平民","狼人","猎人","守卫"};
+
     m_passwd="";
     ui->setupUi(this);
     m_playerLayoutLeft=new QVBoxLayout;
@@ -66,6 +72,12 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
 
 void roomDialog::slot_destroyRoom(){
     m_currentCou=0;
+    m_playing=false;
+    if(state){
+        state=false;
+        killTimer(m_timer_ready);
+        ui->lb_ready->setText("");
+    }
     for(int i=1;i<13;i++){
         roomPlayerform* player= m_mapIdToPlayer[i];
         slot_removePlayer(player,i);
@@ -80,6 +92,23 @@ void roomDialog::slot_ready()
     state=true;
     ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
 }
+
+void roomDialog::slot_setIden(int iden)
+{
+    m_user_iden=iden;
+    m_playing=true;
+    ui->lb_ready->setText(QString("游戏开始~~你的身份是：%1").arg(BASEIDENTIFY[iden]));
+}
+
+void roomDialog::slot_skyBlack()
+{
+    m_day++;
+    ui->pb_day->setText(QString("第%1天").arg(m_day));
+    ui->pb_day->setStyleSheet("background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);");
+}
+
+
+
 
 void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QString name, int userid)
 {
@@ -124,6 +153,7 @@ void roomDialog::on_pb_close_clicked()
 void roomDialog::on_pb_quitroom_clicked()
 {
     if(state&&m_seat==1)return;
+    if(m_playing&&QMessageBox::question( this , "退出提示","游戏已开始，是否确定退出?" ) != QMessageBox::Yes)return;
     //发送退出房间信号，如果是房主，就退出到主界面，如果不是，退出到房间列表
     Q_EMIT SIG_quitRoom(m_mapIdToPlayer[1]->getUserid());
 }
@@ -137,7 +167,7 @@ void roomDialog::on_pb_0_begin_clicked()
         //是房主，判断房间内有没有满员
         if(1||m_currentCou==m_count){//测试
             //满员了，发送开始游戏包
-            Q_EMIT SIG_beginGame();
+            Q_EMIT SIG_ReadybeginGame();
         }else{
             //没满员，提示人数不足，不能开始游戏
             ui->lb_tip->setText("人数不足，不能开始游戏");
@@ -171,6 +201,7 @@ void roomDialog::timerEvent(QTimerEvent *e)
             //倒计时结束，判断自己是不是房主，如果是房主，给服务端发送正式开始包
             state=false;
             ui->lb_ready->setText("");
+            if(m_seat==1)Q_EMIT SIG_beginGame();
         }
     }
 }
