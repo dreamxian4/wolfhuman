@@ -30,6 +30,9 @@ public:
     void JoinRoom( sock_fd clientfd, char*szbuf, int nlen );
     void LeaveRoom( sock_fd clientfd, char*szbuf, int nlen );
     void BeginGameTest( sock_fd clientfd, char*szbuf, int nlen );
+    void BeginGame( sock_fd clientfd, char*szbuf, int nlen );
+    void Skyblack( sock_fd clientfd, char*szbuf, int nlen );
+    void SkyblackEnd( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

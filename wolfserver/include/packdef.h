@@ -33,7 +33,7 @@
 #define _DEF_DB_USER    "root"
 #define _DEF_DB_PWD     "123456"
 /*
-    room表属性：房间id（6位数），房主，开始人数，当前人数，房间状态，等级，是否加密，密码
+
 
 */
 /*--------------------------------------*/
@@ -45,6 +45,9 @@
 #define _GAME_MODE_AUDIO (1)
 //基础玩法
 #define _GAME_BASE (0)
+
+//基础玩法身份牌
+//预言家 女巫 平民 狼人 猎人 守卫
 /*--------------------------------------*/
 
 #define TRUE true
@@ -96,6 +99,18 @@
 #define DEF_PACK_BEGINGAMETEST_RS   (DEF_PACK_BASE + 17)
 #define DEF_PACK_BEGINGAME_RQ   (DEF_PACK_BASE + 18)
 #define DEF_PACK_BEGINGAME_RS   (DEF_PACK_BASE + 19)
+//天黑
+#define DEF_PACK_SKYBLACK_RQ   (DEF_PACK_BASE + 20)
+#define DEF_PACK_SKYBLACK_RS   (DEF_PACK_BASE + 21)
+//预言信息
+#define DEF_PACK_YYJ_SKYBLK     (DEF_PACK_BASE + 22)
+//夜晚杀人信息
+#define DEF_PACK_LR_SKYBLK     (DEF_PACK_BASE + 23)
+//夜晚结束
+#define DEF_PACK_SKYBLACK_END       (DEF_PACK_BASE + 24)
+//发给女巫的杀人信息
+#define DEF_PACK_LRTONW_SKYBLK       (DEF_PACK_BASE + 25)
+
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
@@ -185,6 +200,13 @@ typedef struct RoomInfo
         m_playMethod=0;
         memset(m_passwd,0,MAX_SIZE);
         memset(m_seat,0,13*sizeof(bool));
+        memset(m_identify,0,13*sizeof(int));
+
+        i_godNum    =0;
+        i_farmerNum =0;
+        i_wolfNum   =0;
+        memset(i_die,0,2*sizeof(int));
+        memset(i_kill,0,4*sizeof(int));
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -197,6 +219,15 @@ typedef struct RoomInfo
     int  m_mode;//0语音 1视频
     int  m_playMethod;//0基础玩法
     bool m_seat[13];
+    int  m_identify[13];
+
+    //游戏开始后的信息
+    int i_godNum        ;
+    int i_farmerNum     ;
+    int i_wolfNum       ;
+    int i_die[2]        ;
+    int i_kill[4]       ;
+
 }RoomInfo;
 
 //登录
@@ -535,6 +566,121 @@ typedef struct STRU_BEGINGAMETEST_RS
     }
     PackType   m_nType;   //包类型
 }STRU_BEGINGAMETEST_RS;
+
+
+//正式开始游戏
+typedef struct STRU_BEGINGAME_RQ
+{
+    STRU_BEGINGAME_RQ()
+    {
+        m_nType = DEF_PACK_BEGINGAME_RQ;
+        m_RoomId = 0;
+    }
+    PackType   m_nType;   //包类型
+    int    m_RoomId;
+}STRU_BEGINGAME_RQ;
+
+
+typedef struct STRU_BEGINGAME_RS
+{
+    STRU_BEGINGAME_RS()
+    {
+        m_nType = DEF_PACK_BEGINGAME_RS;
+        m_iden=0;
+    }
+    PackType   m_nType;   //包类型
+    int m_iden;
+}STRU_BEGINGAME_RS;
+
+//天黑
+typedef struct STRU_SKYBLACK_RQ
+{
+    STRU_SKYBLACK_RQ()
+    {
+        m_nType = DEF_PACK_SKYBLACK_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_SKYBLACK_RQ;
+
+
+typedef struct STRU_SKYBLACK_RS
+{
+    STRU_SKYBLACK_RS()
+    {
+        m_nType = DEF_PACK_SKYBLACK_RS;
+        m_iden=0;
+        m_roomid=0;
+        m_iden     =0;
+        m_seat     =0;
+        m_operate  =0;
+        m_toseat   =0;
+    }
+    PackType   m_nType;   //包类型
+    int m_roomid;//房间号
+    int m_iden      ;//我的身份
+    int m_seat      ;//我的座位号
+    int m_operate   ;//我进行的操作 1预言家 2狼人  3女巫毒 4守卫 0无操作
+    int m_toseat    ;//我对谁操作
+}STRU_SKYBLACK_RS;
+
+
+
+//预言家预言信息
+typedef struct STRU_YYJ_SKYBLK
+{
+    STRU_YYJ_SKYBLK()
+    {
+        m_nType = DEF_PACK_YYJ_SKYBLK;
+        id=0;
+        iden=0;
+    }
+    PackType   m_nType;   //包类型
+    int id;
+    int iden;
+}STRU_YYJ_SKYBLK;
+
+//狼人杀人信息
+typedef struct STRU_LR_SKYBLK
+{
+    STRU_LR_SKYBLK()
+    {
+        m_nType = DEF_PACK_LR_SKYBLK;
+        id=0;
+        toid=0;
+    }
+    PackType   m_nType;   //包类型
+    int id;
+    int toid;
+}STRU_LR_SKYBLK;
+
+
+//夜晚结束
+typedef struct STRU_SKYBLK_END
+{
+    STRU_SKYBLK_END()
+    {
+        m_nType = DEF_PACK_SKYBLACK_END;
+        state=0;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int state;//0:前15s  1:夜晚结束
+    int roomid;
+}STRU_SKYBLK_END;
+
+
+
+//狼人的确切杀人信息
+typedef struct STRU_LRTONW_SKYBLK
+{
+    STRU_LRTONW_SKYBLK()
+    {
+        m_nType = DEF_PACK_LRTONW_SKYBLK;
+        kill=0;
+    }
+    PackType   m_nType;   //包类型
+    int kill;
+}STRU_LRTONW_SKYBLK;
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER

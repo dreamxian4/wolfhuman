@@ -1,6 +1,7 @@
 #include "clogic.h"
 #include<string>
 #include<random>
+#include<vector>
 
 void CLogic::setNetPackMap()
 {
@@ -12,6 +13,9 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_JOINROOM_RQ)    = &CLogic::JoinRoom;
     NetPackMap(DEF_PACK_LEAVEROOM_RQ)    = &CLogic::LeaveRoom;
     NetPackMap(DEF_PACK_BEGINGAMETEST_RQ)    = &CLogic::BeginGameTest;
+    NetPackMap(DEF_PACK_BEGINGAME_RQ)    = &CLogic::BeginGame;
+    NetPackMap(DEF_PACK_SKYBLACK_RS)    = &CLogic::Skyblack;
+    NetPackMap(DEF_PACK_SKYBLACK_END)    = &CLogic::SkyblackEnd;
 }
 
 
@@ -405,5 +409,126 @@ void CLogic::BeginGameTest(sock_fd clientfd, char *szbuf, int nlen)
         UserInfo* user=nullptr;
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
         SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+    }
+}
+
+void CLogic::BeginGame(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("BeginGame:%d\n",clientfd);
+    //拆包
+    STRU_BEGINGAME_RQ* rq=(STRU_BEGINGAME_RQ*)szbuf;
+    //找到房间信息
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rq->m_RoomId,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rq->m_RoomId,lst))return;
+    STRU_BEGINGAME_RS rs;
+    STRU_SKYBLACK_RQ skyrq;
+
+    //为每个玩家随机生成身份牌
+    //预言家,女巫,平民,狼人,猎人,守卫
+    vector<int>pai(6);
+    switch(room->m_beginNum){
+    case 6:
+        pai={1,1,2,2,0,0};
+        break;
+    case 7:
+        pai={1,1,3,2,0,0};
+        break;
+    case 8:
+        pai={1,1,2,3,1,0};
+        break;
+    case 9:
+        pai={1,1,3,3,1,0};
+        break;
+    case 10:
+        pai={1,1,4,3,1,0};
+        break;
+    case 11:
+        pai={1,1,3,4,1,1};
+        break;
+    case 12:
+        pai={1,1,4,4,1,1};
+        break;
+    }
+    room->i_godNum=pai[0]+pai[1]+pai[4]+pai[5];
+    room->i_wolfNum=pai[3];
+    room->i_farmerNum=pai[2];
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        UserInfo* user=nullptr;
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        int iden=rand()%6;
+        while(pai[iden]==0)iden=rand()%6;
+        //将身份信息发送给玩家
+        rs.m_iden=iden;
+        room->m_identify[user->m_seat]=iden;
+        pai[iden]--;
+        SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+        //发送天黑包
+        SendData(user->m_sockfd,(char*)&skyrq,sizeof(skyrq));
+    }
+}
+
+void CLogic::Skyblack(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("Skyblack:%d\n",clientfd);
+    //拆包
+    STRU_SKYBLACK_RS* rs=(STRU_SKYBLACK_RS*)szbuf;
+    //通过房间号找到房间
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->m_roomid,room))return;
+    STRU_YYJ_SKYBLK yyj;
+    list<int>lst;
+    switch(rs->m_operate){//1预言家 2狼人  3女巫毒 4守卫 0无操作
+    case 0:
+        break;
+    case 1://处理预言家
+        yyj.iden=room->m_identify[rs->m_toseat];
+        yyj.id=rs->m_toseat;
+        SendData(clientfd,(char*)&yyj,sizeof(yyj));
+        break;
+    case 2://处理狼人
+        if(!m_mapRoomidToMemberlist.find(rs->m_roomid,lst))return;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            UserInfo* user=nullptr;
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            STRU_LR_SKYBLK lr;
+            lr.id=rs->m_seat;
+            lr.toid=rs->m_toseat;
+            SendData(user->m_sockfd,(char*)&lr,sizeof(lr));
+            for(int i=0;i<4;i++)if(room->i_kill[i]==0){
+                room->i_kill[i]=rs->m_toseat;
+                break;
+            }
+        }
+        break;
+    case 3://处理女巫
+        break;
+    case 4://处理守卫
+        break;
+    }
+}
+
+void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    //拆包
+    STRU_SKYBLK_END* end=(STRU_SKYBLK_END*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
+    //判断是半夜还是整夜
+    if(end->state==0){
+        //如果是半夜，将狼人的杀人信息发送给女巫
+        STRU_LRTONW_SKYBLK die;
+        int kill=rand()%room->i_wolfNum;
+        die.kill=room->i_kill[kill];
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            UserInfo* user=nullptr;
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&die,sizeof(die));
+        }
+    }else{
+        //如果是整夜。发送天亮包和夜晚信息包TODO
     }
 }
