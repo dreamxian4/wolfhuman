@@ -81,6 +81,10 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendBeginGameTestRq()));
     connect(m_roomDialog,SIGNAL(SIG_beginGame()),
             this,SLOT(slot_sendBeginGameRq()));
+    connect(m_roomDialog,SIGNAL(SIG_skyBlkRs(int,int,int,int)),
+            this,SLOT(slot_sendSkyBlkRs(int,int,int,int)));
+    connect(m_roomDialog,SIGNAL(SIG_skyBlk15()),
+            this,SLOT(slot_sendskyBlk15()));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -293,6 +297,27 @@ void ckernel::slot_sendBeginGameRq()
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
+void ckernel::slot_sendSkyBlkRs(int iden, int seat, int operate, int toseat)
+{
+    //发送天黑操作包
+    STRU_SKYBLACK_RS rs;
+    rs.m_iden=iden;
+    rs.m_operate=operate;
+    rs.m_seat=seat;
+    rs.m_toseat=toseat;
+    rs.m_roomid=m_roomid;
+    SendData(0,(char*)&rs,sizeof(rs));
+}
+
+void ckernel::slot_sendskyBlk15()
+{
+    //发送夜晚前十五秒结束
+    STRU_SKYBLK_END end;
+    end.state=0;
+    end.roomid=m_roomid;
+    SendData(0,(char)&end,sizeof(end));
+}
+
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
 {
     int type=*(int*)buf;
@@ -464,6 +489,24 @@ void ckernel::slot_DealSkyBlackRq(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_skyBlack();
 }
 
+void ckernel::slot_DealYYJSkyBlk(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_YYJ_SKYBLK* yyj=(STRU_YYJ_SKYBLK*)buf;
+    m_roomDialog->slot_yyj(yyj->id,yyj->iden);
+}
+
+void ckernel::slot_DealLRSkyBlk(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_LR_SKYBLK* lr=(STRU_LR_SKYBLK*)buf;
+    m_roomDialog->slot_lr(lr->id,lr->toid);
+}
+
+void ckernel::slot_DealLRKillSkyBlk(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_LRTONW_SKYBLK* kl=(STRU_LRTONW_SKYBLK*)buf;
+    m_roomDialog->slot_nw(kl->kill);
+}
+
 void ckernel::initConfig()
 {
     m_serverIp=_DEF_SERVER_IP;
@@ -514,6 +557,9 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_BEGINGAMETEST_RS)=&ckernel::slot_DealBeginGameTestRs;
     netMap(DEF_PACK_BEGINGAME_RS)=&ckernel::slot_DealBeginGameRs;
     netMap(DEF_PACK_SKYBLACK_RQ)=&ckernel::slot_DealSkyBlackRq;
+    netMap(DEF_PACK_YYJ_SKYBLK)=&ckernel::slot_DealYYJSkyBlk;
+    netMap(DEF_PACK_LR_SKYBLK)=&ckernel::slot_DealLRSkyBlk;
+    netMap(DEF_PACK_LRTONW_SKYBLK)=&ckernel::slot_DealLRKillSkyBlk;
 }
 
 void ckernel::slot_quitLogin()

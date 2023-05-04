@@ -10,6 +10,14 @@
 #include<QTimerEvent>
 #include<vector>
 
+/**************************************/
+#define USERINFO 0
+#define SKYBLK_YYJ 1
+#define SKYBLK_LR 2
+#define SKYBLK_NW 3
+#define SKYBLK_SW 4
+/***************************************/
+
 
 namespace Ui {
 class roomDialog;
@@ -24,6 +32,9 @@ signals:
     void SIG_QUIT();
     void SIG_ReadybeginGame();
     void SIG_beginGame();
+    void SIG_skyBlkRs(int,int,int,int);
+    void SIG_skyBlk15();
+
 
 public:
     explicit roomDialog(QWidget *parent = nullptr);
@@ -35,6 +46,9 @@ public:
     void slot_ready();
     void slot_setIden(int iden);
     void slot_skyBlack();
+    void slot_yyj(int id,int iden);
+    void slot_lr(int id,int toid);
+    void slot_nw(int kill);
 
 private slots:
     void on_pb_min_clicked();
@@ -46,6 +60,7 @@ private slots:
     void slot_removePlayer(QWidget* player,int id);
 
     void on_pb_0_begin_clicked();
+    void slot_click_icon(int id);
 
 public:
     void timerEvent(QTimerEvent *e);
@@ -76,12 +91,19 @@ private:
     int m_user_iden;
 
     //定时器
-    int m_timer_tips;
-    int m_timer_ready;
+    int m_timer_tips;//提示消失
+    int m_timer_ready;//5秒准备
+    int m_timer_skyBlk;//夜晚
 
     //用于倒计时
     int num;//5秒
-    bool state;//判断是否在倒计时中
+    bool state;//判断是否在准备开始倒计时中
+
+    //用于控制组件
+    int m_pb_icon;
+
+    //被杀的人
+    int m_d_kill;
 };
 
 #endif // ROOMDIALOG_H

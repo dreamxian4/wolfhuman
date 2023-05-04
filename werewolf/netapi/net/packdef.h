@@ -60,6 +60,14 @@
 //天黑
 #define DEF_PACK_SKYBLACK_RQ     (_DEF_PACK_BASE + 20)
 #define DEF_PACK_SKYBLACK_RS     (_DEF_PACK_BASE + 21)
+//预言信息
+#define DEF_PACK_YYJ_SKYBLK     (_DEF_PACK_BASE + 22)
+//杀人信息
+#define DEF_PACK_LR_SKYBLK     (_DEF_PACK_BASE + 23)
+//夜晚结束
+#define DEF_PACK_SKYBLACK_END     (_DEF_PACK_BASE + 24)
+//发给女巫的杀人信息
+#define DEF_PACK_LRTONW_SKYBLK       (_DEF_PACK_BASE + 25)
 
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
@@ -474,10 +482,77 @@ typedef struct STRU_SKYBLACK_RS
     {
         m_nType = DEF_PACK_SKYBLACK_RS;
         m_iden=0;
+        m_roomid=0;
+        m_iden     =0;
+        m_seat     =0;
+        m_operate  =0;
+        m_toseat   =0;
     }
     PackType   m_nType;   //包类型
-    int m_iden;
+    int m_roomid;//房间号
+    int m_iden      ;//我的身份
+    int m_seat      ;//我的座位号
+    int m_operate   ;//我进行的操作 1预言家 2狼人  3女巫毒 4守卫 0无操作
+    int m_toseat    ;//我对谁操作
 }STRU_SKYBLACK_RS;
+
+
+//预言家预言信息
+typedef struct STRU_YYJ_SKYBLK
+{
+    STRU_YYJ_SKYBLK()
+    {
+        m_nType = DEF_PACK_YYJ_SKYBLK;
+        id=0;
+        iden=0;
+    }
+    PackType   m_nType;   //包类型
+    int id;
+    int iden;
+}STRU_YYJ_SKYBLK;
+
+//狼人杀人信息
+typedef struct STRU_LR_SKYBLK
+{
+    STRU_LR_SKYBLK()
+    {
+        m_nType = DEF_PACK_LR_SKYBLK;
+        id=0;
+        toid=0;
+    }
+    PackType   m_nType;   //包类型
+    int id;
+    int toid;
+}STRU_LR_SKYBLK;
+
+
+
+//夜晚结束
+typedef struct STRU_SKYBLK_END
+{
+    STRU_SKYBLK_END()
+    {
+        m_nType = DEF_PACK_SKYBLACK_END;
+        state=0;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int state;//0:前15s  1:夜晚结束
+    int roomid;
+}STRU_SKYBLK_END;
+
+
+//狼人的确切杀人信息
+typedef struct STRU_LRTONW_SKYBLK
+{
+    STRU_LRTONW_SKYBLK()
+    {
+        m_nType = DEF_PACK_LRTONW_SKYBLK;
+        kill=0;
+    }
+    PackType   m_nType;   //包类型
+    int kill;
+}STRU_LRTONW_SKYBLK;
 
 
 ////注册音频

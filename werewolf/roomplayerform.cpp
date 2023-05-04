@@ -6,7 +6,7 @@
 
 roomPlayerform::roomPlayerform(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::roomPlayerform)
+    ui(new Ui::roomPlayerform),m_id(0)
 {
     ui->setupUi(this);
     setImage(0);
@@ -30,7 +30,8 @@ roomPlayerform::~roomPlayerform()
 
 void roomPlayerform::setInfo(int id, int identify, int jing)
 {
-    ui->lb_num->setText(QString("%1").arg(id));
+    ui->lb_num->setText(QString("%1").arg(id));\
+    m_id=id;
     //设置警徽和身份TODO
 }
 
@@ -51,5 +52,12 @@ void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid)
 int roomPlayerform::getUserid()
 {
     return m_userid;
+}
+
+
+void roomPlayerform::on_pb_icon_clicked()
+{
+
+    Q_EMIT SIG_click_icon(m_id);
 }
 

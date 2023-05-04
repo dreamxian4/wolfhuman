@@ -68,7 +68,7 @@
     <bool>false</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="pb_icon_2">
+  <widget class="QPushButton" name="pb_edge">
    <property name="geometry">
     <rect>
      <x>0</x>
@@ -84,7 +84,7 @@
     <bool>false</bool>
    </property>
   </widget>
-  <zorder>pb_icon_2</zorder>
+  <zorder>pb_edge</zorder>
   <zorder>pb_icon</zorder>
   <zorder>lb_identify</zorder>
   <zorder>lb_badge</zorder>

@@ -7,6 +7,7 @@
 #include<QImage>
 
 
+
 namespace Ui {
 class roomPlayerform;
 }
@@ -14,6 +15,9 @@ class roomPlayerform;
 class roomPlayerform : public QWidget
 {
     Q_OBJECT
+
+signals:
+    void SIG_click_icon(int id);
 
 public:
     explicit roomPlayerform(QWidget *parent = nullptr);
@@ -24,12 +28,18 @@ public:
     void setZiLiao(int level,QString sex,QString name,int userid);
     int getUserid();
 
+private slots:
+    void on_pb_icon_clicked();
+
 private:
     Ui::roomPlayerform *ui;
     int         m_level  ;
     QString     m_sex    ;
     QString     m_name   ;
     int         m_userid ;
+    int         m_id;
+
+
 };
 
 #endif // ROOMPLAYERFORM_H

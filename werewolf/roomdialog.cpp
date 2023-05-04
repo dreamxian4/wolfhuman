@@ -10,7 +10,7 @@ roomDialog::roomDialog(QWidget *parent) :
     ui(new Ui::roomDialog),m_seat(0),m_userid(0),
     m_mode(0),m_method(0),m_roomid(0),m_count(0),
     m_currentCou(0),m_pass(false),num(0),state(false),
-    m_playing(false),m_day(0)
+    m_playing(false),m_day(0),m_pb_icon(USERINFO),m_d_kill(0)
 {
 
     //身份信息初始化
@@ -61,6 +61,8 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
     for(int i=1;i<13;i++){
         //头像：小于人数的编号：+ 大于人数的编号：锁
         roomPlayerform* player=new roomPlayerform;
+        connect(player,SIGNAL(SIG_click_icon(int)),
+                this,SLOT(slot_click_icon(int)));
         player->setInfo(i,0,0);
         //锁
         if(i>num)player->setImage(1);
@@ -105,6 +107,63 @@ void roomDialog::slot_skyBlack()
     m_day++;
     ui->pb_day->setText(QString("第%1天").arg(m_day));
     ui->pb_day->setStyleSheet("background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);");
+    ui->lb_operate->setStyleSheet("color: rgb(0, 255, 127);font: 8pt \"隶书\";");
+    switch(m_user_iden){
+    case 0://预言家
+        ui->lb_operate->setText("请选择一位玩家，验证其身份");
+        m_pb_icon=SKYBLK_YYJ;
+        break;
+    case 1://女巫
+        ui->lb_operate->setText("等待狼人杀人");
+        m_pb_icon=USERINFO;
+        break;
+    case 2://平民
+        ui->lb_operate->setText("等待天亮");
+        m_pb_icon=USERINFO;
+        break;
+    case 3://狼人
+        ui->lb_operate->setText("请选择一位玩家，杀掉他");
+        m_pb_icon=SKYBLK_LR;
+        break;
+    case 4://猎人
+        ui->lb_operate->setText("等待天亮");
+        m_pb_icon=USERINFO;
+        break;
+    case 5://守卫
+        ui->lb_operate->setText("请选择一位玩家，守护他不被杀害");
+        m_pb_icon=SKYBLK_SW;
+        break;
+    }
+    m_timer_skyBlk=startTimer(15000);
+}
+
+void roomDialog::slot_yyj(int id, int iden)
+{
+    ui->lb_operate->setText(QString("您选择的玩家是%1号，他的身份是:%2").arg(id).arg(BASEIDENTIFY[iden]));
+}
+
+void roomDialog::slot_lr(int id, int toid)
+{
+    if(m_user_iden!=3)return;
+    //TODO
+    ui->tb_message->append(QString("杀人信息：%1号 选择杀掉 %2号").arg(id).arg(toid));
+}
+
+void roomDialog::slot_nw(int kill)
+{
+    //判断自己是不是女巫
+    if(m_user_iden==1){
+        //是，弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
+        if(kill=0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
+        else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
+            //救，发送救人信息
+        }else{
+            //不救
+            //TODO：如果女巫已经救过人了，就不能给女巫发送死亡信息了
+            //询问是否毒人
+        }
+    }
+    //不是忽略
 }
 
 
@@ -183,6 +242,41 @@ void roomDialog::on_pb_0_begin_clicked()
     }
 }
 
+//玩家头像被点击
+void roomDialog::slot_click_icon(int id)
+{
+    //1预言家 2狼人  3女巫毒 4守卫 0无操作
+    //判断当前是什么状态
+    switch(m_pb_icon){
+    case USERINFO:
+        //显示玩家资料TODO
+        QMessageBox::about(this,"资料","xxxxx");
+        break;
+    case SKYBLK_YYJ:
+        //直接发送选择，TODO:等待计时结束，将最后一个选择的发送出去
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,1,id);
+        //操作完，将状态恢复成默认
+        m_pb_icon=USERINFO;
+        break;
+    case SKYBLK_LR:
+        //直接发送杀人信息
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,2,id);
+        m_pb_icon=USERINFO;
+        break;
+    case SKYBLK_NW:
+        //在收到杀人信息时进行的操作：弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
+        //毒人
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,3,id);
+        m_pb_icon=USERINFO;
+        break;
+    case SKYBLK_SW:
+        //发送守人信息，TODO:等待计时结束，将最后一个选择的发送出去
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,4,id);
+        m_pb_icon=USERINFO;
+        break;
+    }
+}
+
 
 void roomDialog::timerEvent(QTimerEvent *e)
 {
@@ -203,6 +297,13 @@ void roomDialog::timerEvent(QTimerEvent *e)
             ui->lb_ready->setText("");
             if(m_seat==1)Q_EMIT SIG_beginGame();
         }
+    }else if(e->timerId()==m_timer_skyBlk){
+        //判断是不是房主
+        if(m_seat==1){
+            //是房主发送结束包
+            Q_EMIT SIG_skyBlk15();
+        }
+        //不是忽略
     }
 }
 

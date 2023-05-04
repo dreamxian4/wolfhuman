@@ -66,6 +66,9 @@ public slots:
     void slot_sendJoinRoomRq(int roomid);
     void slot_sendBeginGameTestRq();
     void slot_sendBeginGameRq();
+    void slot_sendSkyBlkRs(int iden,int seat,int operate,int toseat);
+    void slot_sendskyBlk15();
+
 
 
     //网络接收处理槽
@@ -95,6 +98,12 @@ public slots:
     void slot_DealBeginGameRs( unsigned int lSendIP , char* buf , int nlen );
     //天黑
     void slot_DealSkyBlackRq( unsigned int lSendIP , char* buf , int nlen );
+    //预言信息
+    void slot_DealYYJSkyBlk( unsigned int lSendIP , char* buf , int nlen );
+    //狼人杀人信息
+    void slot_DealLRSkyBlk( unsigned int lSendIP , char* buf , int nlen );
+    //狼人的确切杀人信息
+    void slot_DealLRKillSkyBlk( unsigned int lSendIP , char* buf , int nlen );
 
 
 
