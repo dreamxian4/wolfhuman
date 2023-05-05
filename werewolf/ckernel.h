@@ -67,7 +67,9 @@ public slots:
     void slot_sendBeginGameTestRq();
     void slot_sendBeginGameRq();
     void slot_sendSkyBlkRs(int iden,int seat,int operate,int toseat);
-    void slot_sendskyBlk15();
+    void slot_sendskyBlk15(bool mid);
+    void slot_sendNvSW();
+    void slot_sendImDie(int iden);
 
 
 
@@ -104,6 +106,10 @@ public slots:
     void slot_DealLRSkyBlk( unsigned int lSendIP , char* buf , int nlen );
     //狼人的确切杀人信息
     void slot_DealLRKillSkyBlk( unsigned int lSendIP , char* buf , int nlen );
+    //天亮了,包含死亡信息
+    void slot_DealSkyWhiteRq( unsigned int lSendIP , char* buf , int nlen );
+    //天亮发言
+    void slot_DealSpeakRq( unsigned int lSendIP , char* buf , int nlen );
 
 
 

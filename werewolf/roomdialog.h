@@ -7,7 +7,7 @@
 #include<map>
 #include"uiapi/customwidget.h"
 #include<QTimer>
-#include<QTimerEvent>
+#include<QTime>
 #include<vector>
 
 /**************************************/
@@ -29,11 +29,13 @@ class roomDialog : public CustomMoveDialog
 
 signals:
     void SIG_quitRoom(int);//id是房主的userid
-    void SIG_QUIT();
-    void SIG_ReadybeginGame();
-    void SIG_beginGame();
-    void SIG_skyBlkRs(int,int,int,int);
-    void SIG_skyBlk15();
+    void SIG_QUIT();//退出游戏
+    void SIG_ReadybeginGame();//准备开始游戏
+    void SIG_beginGame();//正式开始游戏
+    void SIG_skyBlkRs(int,int,int,int);//夜晚的操作
+    void SIG_skyBlk15(bool);//是：前半夜结束  否：后半夜结束
+    void SIG_nvSilverWater();//女巫救人
+    void SIG_imDie(int);//我死了，发送我的身份到服务端
 
 
 public:
@@ -49,21 +51,24 @@ public:
     void slot_yyj(int id,int iden);
     void slot_lr(int id,int toid);
     void slot_nw(int kill);
+    void slot_skyWhite(int* die);
+    void slot_speak();
 
 private slots:
     void on_pb_min_clicked();
-
     void on_pb_close_clicked();
-
     void on_pb_quitroom_clicked();
+    void on_pb_0_begin_clicked();
+
     void slot_addPlayer(QWidget* player,int id);
     void slot_removePlayer(QWidget* player,int id);
 
-    void on_pb_0_begin_clicked();
     void slot_click_icon(int id);
 
-public:
-    void timerEvent(QTimerEvent *e);
+    void slot_OverTimerReady();
+    void slot_OverTimerTips();
+    void slot_OverTimerskyBlk();
+
 
 private:
     Ui::roomDialog *ui;
@@ -91,9 +96,9 @@ private:
     int m_user_iden;
 
     //定时器
-    int m_timer_tips;//提示消失
-    int m_timer_ready;//5秒准备
-    int m_timer_skyBlk;//夜晚
+    QTimer* m_timer_tips;//提示消失
+    QTimer* m_timer_ready;//5秒准备
+    QTimer* m_timer_skyBlk;//夜晚
 
     //用于倒计时
     int num;//5秒
@@ -102,8 +107,12 @@ private:
     //用于控制组件
     int m_pb_icon;
 
-    //被杀的人
-    int m_d_kill;
+
+    int m_d_kill;//被杀的人
+    bool m_d_antidote;//女巫解药
+    bool m_d_poison;//女巫毒药
+    int m_d_protect;//守卫守的人
+    bool m_d_midnight;//半夜还是整夜，用于房主发送夜晚包
 };
 
 #endif // ROOMDIALOG_H

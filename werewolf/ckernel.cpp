@@ -83,8 +83,12 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendBeginGameRq()));
     connect(m_roomDialog,SIGNAL(SIG_skyBlkRs(int,int,int,int)),
             this,SLOT(slot_sendSkyBlkRs(int,int,int,int)));
-    connect(m_roomDialog,SIGNAL(SIG_skyBlk15()),
-            this,SLOT(slot_sendskyBlk15()));
+    connect(m_roomDialog,SIGNAL(SIG_skyBlk15(bool)),
+            this,SLOT(slot_sendskyBlk15(bool)));
+    connect(m_roomDialog,SIGNAL(SIG_nvSilverWater()),
+            this,SLOT(slot_sendNvSW()));
+    connect(m_roomDialog,SIGNAL(SIG_imDie(int)),
+            this,SLOT(slot_sendImDie(int)));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -309,13 +313,33 @@ void ckernel::slot_sendSkyBlkRs(int iden, int seat, int operate, int toseat)
     SendData(0,(char*)&rs,sizeof(rs));
 }
 
-void ckernel::slot_sendskyBlk15()
+void ckernel::slot_sendskyBlk15(bool mid)
 {
-    //发送夜晚前十五秒结束
     STRU_SKYBLK_END end;
-    end.state=0;
     end.roomid=m_roomid;
-    SendData(0,(char)&end,sizeof(end));
+    if(mid){
+        //发送夜晚前十五秒结束
+        end.state=0;
+    }else{
+        //发送夜晚后十五秒结束
+        end.state=1;
+    }
+    SendData(0,(char*)&end,sizeof(end));
+}
+
+void ckernel::slot_sendNvSW()
+{
+    STRU_LRTONW_SKYBLK_RS rs;
+    rs.roomid=m_roomid;
+    SendData(0,(char*)&rs,sizeof(rs));
+}
+
+void ckernel::slot_sendImDie(int iden)
+{
+    STRU_SKYWHT_RS rs;
+    rs.iden=iden;
+    rs.roomid=m_roomid;
+    SendData(0,(char*)&rs,sizeof(rs));
 }
 
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
@@ -507,6 +531,19 @@ void ckernel::slot_DealLRKillSkyBlk(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_nw(kl->kill);
 }
 
+void ckernel::slot_DealSkyWhiteRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //拆包
+    STRU_SKYWHT_RQ* rq=(STRU_SKYWHT_RQ*)buf;
+    m_roomDialog->slot_skyWhite(rq->die);
+}
+
+void ckernel::slot_DealSpeakRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //语音TODO
+    m_roomDialog->slot_speak();
+}
+
 void ckernel::initConfig()
 {
     m_serverIp=_DEF_SERVER_IP;
@@ -560,6 +597,8 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_YYJ_SKYBLK)=&ckernel::slot_DealYYJSkyBlk;
     netMap(DEF_PACK_LR_SKYBLK)=&ckernel::slot_DealLRSkyBlk;
     netMap(DEF_PACK_LRTONW_SKYBLK)=&ckernel::slot_DealLRKillSkyBlk;
+    netMap(DEF_PACK_SKYWHT_RQ)=&ckernel::slot_DealSkyWhiteRq;
+    netMap(DEF_PACK_SPEAK_RQ)=&ckernel::slot_DealSpeakRq;
 }
 
 void ckernel::slot_quitLogin()

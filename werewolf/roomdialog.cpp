@@ -10,7 +10,9 @@ roomDialog::roomDialog(QWidget *parent) :
     ui(new Ui::roomDialog),m_seat(0),m_userid(0),
     m_mode(0),m_method(0),m_roomid(0),m_count(0),
     m_currentCou(0),m_pass(false),num(0),state(false),
-    m_playing(false),m_day(0),m_pb_icon(USERINFO),m_d_kill(0)
+    m_playing(false),m_day(0),m_pb_icon(USERINFO),m_d_kill(0),
+    m_d_antidote(false),m_d_poison(false),m_d_protect(0),
+    m_d_midnight(true)
 {
 
     //身份信息初始化
@@ -29,6 +31,13 @@ roomDialog::roomDialog(QWidget *parent) :
     //通过addwidget添加控件
     //m_userLayout->addWidget();
 
+    //定时器
+    m_timer_ready=new QTimer;
+    connect(m_timer_ready,&QTimer::timeout,this,&roomDialog::slot_OverTimerReady);
+    m_timer_skyBlk=new QTimer;
+    connect(m_timer_skyBlk,&QTimer::timeout,this,&roomDialog::slot_OverTimerskyBlk);
+    m_timer_tips=new QTimer;
+    connect(m_timer_tips,&QTimer::timeout,this,&roomDialog::slot_OverTimerTips);
 }
 
 void roomDialog::slot_addPlayer(QWidget *player,int id)
@@ -45,7 +54,7 @@ void roomDialog::slot_removePlayer(QWidget *player,int id)
 }
 
 void roomDialog::slot_setInfo(int roomid, int mode, int method,
-                             bool lock, QString password,int num,int userid)
+                              bool lock, QString password,int num,int userid)
 {
     m_roomid=roomid;
     m_mode=mode;
@@ -77,7 +86,7 @@ void roomDialog::slot_destroyRoom(){
     m_playing=false;
     if(state){
         state=false;
-        killTimer(m_timer_ready);
+        m_timer_ready->stop();
         ui->lb_ready->setText("");
     }
     for(int i=1;i<13;i++){
@@ -89,7 +98,7 @@ void roomDialog::slot_destroyRoom(){
 void roomDialog::slot_ready()
 {
     //倒计时，如果有玩家退出，停止计时
-    m_timer_ready=startTimer(1000);
+    m_timer_ready->start(1000);
     num=5;
     state=true;
     ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
@@ -98,12 +107,17 @@ void roomDialog::slot_ready()
 void roomDialog::slot_setIden(int iden)
 {
     m_user_iden=iden;
+    if(iden==1){
+        m_d_antidote=true;
+        m_d_poison=true;
+    }
     m_playing=true;
     ui->lb_ready->setText(QString("游戏开始~~你的身份是：%1").arg(BASEIDENTIFY[iden]));
 }
 
 void roomDialog::slot_skyBlack()
 {
+    ui->tb_message->append("天黑啦！！！！");
     m_day++;
     ui->pb_day->setText(QString("第%1天").arg(m_day));
     ui->pb_day->setStyleSheet("background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);");
@@ -114,7 +128,7 @@ void roomDialog::slot_skyBlack()
         m_pb_icon=SKYBLK_YYJ;
         break;
     case 1://女巫
-        ui->lb_operate->setText("等待狼人杀人");
+        ui->lb_operate->setText("等待操作");
         m_pb_icon=USERINFO;
         break;
     case 2://平民
@@ -134,7 +148,8 @@ void roomDialog::slot_skyBlack()
         m_pb_icon=SKYBLK_SW;
         break;
     }
-    m_timer_skyBlk=startTimer(15000);
+    m_timer_skyBlk->start(15000);
+    qDebug()<<"skyblk:"<<m_timer_skyBlk;
 }
 
 void roomDialog::slot_yyj(int id, int iden)
@@ -153,17 +168,53 @@ void roomDialog::slot_nw(int kill)
 {
     //判断自己是不是女巫
     if(m_user_iden==1){
-        //是，弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
-        if(kill=0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
-        else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
-            //救，发送救人信息
-        }else{
-            //不救
-            //TODO：如果女巫已经救过人了，就不能给女巫发送死亡信息了
-            //询问是否毒人
+        //是
+        //判断还有没有解药
+        if(m_d_antidote){
+            //有，弹出框显示杀人信息，询问是否救人
+            if(kill=0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
+            else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
+                //救，发送救人信息
+                Q_EMIT SIG_nvSilverWater();
+                m_d_antidote=false;
+                return;
+            }
         }
+        //不救，没有解药，没有杀人
+        //判断有没有毒药
+        if(m_d_poison){
+            //询问是否毒人（将按钮状态设置成女巫），发送操作信息
+            if(QMessageBox::question(this,"提示",QString("你有一瓶毒药，是否毒人？"))==QMessageBox::Yes){
+                //毒TODO
+                ui->lb_operate->setText("选择一位玩家，毒死他");
+                m_pb_icon=SKYBLK_NW;
+                return;
+            }
+        }
+        ui->lb_operate->setText("等待天亮");
+        m_pb_icon=USERINFO;
     }
     //不是忽略
+}
+
+void roomDialog::slot_skyWhite(int *die)
+{
+    //判断死的是不是自己
+    QString show="昨晚死亡的玩家是：";
+    for(int i=0;i<2;i++){
+        //是，发送自己的身份
+        if(die[i]==m_seat)Q_EMIT SIG_imDie(m_user_iden);
+        //显示死亡信息
+        if(die[i]!=0)show+=QString("%1号 ").arg(die[i]);
+    }
+    ui->tb_message->append("天亮了！！！！");
+    ui->tb_message->append(show);
+}
+
+void roomDialog::slot_speak()
+{
+    //语音TODO
+    ui->lb_operate->setText("开始发言");
 }
 
 
@@ -176,7 +227,7 @@ void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QStrin
         m_currentCou--;
         if(state){
             state=false;
-            killTimer(m_timer_ready);
+            m_timer_ready->stop();
             ui->lb_ready->setText("");
         }
     }
@@ -203,7 +254,7 @@ void roomDialog::on_pb_close_clicked()
     {
         //发送退出房间信号
         on_pb_quitroom_clicked();
-         //发送退出登录信号
+        //发送退出登录信号
         Q_EMIT SIG_QUIT();
     }
 }
@@ -232,13 +283,13 @@ void roomDialog::on_pb_0_begin_clicked()
             ui->lb_tip->setText("人数不足，不能开始游戏");
             ui->lb_tip->setStyleSheet("background-color: rgb(129, 129, 129);color: rgb(255, 255, 255);");
             //定时回复
-            m_timer_tips=startTimer(1500);
+            m_timer_tips->start(1500);
         }
     }else{
         //不是房主，提示只有房主可以开始游戏
         ui->lb_tip->setText("只有房主可以开始游戏");
         ui->lb_tip->setStyleSheet("background-color: rgb(129, 129, 129);color: rgb(255, 255, 255);");
-        m_timer_tips=startTimer(1500);
+        m_timer_tips->start(1500);
     }
 }
 
@@ -267,43 +318,60 @@ void roomDialog::slot_click_icon(int id)
         //在收到杀人信息时进行的操作：弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
         //毒人
         Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,3,id);
+        ui->lb_operate->setText("等待天亮");
+        m_d_poison=false;
         m_pb_icon=USERINFO;
         break;
     case SKYBLK_SW:
         //发送守人信息，TODO:等待计时结束，将最后一个选择的发送出去
-        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,4,id);
-        m_pb_icon=USERINFO;
+        if(m_d_protect==id)QMessageBox::about(this,"提示","不能连续两晚守护同一个人");
+        else{
+            Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,4,id);
+            m_d_protect=id;
+            m_pb_icon=USERINFO;
+        }
         break;
     }
 }
 
-
-void roomDialog::timerEvent(QTimerEvent *e)
+void roomDialog::slot_OverTimerReady()
 {
-    if(e->timerId()==m_timer_tips){
-        //开始按钮提醒恢复
-        ui->lb_tip->setText("");
-        ui->lb_tip->setStyleSheet("background:transparent");
-        killTimer(m_timer_tips);
-    }else if(e->timerId()==m_timer_ready){
-        //5秒倒计时
-        num--;
-        ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
-        killTimer(m_timer_ready);
-        if(num>0)m_timer_ready=startTimer(1000);
-        else{
-            //倒计时结束，判断自己是不是房主，如果是房主，给服务端发送正式开始包
-            state=false;
-            ui->lb_ready->setText("");
-            if(m_seat==1)Q_EMIT SIG_beginGame();
-        }
-    }else if(e->timerId()==m_timer_skyBlk){
-        //判断是不是房主
-        if(m_seat==1){
-            //是房主发送结束包
-            Q_EMIT SIG_skyBlk15();
-        }
-        //不是忽略
+    //5秒倒计时
+    num--;
+    ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
+    if(num==0){
+        //倒计时结束，判断自己是不是房主，如果是房主，给服务端发送正式开始包
+        m_timer_ready->stop();
+        state=false;
+        ui->lb_ready->setText("");
+        if(m_seat==1)Q_EMIT SIG_beginGame();
     }
+}
+
+void roomDialog::slot_OverTimerTips()
+{
+    //开始按钮提醒恢复
+    ui->lb_tip->setText("");
+    ui->lb_tip->setStyleSheet("background:transparent");
+    m_timer_tips->stop();
+}
+
+void roomDialog::slot_OverTimerskyBlk()
+{
+    //判断是不是房主
+    if(m_seat==1){
+        //是房主发送结束包
+        if(m_d_midnight){
+            Q_EMIT SIG_skyBlk15(true);
+            m_d_midnight=false;
+        }
+        else{
+            Q_EMIT SIG_skyBlk15(false);
+            m_d_midnight=true;
+            m_timer_skyBlk->stop();
+        }
+    }else m_timer_skyBlk->stop();
+    //不是忽略
+
 }
 
