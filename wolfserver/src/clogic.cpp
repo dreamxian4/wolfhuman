@@ -16,6 +16,8 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_BEGINGAME_RQ)    = &CLogic::BeginGame;
     NetPackMap(DEF_PACK_SKYBLACK_RS)    = &CLogic::Skyblack;
     NetPackMap(DEF_PACK_SKYBLACK_END)    = &CLogic::SkyblackEnd;
+    NetPackMap(DEF_PACK_LRTONW_SKYBLK_RS)    = &CLogic::NWSilverWater;
+    NetPackMap(DEF_PACK_SKYWHT_RS)    = &CLogic::DierIden;
 }
 
 
@@ -503,14 +505,17 @@ void CLogic::Skyblack(sock_fd clientfd, char *szbuf, int nlen)
         }
         break;
     case 3://处理女巫
+        room->i_die[1]=rs->m_toseat;
         break;
     case 4://处理守卫
+        if(room->i_die[0]==rs->m_toseat)room->i_die[0]=0;
         break;
     }
 }
 
 void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
 {
+    printf("SkyblackEnd:%d\n",clientfd);
     //拆包
     STRU_SKYBLK_END* end=(STRU_SKYBLK_END*)szbuf;
     RoomInfo* room=nullptr;
@@ -521,14 +526,64 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
     if(end->state==0){
         //如果是半夜，将狼人的杀人信息发送给女巫
         STRU_LRTONW_SKYBLK die;
-        int kill=rand()%room->i_wolfNum;
+        int num=0;
+        for(int i=0;i<4;i++)if(room->i_kill[i]!=0)num++;
+        int kill=rand()%num;
         die.kill=room->i_kill[kill];
+        room->i_die[0]=die.kill;
         for(auto ite=lst.begin();ite!=lst.end();ite++){
             UserInfo* user=nullptr;
             if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&die,sizeof(die));
         }
     }else{
-        //如果是整夜。发送天亮包和夜晚信息包TODO
+        //发送天亮包，包含死亡信息
+        STRU_SKYWHT_RQ rq;
+        rq.die[0]=room->i_die[0];
+        rq.die[1]=room->i_die[1];
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            UserInfo* user=nullptr;
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
+        memset(room->i_die,0,8);
+        memset(room->i_kill,0,16);
+    }
+}
+
+void CLogic::NWSilverWater(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("NWSilverWater:%d\n",clientfd);
+    //女巫救人了
+    //找到房间
+    STRU_LRTONW_SKYBLK_RS* rs=(STRU_LRTONW_SKYBLK_RS*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    //将杀人清空
+    room->i_die[0]=0;
+}
+
+void CLogic::DierIden(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("DierIden:%d\n",clientfd);
+    //找到房间
+    STRU_SKYWHT_RS* rs=(STRU_SKYWHT_RS*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    //更新存活信息
+    if(rs->iden==2)room->i_farmerNum--;
+    else if(rs->iden==3)room->i_wolfNum--;
+    else room->i_godNum--;
+    //判断是否结束游戏
+    if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+        //结束：给每个人发送结束包TODO
+    }else{
+        //不结束：给房主发送开始发言包
+        list<int>lst;
+        if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
+        UserInfo* user=nullptr;
+        if(!m_mapIdToUserInfo.find(lst.front(),user))return;
+        STRU_SPEAK_RQ rq;
+        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
     }
 }

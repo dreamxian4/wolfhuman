@@ -110,7 +110,13 @@
 #define DEF_PACK_SKYBLACK_END       (DEF_PACK_BASE + 24)
 //发给女巫的杀人信息
 #define DEF_PACK_LRTONW_SKYBLK       (DEF_PACK_BASE + 25)
-
+#define DEF_PACK_LRTONW_SKYBLK_RS       (DEF_PACK_BASE + 26)
+//天亮
+#define DEF_PACK_SKYWHT_RQ       (DEF_PACK_BASE + 27)
+#define DEF_PACK_SKYWHT_RS       (DEF_PACK_BASE + 28)
+//发言
+#define DEF_PACK_SPEAK_RQ       (DEF_PACK_BASE + 29)
+#define DEF_PACK_SPEAK_RS       (DEF_PACK_BASE + 30)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
@@ -681,6 +687,67 @@ typedef struct STRU_LRTONW_SKYBLK
     PackType   m_nType;   //包类型
     int kill;
 }STRU_LRTONW_SKYBLK;
+
+
+//杀人信息回复：女巫救人
+typedef struct STRU_LRTONW_SKYBLK_RS
+{
+    STRU_LRTONW_SKYBLK_RS()
+    {
+        m_nType = DEF_PACK_LRTONW_SKYBLK_RS;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+}STRU_LRTONW_SKYBLK_RS;
+
+
+//天亮了，包含死亡信息
+typedef struct STRU_SKYWHT_RQ
+{
+    STRU_SKYWHT_RQ()
+    {
+        m_nType = DEF_PACK_SKYWHT_RQ;
+        memset(die,0,8);
+    }
+    PackType   m_nType;   //包类型
+    int die[2];
+}STRU_SKYWHT_RQ;
+
+typedef struct STRU_SKYWHT_RS
+{
+    STRU_SKYWHT_RS()
+    {
+        m_nType = DEF_PACK_SKYWHT_RS;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int iden;
+}STRU_SKYWHT_RS;
+
+//天亮发言
+typedef struct STRU_SPEAK_RQ
+{
+    STRU_SPEAK_RQ()
+    {
+        m_nType = DEF_PACK_SPEAK_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_SPEAK_RQ;
+
+typedef struct STRU_SPEAK_RS
+{
+    STRU_SPEAK_RS()
+    {
+        m_nType = DEF_PACK_SPEAK_RS;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+}STRU_SPEAK_RS;
+
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER

@@ -33,6 +33,8 @@ public:
     void BeginGame( sock_fd clientfd, char*szbuf, int nlen );
     void Skyblack( sock_fd clientfd, char*szbuf, int nlen );
     void SkyblackEnd( sock_fd clientfd, char*szbuf, int nlen );
+    void NWSilverWater( sock_fd clientfd, char*szbuf, int nlen );
+    void DierIden( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
