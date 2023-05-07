@@ -70,6 +70,7 @@ public slots:
     void slot_sendskyBlk15(bool mid);
     void slot_sendNvSW();
     void slot_sendImDie(int iden);
+    void slot_sendPolice(bool be,int seat);
 
 
 
@@ -110,6 +111,10 @@ public slots:
     void slot_DealSkyWhiteRq( unsigned int lSendIP , char* buf , int nlen );
     //天亮发言
     void slot_DealSpeakRq( unsigned int lSendIP , char* buf , int nlen );
+    //竞选警长
+    void slot_DealPoliceRq( unsigned int lSendIP , char* buf , int nlen );
+
+
 
 
 

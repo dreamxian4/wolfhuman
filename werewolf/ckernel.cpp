@@ -89,6 +89,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendNvSW()));
     connect(m_roomDialog,SIGNAL(SIG_imDie(int)),
             this,SLOT(slot_sendImDie(int)));
+    connect(m_roomDialog,SIGNAL(SIG_police(bool,int)),
+            this,SLOT(slot_sendPolice(bool,int)));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -342,6 +344,15 @@ void ckernel::slot_sendImDie(int iden)
     SendData(0,(char*)&rs,sizeof(rs));
 }
 
+void ckernel::slot_sendPolice(bool be,int seat)
+{
+    STRU_TOBEPOLICE_RS rs;
+    rs.roomid=m_roomid;
+    rs.seat==seat;
+    rs.be=be;
+    SendData(0,(char*)&rs,sizeof(rs));
+}
+
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
 {
     int type=*(int*)buf;
@@ -544,6 +555,12 @@ void ckernel::slot_DealSpeakRq(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_speak();
 }
 
+void ckernel::slot_DealPoliceRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //竞选警长
+    m_roomDialog->slot_police();
+}
+
 void ckernel::initConfig()
 {
     m_serverIp=_DEF_SERVER_IP;
@@ -599,6 +616,7 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_LRTONW_SKYBLK)=&ckernel::slot_DealLRKillSkyBlk;
     netMap(DEF_PACK_SKYWHT_RQ)=&ckernel::slot_DealSkyWhiteRq;
     netMap(DEF_PACK_SPEAK_RQ)=&ckernel::slot_DealSpeakRq;
+    netMap(DEF_PACK_TOBEPOLICE_RQ)=&ckernel::slot_DealPoliceRq;
 }
 
 void ckernel::slot_quitLogin()

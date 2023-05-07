@@ -23,9 +23,9 @@ public:
     explicit roomPlayerform(QWidget *parent = nullptr);
     ~roomPlayerform();
 //    void paintEvent(QPaintEvent *event);
-    void setInfo(int id,int identify,int jing);
-    void setImage(int icon);
-    void setZiLiao(int level,QString sex,QString name,int userid);
+    void setInfo(int id,int identify,int jing,bool isme);
+    void setImage(QString icon);
+    void setZiLiao(int level,QString sex,QString name,int userid,int count);
     int getUserid();
 
 private slots:
@@ -38,6 +38,7 @@ private:
     QString     m_name   ;
     int         m_userid ;
     int         m_id;
+    int m_num;
 
 
 };

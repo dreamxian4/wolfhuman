@@ -36,6 +36,7 @@ signals:
     void SIG_skyBlk15(bool);//是：前半夜结束  否：后半夜结束
     void SIG_nvSilverWater();//女巫救人
     void SIG_imDie(int);//我死了，发送我的身份到服务端
+    void SIG_police(bool,int);//是否竞选警长
 
 
 public:
@@ -53,6 +54,7 @@ public:
     void slot_nw(int kill);
     void slot_skyWhite(int* die);
     void slot_speak();
+    void slot_police();
 
 private slots:
     void on_pb_min_clicked();

@@ -9,7 +9,8 @@ roomPlayerform::roomPlayerform(QWidget *parent) :
     ui(new Ui::roomPlayerform),m_id(0)
 {
     ui->setupUi(this);
-    setImage(0);
+    setImage("0");
+    ui->pb_edge->setEnabled(false);
 }
 
 roomPlayerform::~roomPlayerform()
@@ -28,25 +29,33 @@ roomPlayerform::~roomPlayerform()
 //    event->accept();
 //}
 
-void roomPlayerform::setInfo(int id, int identify, int jing)
+void roomPlayerform::setInfo(int id, int identify, int jing,bool isme)
 {
-    ui->lb_num->setText(QString("%1").arg(id));\
+    //判断是不是自己，设置醒目
+    if(isme)ui->pb_edge->setStyleSheet("background-color: rgb(0, 255, 127);");
+    ui->lb_num->setText(QString("%1").arg(id));
     m_id=id;
     //设置警徽和身份TODO
 }
 
-void roomPlayerform::setImage(int icon)
+void roomPlayerform::setImage(QString icon)
 {
+    //如果icon==00，即该位置是被锁住的，则按钮不能点击
+    if(icon=="00"){
+        //设置按钮不能点击
+        ui->pb_icon->setEnabled(false);
+    }
     ui->pb_icon->setIcon(QIcon(QString(":/tx/%1.png").arg(icon)));
     ui->pb_icon->setIconSize(QSize(50,40));
 }
 
-void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid)
+void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid,int count)
 {
     m_level =level;
     m_sex   =sex;
     m_name  =name;
     m_userid=userid;
+    m_num=count;
 }
 
 int roomPlayerform::getUserid()

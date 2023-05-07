@@ -65,7 +65,7 @@
     <string/>
    </property>
    <property name="flat">
-    <bool>false</bool>
+    <bool>true</bool>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_edge">
@@ -76,6 +76,9 @@
      <width>101</width>
      <height>61</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true"/>
    </property>
    <property name="text">
     <string/>

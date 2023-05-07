@@ -72,9 +72,9 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
         roomPlayerform* player=new roomPlayerform;
         connect(player,SIGNAL(SIG_click_icon(int)),
                 this,SLOT(slot_click_icon(int)));
-        player->setInfo(i,0,0);
+        player->setInfo(i,0,0,false);
         //锁
-        if(i>num)player->setImage(1);
+        if(i>num)player->setImage("00");
         m_mapIdToPlayer[i]=player;
         slot_addPlayer(player,i);
     }
@@ -93,6 +93,8 @@ void roomDialog::slot_destroyRoom(){
         roomPlayerform* player= m_mapIdToPlayer[i];
         slot_removePlayer(player,i);
     }
+    ui->lb_ready->setText("");
+    ui->lb_operate->setText("");
 }
 
 void roomDialog::slot_ready()
@@ -217,24 +219,40 @@ void roomDialog::slot_speak()
     ui->lb_operate->setText("开始发言");
 }
 
+void roomDialog::slot_police()
+{
+    //询问是否竞选警长
+    if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
+        //是：回复竞选
+        Q_EMIT SIG_police(true,m_seat);
+    }else{
+        //不是：回复不竞选
+        Q_EMIT SIG_police(false,m_seat);
+    }
+}
+
 
 
 
 void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QString name, int userid)
 {
+    //新成员加入
     if(userid>0)m_currentCou++;
-    else {
+    else {//有人退出
         m_currentCou--;
-        if(state){
+        if(state){//如果正在准备开始游戏，结束计时
             state=false;
             m_timer_ready->stop();
             ui->lb_ready->setText("");
         }
     }
     //设置成员信息
-    if(userid==m_userid)m_seat=id;
-    m_mapIdToPlayer[id]->setImage(icon);
-    m_mapIdToPlayer[id]->setZiLiao(level,sex,name,userid);
+    if(userid==m_userid){//判断该信息是不是自己
+        m_seat=id;
+        m_mapIdToPlayer[id]->setInfo(id,0,0,true);
+    }
+    m_mapIdToPlayer[id]->setImage(QString("%1").arg(icon));
+    m_mapIdToPlayer[id]->setZiLiao(level,sex,name,userid,m_count);
 }
 
 roomDialog::~roomDialog()
