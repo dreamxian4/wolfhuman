@@ -117,6 +117,9 @@
 //发言
 #define DEF_PACK_SPEAK_RQ       (DEF_PACK_BASE + 29)
 #define DEF_PACK_SPEAK_RS       (DEF_PACK_BASE + 30)
+//竞选警长
+#define DEF_PACK_TOBEPOLICE_RQ     (DEF_PACK_BASE + 31)
+#define DEF_PACK_TOBEPOLICE_RS     (DEF_PACK_BASE + 32)
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
@@ -213,6 +216,7 @@ typedef struct RoomInfo
         i_wolfNum   =0;
         memset(i_die,0,2*sizeof(int));
         memset(i_kill,0,4*sizeof(int));
+        i_day=0;
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -233,6 +237,7 @@ typedef struct RoomInfo
     int i_wolfNum       ;
     int i_die[2]        ;
     int i_kill[4]       ;
+    int i_day           ;
 
 }RoomInfo;
 
@@ -720,11 +725,13 @@ typedef struct STRU_SKYWHT_RS
     {
         m_nType = DEF_PACK_SKYWHT_RS;
         roomid=0;
+        iden=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int iden;
 }STRU_SKYWHT_RS;
+
 
 //天亮发言
 typedef struct STRU_SPEAK_RQ
@@ -742,11 +749,38 @@ typedef struct STRU_SPEAK_RS
     {
         m_nType = DEF_PACK_SPEAK_RS;
         roomid=0;
+        seat=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
 }STRU_SPEAK_RS;
+
+
+//竞选警长
+typedef struct STRU_TOBEPOLICE_RQ
+{
+    STRU_TOBEPOLICE_RQ()
+    {
+        m_nType = DEF_PACK_TOBEPOLICE_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_TOBEPOLICE_RQ;
+
+typedef struct STRU_TOBEPOLICE_RS
+{
+    STRU_TOBEPOLICE_RS()
+    {
+        m_nType = DEF_PACK_TOBEPOLICE_RS;
+        roomid=0;
+        seat=0;
+        be=false;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+    bool be;
+}STRU_TOBEPOLICE_RS;
 
 
 ////注册音频

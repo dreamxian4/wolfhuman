@@ -5,19 +5,19 @@
 
 void CLogic::setNetPackMap()
 {
-    NetPackMap(DEF_PACK_REGISTER_RQ)    = &CLogic::RegisterRq;
-    NetPackMap(DEF_PACK_LOGIN_RQ)    = &CLogic::LoginRq;
-    NetPackMap(DEF_PACK_CLIENTQUITLOGIN_RQ)    = &CLogic::QuitLogin;
-    NetPackMap(DEF_PACK_CREATEROOM_RQ)    = &CLogic::CreateRoom;
-    NetPackMap(DEF_PACK_ROOMLIST_RQ)    = &CLogic::RoomList;
-    NetPackMap(DEF_PACK_JOINROOM_RQ)    = &CLogic::JoinRoom;
-    NetPackMap(DEF_PACK_LEAVEROOM_RQ)    = &CLogic::LeaveRoom;
-    NetPackMap(DEF_PACK_BEGINGAMETEST_RQ)    = &CLogic::BeginGameTest;
-    NetPackMap(DEF_PACK_BEGINGAME_RQ)    = &CLogic::BeginGame;
-    NetPackMap(DEF_PACK_SKYBLACK_RS)    = &CLogic::Skyblack;
-    NetPackMap(DEF_PACK_SKYBLACK_END)    = &CLogic::SkyblackEnd;
-    NetPackMap(DEF_PACK_LRTONW_SKYBLK_RS)    = &CLogic::NWSilverWater;
-    NetPackMap(DEF_PACK_SKYWHT_RS)    = &CLogic::DierIden;
+    NetPackMap(DEF_PACK_REGISTER_RQ)        = &CLogic::RegisterRq;
+    NetPackMap(DEF_PACK_LOGIN_RQ)           = &CLogic::LoginRq;
+    NetPackMap(DEF_PACK_CLIENTQUITLOGIN_RQ) = &CLogic::QuitLogin;
+    NetPackMap(DEF_PACK_CREATEROOM_RQ)      = &CLogic::CreateRoom;
+    NetPackMap(DEF_PACK_ROOMLIST_RQ)        = &CLogic::RoomList;
+    NetPackMap(DEF_PACK_JOINROOM_RQ)        = &CLogic::JoinRoom;
+    NetPackMap(DEF_PACK_LEAVEROOM_RQ)       = &CLogic::LeaveRoom;
+    NetPackMap(DEF_PACK_BEGINGAMETEST_RQ)   = &CLogic::BeginGameTest;
+    NetPackMap(DEF_PACK_BEGINGAME_RQ)       = &CLogic::BeginGame;
+    NetPackMap(DEF_PACK_SKYBLACK_RS)        = &CLogic::Skyblack;
+    NetPackMap(DEF_PACK_SKYBLACK_END)       = &CLogic::SkyblackEnd;
+    NetPackMap(DEF_PACK_LRTONW_SKYBLK_RS)   = &CLogic::NWSilverWater;
+    NetPackMap(DEF_PACK_SKYWHT_RS)          = &CLogic::DierIden;
 }
 
 
@@ -464,6 +464,7 @@ void CLogic::BeginGame(sock_fd clientfd, char *szbuf, int nlen)
         //将身份信息发送给玩家
         rs.m_iden=iden;
         room->m_identify[user->m_seat]=iden;
+        room->i_day=1;
         pai[iden]--;
         SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
         //发送天黑包
@@ -528,7 +529,7 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
         STRU_LRTONW_SKYBLK die;
         int num=0;
         for(int i=0;i<4;i++)if(room->i_kill[i]!=0)num++;
-        int kill=rand()%num;
+        int kill=num==0?0:rand()%num;
         die.kill=room->i_kill[kill];
         room->i_die[0]=die.kill;
         for(auto ite=lst.begin();ite!=lst.end();ite++){
@@ -578,12 +579,24 @@ void CLogic::DierIden(sock_fd clientfd, char *szbuf, int nlen)
     if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
         //结束：给每个人发送结束包TODO
     }else{
-        //不结束：给房主发送开始发言包
+        //不结束：
+        //判断天数
         list<int>lst;
         if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
         UserInfo* user=nullptr;
-        if(!m_mapIdToUserInfo.find(lst.front(),user))return;
-        STRU_SPEAK_RQ rq;
-        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        printf("%d\n",room->i_day);
+        if(room->i_day==1){
+            //如果是第一天：发送竞选警长包
+            STRU_TOBEPOLICE_RQ rq;
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+            }
+        }else{
+            //如果不是：发送发言信息
+            if(!m_mapIdToUserInfo.find(lst.front(),user))return;
+            STRU_SPEAK_RQ rq;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
     }
 }
