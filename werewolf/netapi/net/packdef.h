@@ -75,6 +75,9 @@
 //发言
 #define DEF_PACK_SPEAK_RQ       (_DEF_PACK_BASE + 29)
 #define DEF_PACK_SPEAK_RS       (_DEF_PACK_BASE + 30)
+//竞选警长
+#define DEF_PACK_TOBEPOLICE_RQ     (_DEF_PACK_BASE + 31)
+#define DEF_PACK_TOBEPOLICE_RS     (_DEF_PACK_BASE + 32)
 
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
@@ -592,6 +595,7 @@ typedef struct STRU_SKYWHT_RS
     {
         m_nType = DEF_PACK_SKYWHT_RS;
         roomid=0;
+        iden=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
@@ -615,12 +619,38 @@ typedef struct STRU_SPEAK_RS
     {
         m_nType = DEF_PACK_SPEAK_RS;
         roomid=0;
+        seat=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
 }STRU_SPEAK_RS;
 
+
+//竞选警长
+typedef struct STRU_TOBEPOLICE_RQ
+{
+    STRU_TOBEPOLICE_RQ()
+    {
+        m_nType = DEF_PACK_TOBEPOLICE_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_TOBEPOLICE_RQ;
+
+typedef struct STRU_TOBEPOLICE_RS
+{
+    STRU_TOBEPOLICE_RS()
+    {
+        m_nType = DEF_PACK_TOBEPOLICE_RS;
+        roomid=0;
+        seat=0;
+        be=false;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+    bool be;
+}STRU_TOBEPOLICE_RS;
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER
