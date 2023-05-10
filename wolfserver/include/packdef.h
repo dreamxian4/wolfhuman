@@ -120,6 +120,22 @@
 //竞选警长
 #define DEF_PACK_TOBEPOLICE_RQ     (DEF_PACK_BASE + 31)
 #define DEF_PACK_TOBEPOLICE_RS     (DEF_PACK_BASE + 32)
+//成为警长
+#define DEF_PACK_BEPOLICE_RQ        (DEF_PACK_BASE + 33)
+#define DEF_PACK_BEPOLICE_RS        (DEF_PACK_BASE + 34)
+//竞选阶段结束
+#define DEF_PACK_POLICEEND     (DEF_PACK_BASE + 35)
+//发言阶段结束（开始投票）
+#define DEF_PACK_SPEAKSTATE_END     (DEF_PACK_BASE + 36)
+//玩家投票
+#define DEF_PACK_VOTE_RQ    (DEF_PACK_BASE + 37)
+//投票结果
+#define DEF_PACK_VOTE_RS     (DEF_PACK_BASE + 38)
+
+
+
+
+
 ////音频数据
 //#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
 ////视频数据
@@ -217,6 +233,8 @@ typedef struct RoomInfo
         memset(i_die,0,2*sizeof(int));
         memset(i_kill,0,4*sizeof(int));
         i_day=0;
+        i_police=0;
+        i_policeNum=0;
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -238,6 +256,8 @@ typedef struct RoomInfo
     int i_die[2]        ;
     int i_kill[4]       ;
     int i_day           ;
+    int i_police        ;
+    int i_policeNum     ;
 
 }RoomInfo;
 
@@ -733,14 +753,18 @@ typedef struct STRU_SKYWHT_RS
 }STRU_SKYWHT_RS;
 
 
-//天亮发言
+//发言
 typedef struct STRU_SPEAK_RQ
 {
     STRU_SPEAK_RQ()
     {
         m_nType = DEF_PACK_SPEAK_RQ;
+        state=0;
+        seat=0;
     }
     PackType   m_nType;   //包类型
+    int state;//1:uppolice 2:nopolice 3:normal
+    int seat;
 }STRU_SPEAK_RQ;
 
 typedef struct STRU_SPEAK_RS
@@ -750,11 +774,28 @@ typedef struct STRU_SPEAK_RS
         m_nType = DEF_PACK_SPEAK_RS;
         roomid=0;
         seat=0;
+        next=0;
+        state=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
+    int next;
+    int state;//1:uppolice 2:nopolice 3:normal
 }STRU_SPEAK_RS;
+
+//竞选警长阶段结束
+typedef struct STRU_POLICE_END
+{
+    STRU_POLICE_END()
+    {
+        m_nType = DEF_PACK_POLICEEND;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+}STRU_POLICE_END;
+
 
 
 //竞选警长
@@ -774,13 +815,84 @@ typedef struct STRU_TOBEPOLICE_RS
         m_nType = DEF_PACK_TOBEPOLICE_RS;
         roomid=0;
         seat=0;
-        be=false;
+        raise=true;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
-    bool be;
+    bool raise;//是举手还是放手
 }STRU_TOBEPOLICE_RS;
+
+
+//成为警长
+typedef struct STRU_BEPOLICE_RQ
+{
+    STRU_BEPOLICE_RQ()
+    {
+        m_nType = DEF_PACK_BEPOLICE_RQ;
+    }
+    PackType   m_nType;   //包类型
+}STRU_BEPOLICE_RQ;
+
+typedef struct STRU_BEPOLICE_RS
+{
+    STRU_BEPOLICE_RS()
+    {
+        m_nType = DEF_PACK_BEPOLICE_RS;
+        roomid=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+}STRU_BEPOLICE_RS;
+
+
+//发言阶段结束（开始投票包）
+typedef struct STRU_SPEAKSTATE_END
+{
+    STRU_SPEAKSTATE_END()
+    {
+        m_nType = DEF_PACK_SPEAKSTATE_END;
+        roomid=0;
+        state=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int state;//1:上警
+}STRU_SPEAKSTATE_END;
+
+//玩家投票包
+typedef struct STRU_VOTE_RQ
+{
+    STRU_VOTE_RQ()
+    {
+        m_nType = DEF_PACK_VOTE_RQ;
+        roomid=0;
+        state=0;
+        seat=0;
+        toseat=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int state;//1:上警
+    int seat;
+    int toseat;
+}STRU_VOTE_RQ;
+
+//投票结果包
+typedef struct STRU_VOTE_RS
+{
+    STRU_VOTE_RS()
+    {
+        m_nType = DEF_PACK_VOTE_RS;
+        state=0;
+        memset(result,0,sizeof(int)*12);
+    }
+    PackType   m_nType;   //包类型
+    int state;//1:上警
+    int result[12];
+}STRU_VOTE_RS;
+
 
 
 ////注册音频

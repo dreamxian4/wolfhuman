@@ -18,6 +18,12 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_SKYBLACK_END)       = &CLogic::SkyblackEnd;
     NetPackMap(DEF_PACK_LRTONW_SKYBLK_RS)   = &CLogic::NWSilverWater;
     NetPackMap(DEF_PACK_SKYWHT_RS)          = &CLogic::DierIden;
+    NetPackMap(DEF_PACK_TOBEPOLICE_RS)      = &CLogic::ToBePolice;
+    NetPackMap(DEF_PACK_POLICEEND)          = &CLogic::PoliceEnd;
+    NetPackMap(DEF_PACK_SPEAK_RS)           = &CLogic::SpeakEnd;
+    NetPackMap(DEF_PACK_BEPOLICE_RS)        = &CLogic::BePolice;
+    NetPackMap(DEF_PACK_SPEAKSTATE_END)     = &CLogic::SpeakStateEnd;
+    NetPackMap(DEF_PACK_VOTE_RQ)            = &CLogic::Vote;
 }
 
 
@@ -537,18 +543,37 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
             if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&die,sizeof(die));
         }
-    }else{
-        //发送天亮包，包含死亡信息
-        STRU_SKYWHT_RQ rq;
-        rq.die[0]=room->i_die[0];
-        rq.die[1]=room->i_die[1];
-        for(auto ite=lst.begin();ite!=lst.end();ite++){
+    }else{//整夜
+        //判断是不是第一天
+        if(room->i_day==1){
+            //是：发送竞选警长
             UserInfo* user=nullptr;
-            if(!m_mapIdToUserInfo.find(*ite,user))continue;
-            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+
+            STRU_TOBEPOLICE_RQ rq;
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+            }
+        }else{
+            //不是：发送死亡信息;如果没有人死，不用判断玩家身份，直接发送发言包
+            //发送天亮包，包含死亡信息
+            STRU_SKYWHT_RQ rq;
+            rq.die[0]=room->i_die[0];
+            rq.die[1]=room->i_die[1];
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                UserInfo* user=nullptr;
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+            }
+            if(room->i_die[0]==0&&room->i_die[1]==0){
+                //直接发送发言包
+                //发送给警长，让警长选择发言顺序（顺序或逆序）
+                //警长选择后，服务器将次序发送给客户端
+                //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁TODO
+            }
+            memset(room->i_die,0,8);
+            memset(room->i_kill,0,16);
         }
-        memset(room->i_die,0,8);
-        memset(room->i_kill,0,16);
     }
 }
 
@@ -580,23 +605,137 @@ void CLogic::DierIden(sock_fd clientfd, char *szbuf, int nlen)
         //结束：给每个人发送结束包TODO
     }else{
         //不结束：
-        //判断天数
         list<int>lst;
         if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
         UserInfo* user=nullptr;
-        printf("%d\n",room->i_day);
-        if(room->i_day==1){
-            //如果是第一天：发送竞选警长包
-            STRU_TOBEPOLICE_RQ rq;
-            for(auto ite=lst.begin();ite!=lst.end();ite++){
-                if(!m_mapIdToUserInfo.find(*ite,user))continue;
-                SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
-            }
-        }else{
-            //如果不是：发送发言信息
-            if(!m_mapIdToUserInfo.find(lst.front(),user))return;
-            STRU_SPEAK_RQ rq;
+        //发送发言信息
+        //发送给警长，让警长选择发言顺序（顺序或逆序）
+        //警长选择后，服务器将次序发送给客户端
+        //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁TODO
+        if(!m_mapIdToUserInfo.find(lst.front(),user))return;
+        STRU_SPEAK_RQ rq;
+        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+
+    }
+}
+
+void CLogic::ToBePolice(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("BePolice:%d\n",clientfd);
+    //拆包
+    STRU_TOBEPOLICE_RS* rs=(STRU_TOBEPOLICE_RS*)szbuf;
+    RoomInfo* room=nullptr;
+    //上警人数+1
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
+    UserInfo* user=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    if(rs->raise)room->i_policeNum++;
+    else {
+        // 有人放手，判断警上人数，如果只有一个，直接当选警长
+        room->i_policeNum--;
+        STRU_BEPOLICE_RQ rq;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
         }
     }
+    //将上警信息发送给每个玩家
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("PoliceEnd:%d\n",clientfd);
+    //判断上警人数，如果为0或为游戏人数，直接发言，没有警长
+    STRU_POLICE_END* end=(STRU_POLICE_END*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
+    STRU_SPEAK_RQ rq;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
+    UserInfo* user=nullptr;
+    if(room->i_policeNum==0||room->i_policeNum==room->m_beginNum){
+        //直接发言，没有警长
+        rq.state=2;
+        rq.seat=1;
+        //发送死亡信息TODO
+    }else if(room->i_policeNum==1){
+        //如果只有一个人上警，直接成为警长，发送一个警长包给所有玩家
+        STRU_BEPOLICE_RQ rq;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
+    }else{
+        //发送上警玩家发言包
+        rq.state=1;
+        rq.seat=1;
+    }
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+    }
+}
+
+void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("SpeakEnd:%d\n",clientfd);
+    //给所有人发送发言包
+    STRU_SPEAK_RS* rs=(STRU_SPEAK_RS*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
+    UserInfo* user=nullptr;
+    STRU_SPEAK_RQ rq;
+    rq.seat=rs->seat+rs->next;
+    rq.state=rs->state;
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+    }
+}
+
+void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("BePolice:%d\n",clientfd);
+    STRU_BEPOLICE_RS* rs=(STRU_BEPOLICE_RS*)szbuf;
+    //设置警长信息
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    room->i_police=rs->seat;
+    //当选警长，将警长信息发送给玩家
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
+    UserInfo* user=nullptr;
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+    //发送死亡信息TODO
+}
+
+void CLogic::SpeakStateEnd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("SpeakStateEnd:%d\n",clientfd);
+    STRU_SPEAKSTATE_END* end=(STRU_SPEAKSTATE_END*)szbuf;
+    //给玩家发送投票包
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
+    UserInfo* user=nullptr;
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::Vote(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("Vote:%d\n",clientfd);
 }

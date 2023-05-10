@@ -35,6 +35,12 @@ public:
     void SkyblackEnd( sock_fd clientfd, char*szbuf, int nlen );
     void NWSilverWater( sock_fd clientfd, char*szbuf, int nlen );
     void DierIden( sock_fd clientfd, char*szbuf, int nlen );
+    void ToBePolice( sock_fd clientfd, char*szbuf, int nlen );
+    void PoliceEnd( sock_fd clientfd, char*szbuf, int nlen );
+    void SpeakEnd( sock_fd clientfd, char*szbuf, int nlen );
+    void BePolice( sock_fd clientfd, char*szbuf, int nlen );
+    void SpeakStateEnd( sock_fd clientfd, char*szbuf, int nlen );
+    void Vote( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
