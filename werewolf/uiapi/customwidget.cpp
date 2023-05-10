@@ -129,7 +129,7 @@ void CustomMoveDialog::slot_showMin()
 
 void CustomMoveDialog::slot_close()
 {
-    if( QMessageBox::question( this , "退出提示","确定退出?" ) == QMessageBox::Yes )
+    if( QMessageBox::question( this , "退出提示","确定退出游戏?" ) == QMessageBox::Yes )
     {
          this->close();
     }
