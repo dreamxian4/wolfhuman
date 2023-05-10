@@ -54,8 +54,6 @@ public slots:
 
 
 
-
-
     //网络发送槽
     void slot_sendRegisterRq(QString username,QString passwd,
                              QString name,QString sex,QDate date);
@@ -70,7 +68,12 @@ public slots:
     void slot_sendskyBlk15(bool mid);
     void slot_sendNvSW();
     void slot_sendImDie(int iden);
-    void slot_sendPolice(bool be,int seat);
+    void slot_sendPolice(int seat,bool raise);
+    void slot_sendPoliceEnd();
+    void slot_sendSpeakEnd(int seat,int next,int state);
+    void slot_sendImPolice(int seat);
+    void slot_sendSpeakStateEnd(int state);
+    void slot_sendVotePolice(int seat,int toseat,int state);
 
 
 
@@ -113,10 +116,14 @@ public slots:
     void slot_DealSpeakRq( unsigned int lSendIP , char* buf , int nlen );
     //竞选警长
     void slot_DealPoliceRq( unsigned int lSendIP , char* buf , int nlen );
-
-
-
-
+    //成为警长
+    void slot_DealBePoliceRq( unsigned int lSendIP , char* buf , int nlen );
+    //竞选警长的玩家
+    void slot_DealPolicePlayerRs( unsigned int lSendIP , char* buf , int nlen );
+    //设置警长
+    void slot_DealBePoliceRs( unsigned int lSendIP , char* buf , int nlen );
+    //开始投票
+    void slot_DealBeginVote( unsigned int lSendIP , char* buf , int nlen );
 
 
 

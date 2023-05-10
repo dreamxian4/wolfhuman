@@ -36,7 +36,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>1</string>
+    <string>上</string>
    </property>
   </widget>
   <widget class="QLabel" name="lb_num">

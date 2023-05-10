@@ -408,8 +408,37 @@ color: rgb(255, 255, 255);</string>
      <x>110</x>
      <y>320</y>
      <width>261</width>
-     <height>311</height>
+     <height>381</height>
     </rect>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lb_time">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>130</y>
+     <width>261</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>this</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_operate">
+   <property name="geometry">
+    <rect>
+     <x>432</x>
+     <y>870</y>
+     <width>41</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>放手</string>
    </property>
   </widget>
  </widget>

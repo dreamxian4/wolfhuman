@@ -23,10 +23,14 @@ public:
     explicit roomPlayerform(QWidget *parent = nullptr);
     ~roomPlayerform();
 //    void paintEvent(QPaintEvent *event);
-    void setInfo(int id,int identify,int jing,bool isme);
+    void setInfo(int id,bool isme);
     void setImage(QString icon);
     void setZiLiao(int level,QString sex,QString name,int userid,int count);
+    void setJing(int jing);
+    void setIden(int iden);
     int getUserid();
+    QString getJing();
+    void setAbleToVoted(bool vote);
 
 private slots:
     void on_pb_icon_clicked();

@@ -29,13 +29,12 @@ roomPlayerform::~roomPlayerform()
 //    event->accept();
 //}
 
-void roomPlayerform::setInfo(int id, int identify, int jing,bool isme)
+void roomPlayerform::setInfo(int id,bool isme)
 {
     //判断是不是自己，设置醒目
     if(isme)ui->pb_edge->setStyleSheet("background-color: rgb(0, 255, 127);");
     ui->lb_num->setText(QString("%1").arg(id));
     m_id=id;
-    //设置警徽和身份TODO
 }
 
 void roomPlayerform::setImage(QString icon)
@@ -58,9 +57,70 @@ void roomPlayerform::setZiLiao(int level, QString sex, QString name, int userid,
     m_num=count;
 }
 
+void roomPlayerform::setJing(int jing)
+{
+    //设置警徽图标
+    switch(jing){
+    case 1://上警
+        ui->lb_badge->setText("上");
+        break;
+    case 2://放手
+        ui->lb_badge->setText("放");
+        break;
+    case 3://警长
+        ui->lb_badge->setText("警");
+        break;
+    default:
+        ui->lb_badge->setText("");
+        break;
+    }
+}
+
+void roomPlayerform::setIden(int iden)
+{
+    //设置身份
+    switch(iden){
+    case 0://预言家
+        ui->lb_identify->setText("预");
+        break;
+    case 1://女巫
+        ui->lb_identify->setText("女");
+        break;
+    case 2://平民
+        ui->lb_identify->setText("民");
+        break;
+    case 3://狼人
+        ui->lb_identify->setText("狼");
+        break;
+    case 4://猎人
+        ui->lb_identify->setText("猎");
+        break;
+    case 5://守卫
+        ui->lb_identify->setText("守");
+        break;
+    default:
+        ui->lb_identify->setText("");
+        break;
+    }
+}
+
 int roomPlayerform::getUserid()
 {
     return m_userid;
+}
+
+QString roomPlayerform::getJing()
+{
+    return ui->lb_badge->text();
+}
+
+void roomPlayerform::setAbleToVoted(bool vote)
+{
+    if(vote){//可以被投票
+        ui->pb_edge->setStyleSheet("background-color: rgb(0, 85, 255);");
+    }else{//不可以被投票
+        ui->pb_icon->setEnabled(false);
+    }
 }
 
 

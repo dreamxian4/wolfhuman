@@ -11,8 +11,7 @@ roomDialog::roomDialog(QWidget *parent) :
     m_mode(0),m_method(0),m_roomid(0),m_count(0),
     m_currentCou(0),m_pass(false),num(0),state(false),
     m_playing(false),m_day(0),m_pb_icon(USERINFO),m_d_kill(0),
-    m_d_antidote(false),m_d_poison(false),m_d_protect(0),
-    m_d_midnight(true)
+    m_d_antidote(false),m_d_poison(false),m_d_protect(0),m_d_speak(0)
 {
 
     //身份信息初始化
@@ -38,6 +37,8 @@ roomDialog::roomDialog(QWidget *parent) :
     connect(m_timer_skyBlk,&QTimer::timeout,this,&roomDialog::slot_OverTimerskyBlk);
     m_timer_tips=new QTimer;
     connect(m_timer_tips,&QTimer::timeout,this,&roomDialog::slot_OverTimerTips);
+    m_timer_police=new QTimer;
+    connect(m_timer_police,&QTimer::timeout,this,&roomDialog::slot_OverTimerPolice);
 }
 
 void roomDialog::slot_addPlayer(QWidget *player,int id)
@@ -66,13 +67,16 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
     ui->lb_roomNum->setText(QString("%1").arg(roomid));
     ui->lb_roomType->setText(QString("%1人基础板").arg(num));
     ui->pb_day->setText("准备阶段");
+    ui->pb_operate->setEnabled(false);
     //加12个默认的
     for(int i=1;i<13;i++){
         //头像：小于人数的编号：+ 大于人数的编号：锁
         roomPlayerform* player=new roomPlayerform;
         connect(player,SIGNAL(SIG_click_icon(int)),
                 this,SLOT(slot_click_icon(int)));
-        player->setInfo(i,0,0,false);
+        player->setInfo(i,false);
+        player->setIden(-1);
+        player->setJing(-1);
         //锁
         if(i>num)player->setImage("00");
         m_mapIdToPlayer[i]=player;
@@ -103,7 +107,7 @@ void roomDialog::slot_ready()
     m_timer_ready->start(1000);
     num=5;
     state=true;
-    ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
+    ui->lb_ready->setText(QString("游戏即将开始"));
 }
 
 void roomDialog::slot_setIden(int iden)
@@ -114,6 +118,7 @@ void roomDialog::slot_setIden(int iden)
         m_d_poison=true;
     }
     m_playing=true;
+    m_mapIdToPlayer[m_seat]->setIden(iden);
     ui->lb_ready->setText(QString("游戏开始~~你的身份是：%1").arg(BASEIDENTIFY[iden]));
 }
 
@@ -150,8 +155,9 @@ void roomDialog::slot_skyBlack()
         m_pb_icon=SKYBLK_SW;
         break;
     }
-    m_timer_skyBlk->start(15000);
-    qDebug()<<"skyblk:"<<m_timer_skyBlk;
+    blk=30;
+    m_timer_skyBlk->start(1000);
+
 }
 
 void roomDialog::slot_yyj(int id, int iden)
@@ -174,7 +180,7 @@ void roomDialog::slot_nw(int kill)
         //判断还有没有解药
         if(m_d_antidote){
             //有，弹出框显示杀人信息，询问是否救人
-            if(kill=0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
+            if(kill==0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
             else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
                 //救，发送救人信息
                 Q_EMIT SIG_nvSilverWater();
@@ -213,25 +219,94 @@ void roomDialog::slot_skyWhite(int *die)
     ui->tb_message->append(show);
 }
 
-void roomDialog::slot_speak()
+void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
 {
-    //语音TODO
-    ui->lb_operate->setText("开始发言");
+    //判断发言人是不是自己
+    switch(rq.state){
+    case 3://白天正常发言
+        break;
+    case 1://上警玩家发言
+        ui->pb_day->setText("竞选阶段");
+        m_d_state=1;
+        if(m_d_police)ui->pb_operate->setEnabled(true);
+        if(rq.seat==m_seat){
+            //判断自己有没有上警
+            if(m_d_police){
+                //如果上警：发言
+                //如果已经发过言了，发言阶段结束
+                if(m_d_speak==1){
+                    Q_EMIT SIG_SpeakStateEnd(1);
+                    m_d_speak=0;
+                }
+                ui->lb_operate->setText("开始发言");
+                m_d_speak=1;
+            }else{
+                //没上警：发送发言结束包，下一个人是后面的人
+                Q_EMIT SIG_SpeakEnd(m_seat,1,rq.state);
+            }
+        }
+        break;
+    case 2://没有警长，依次发言
+        break;
+    }
 }
 
 void roomDialog::slot_police()
 {
+    police=10;
+    m_timer_police->start(1000);
     //询问是否竞选警长
     if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
         //是：回复竞选
-        Q_EMIT SIG_police(true,m_seat);
-    }else{
-        //不是：回复不竞选
-        Q_EMIT SIG_police(false,m_seat);
-    }
+        m_d_police=true;
+        Q_EMIT SIG_police(m_seat,true);
+    }else m_d_police=false;
 }
 
+void roomDialog::slot_bePolice()
+{
+    //判断自己有没有竞选
+    if(m_d_police){
+        //竞选了，自己是警长，发送警长回复包
+        Q_EMIT SIG_imPolice(m_seat);
+    }
+    //没竞选，自己不是警长
+}
 
+void roomDialog::slot_setPolicePlayer(STRU_TOBEPOLICE_RS& rs)
+{
+    //将对应位置的玩家警徽图标设为上警1:上警 2:放手 3:警长
+    if(rs.raise) m_mapIdToPlayer[rs.seat]->setJing(1);
+    else m_mapIdToPlayer[rs.seat]->setJing(2);
+}
+
+void roomDialog::slot_setPolice(STRU_BEPOLICE_RS &rs)
+{
+    //将对应位置的玩家警徽图标设为上警1:上警 2:放手 3:警长
+    m_mapIdToPlayer[rs.seat]->setJing(3);
+}
+
+void roomDialog::slot_beginVote(STRU_SPEAKSTATE_END &end)
+{
+    //判断是哪个阶段的投票
+    //根据阶段查找可以被投票的人
+    switch(end.state){
+    case 1://竞选阶段发言结束，开始投票
+        ui->lb_operate->setText("开始投票,选出警长");
+        if(m_mapIdToPlayer[m_seat]->getJing()==""){
+            m_pb_icon=VOTE_POLICE;
+            for(int i=1;i<=m_count;i++){
+                if(m_mapIdToPlayer[i]->getJing()=="上"){
+                    m_mapIdToPlayer[i]->setAbleToVoted(true);
+                }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+            }
+        }
+        break;
+    case 2:
+
+        break;
+    }
+}
 
 
 void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QString name, int userid)
@@ -249,7 +324,7 @@ void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QStrin
     //设置成员信息
     if(userid==m_userid){//判断该信息是不是自己
         m_seat=id;
-        m_mapIdToPlayer[id]->setInfo(id,0,0,true);
+        m_mapIdToPlayer[id]->setInfo(id,true);
     }
     m_mapIdToPlayer[id]->setImage(QString("%1").arg(icon));
     m_mapIdToPlayer[id]->setZiLiao(level,sex,name,userid,m_count);
@@ -349,6 +424,11 @@ void roomDialog::slot_click_icon(int id)
             m_pb_icon=USERINFO;
         }
         break;
+    case VOTE_POLICE://投票竞选警长
+        //发送投票信息
+        Q_EMIT SIG_votePolice(m_seat,id,1);
+        m_pb_icon=USERINFO;
+        break;
     }
 }
 
@@ -356,12 +436,14 @@ void roomDialog::slot_OverTimerReady()
 {
     //5秒倒计时
     num--;
-    ui->lb_ready->setText(QString("%1秒后开始游戏").arg(num));
+    ui->lb_time->setText(QString("%1").arg(num));
+    ui->lb_ready->setText(QString("游戏即将开始"));
     if(num==0){
         //倒计时结束，判断自己是不是房主，如果是房主，给服务端发送正式开始包
         m_timer_ready->stop();
         state=false;
         ui->lb_ready->setText("");
+        ui->lb_time->setText("");
         if(m_seat==1)Q_EMIT SIG_beginGame();
     }
 }
@@ -376,20 +458,48 @@ void roomDialog::slot_OverTimerTips()
 
 void roomDialog::slot_OverTimerskyBlk()
 {
+    ui->lb_time->setText(QString("%1").arg(blk));
+    blk--;
     //判断是不是房主
-    if(m_seat==1){
+    if(m_seat==1&&blk==15){
         //是房主发送结束包
-        if(m_d_midnight){
-            Q_EMIT SIG_skyBlk15(true);
-            m_d_midnight=false;
-        }
-        else{
-            Q_EMIT SIG_skyBlk15(false);
-            m_d_midnight=true;
-            m_timer_skyBlk->stop();
-        }
-    }else m_timer_skyBlk->stop();
-    //不是忽略
+        Q_EMIT SIG_skyBlk15(true);
+    }else if(m_seat==1&&blk==0){
+        Q_EMIT SIG_skyBlk15(false);
+        m_timer_skyBlk->stop();
+    }else if(blk==0) m_timer_skyBlk->stop();
+}
 
+void roomDialog::slot_OverTimerPolice()
+{
+    ui->lb_time->setText(QString("%1").arg(police));
+    police--;
+    //判断是不是房主
+    if(m_seat==1&&police==0){
+        //是房主发送竞选阶段结束包
+        Q_EMIT SIG_PoliceEnd();
+        m_timer_police->stop();
+        ui->lb_time->setText("");
+
+    }else if(police==0){
+        m_timer_police->stop();
+        ui->lb_time->setText("");
+    }
+    //不是忽略
+}
+
+
+void roomDialog::on_pb_0_end_clicked()
+{
+    //结束发言
+    Q_EMIT SIG_SpeakEnd(m_seat,1,m_d_state);
+}
+
+
+void roomDialog::on_pb_operate_clicked()
+{
+    //放手
+    m_d_police=false;
+    Q_EMIT SIG_police(m_seat,false);
 }
 

@@ -9,6 +9,7 @@
 #include<QTimer>
 #include<QTime>
 #include<vector>
+#include"packdef.h"
 
 /**************************************/
 #define USERINFO 0
@@ -16,6 +17,7 @@
 #define SKYBLK_LR 2
 #define SKYBLK_NW 3
 #define SKYBLK_SW 4
+#define VOTE_POLICE 5
 /***************************************/
 
 
@@ -36,7 +38,12 @@ signals:
     void SIG_skyBlk15(bool);//是：前半夜结束  否：后半夜结束
     void SIG_nvSilverWater();//女巫救人
     void SIG_imDie(int);//我死了，发送我的身份到服务端
-    void SIG_police(bool,int);//是否竞选警长
+    void SIG_police(int,bool);//是否竞选警长,是：举手 否：放手
+    void SIG_PoliceEnd();//竞选阶段结束
+    void SIG_SpeakEnd(int,int,int);//发言结束
+    void SIG_imPolice(int);//我是警长
+    void SIG_SpeakStateEnd(int state);//发言阶段结束
+    void SIG_votePolice(int,int,int);//警长投票
 
 
 public:
@@ -53,8 +60,12 @@ public:
     void slot_lr(int id,int toid);
     void slot_nw(int kill);
     void slot_skyWhite(int* die);
-    void slot_speak();
+    void slot_speak(STRU_SPEAK_RQ& rq);
     void slot_police();
+    void slot_bePolice();
+    void slot_setPolicePlayer(STRU_TOBEPOLICE_RS& rs);
+    void slot_setPolice(STRU_BEPOLICE_RS& rs);
+    void slot_beginVote(STRU_SPEAKSTATE_END& end);
 
 private slots:
     void on_pb_min_clicked();
@@ -70,7 +81,12 @@ private slots:
     void slot_OverTimerReady();
     void slot_OverTimerTips();
     void slot_OverTimerskyBlk();
+    void slot_OverTimerPolice();
 
+
+    void on_pb_0_end_clicked();
+
+    void on_pb_operate_clicked();
 
 private:
     Ui::roomDialog *ui;
@@ -101,20 +117,25 @@ private:
     QTimer* m_timer_tips;//提示消失
     QTimer* m_timer_ready;//5秒准备
     QTimer* m_timer_skyBlk;//夜晚
+    QTimer* m_timer_police;//竞选警长
 
     //用于倒计时
     int num;//5秒
     bool state;//判断是否在准备开始倒计时中
+    int blk;//30s
+    int police;//10s
 
     //用于控制组件
-    int m_pb_icon;
+    int m_pb_icon;//控制头像点击信号
 
 
     int m_d_kill;//被杀的人
     bool m_d_antidote;//女巫解药
     bool m_d_poison;//女巫毒药
     int m_d_protect;//守卫守的人
-    bool m_d_midnight;//半夜还是整夜，用于房主发送夜晚包
+    bool m_d_police;//自己是否竞选
+    int m_d_state;//当前阶段，用于控制发言
+    int m_d_speak;//发言阶段，用于控制结束发言：如果当前阶段已经发过言，发送阶段结束包
 };
 
 #endif // ROOMDIALOG_H

@@ -89,8 +89,18 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendNvSW()));
     connect(m_roomDialog,SIGNAL(SIG_imDie(int)),
             this,SLOT(slot_sendImDie(int)));
-    connect(m_roomDialog,SIGNAL(SIG_police(bool,int)),
-            this,SLOT(slot_sendPolice(bool,int)));
+    connect(m_roomDialog,SIGNAL(SIG_police(int,bool)),
+            this,SLOT(slot_sendPolice(int,bool)));
+    connect(m_roomDialog,SIGNAL(SIG_PoliceEnd()),
+            this,SLOT(slot_sendPoliceEnd()));
+    connect(m_roomDialog,SIGNAL(SIG_SpeakEnd(int,int,int)),
+            this,SLOT(slot_sendSpeakEnd(int,int,int)));
+    connect(m_roomDialog,SIGNAL(SIG_imPolice(int)),
+            this,SLOT(slot_sendImPolice(int)));
+    connect(m_roomDialog,SIGNAL(SIG_SpeakStateEnd(int)),
+            this,SLOT(slot_sendSpeakStateEnd(int)));
+    connect(m_roomDialog,SIGNAL(SIG_votePolice(int,int,int)),
+            this,SLOT(slot_sendVotePolice(int,int,int)));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -102,6 +112,9 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
     connect(m_roomListDialog,SIGNAL(SIG_returnMain()),
             this,SLOT(slot_qie_listMain()));
 }
+
+
+
 
 ckernel::~ckernel()
 {
@@ -149,6 +162,8 @@ ckernel::~ckernel()
         m_roomListDialog==nullptr;
     }
 }
+
+
 
 void ckernel::slot_qie_joinGame()
 {
@@ -224,6 +239,8 @@ void ckernel::slot_qie_listMain()
     //显示主界面
     m_mainDialog->showNormal();
 }
+
+
 
 
 
@@ -344,14 +361,63 @@ void ckernel::slot_sendImDie(int iden)
     SendData(0,(char*)&rs,sizeof(rs));
 }
 
-void ckernel::slot_sendPolice(bool be,int seat)
+void ckernel::slot_sendPolice(int seat,bool raise)
 {
     STRU_TOBEPOLICE_RS rs;
     rs.roomid=m_roomid;
-    rs.seat==seat;
-    rs.be=be;
+    rs.seat=seat;
+    rs.raise=raise;
     SendData(0,(char*)&rs,sizeof(rs));
 }
+
+void ckernel::slot_sendPoliceEnd()
+{
+    STRU_POLICE_END end;
+    end.roomid=m_roomid;
+    SendData(0,(char*)&end,sizeof(end));
+}
+
+void ckernel::slot_sendSpeakEnd(int seat,int next,int state)
+{
+    STRU_SPEAK_RS rs;
+    rs.seat=seat;
+    rs.roomid=m_roomid;
+    rs.next=next;
+    rs.state=state;
+    SendData(0,(char*)&rs,sizeof(rs));
+}
+
+void ckernel::slot_sendImPolice(int seat)
+{
+    STRU_BEPOLICE_RS rs;
+    rs.roomid=m_roomid;
+    rs.seat=seat;
+    SendData(0,(char*)&rs,sizeof(rs));
+}
+
+void ckernel::slot_sendSpeakStateEnd(int state)
+{
+    STRU_SPEAKSTATE_END end;
+    end.roomid=m_roomid;
+    end.state=state;
+    SendData(0,(char*)&end,sizeof(end));
+}
+
+void ckernel::slot_sendVotePolice(int seat, int toseat,int state)
+{
+    STRU_VOTE_RQ rq;
+    rq.roomid=m_roomid;
+    rq.seat=seat;
+    rq.toseat=toseat;
+    rq.state=state;
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+
+
+
+
+
 
 void ckernel::dealData(unsigned int lSendIP, char *buf, int nlen)
 {
@@ -552,7 +618,7 @@ void ckernel::slot_DealSkyWhiteRq(unsigned int lSendIP, char *buf, int nlen)
 void ckernel::slot_DealSpeakRq(unsigned int lSendIP, char *buf, int nlen)
 {
     //语音TODO
-    m_roomDialog->slot_speak();
+    m_roomDialog->slot_speak(*(STRU_SPEAK_RQ*)buf);
 }
 
 void ckernel::slot_DealPoliceRq(unsigned int lSendIP, char *buf, int nlen)
@@ -560,6 +626,34 @@ void ckernel::slot_DealPoliceRq(unsigned int lSendIP, char *buf, int nlen)
     //竞选警长
     m_roomDialog->slot_police();
 }
+
+void ckernel::slot_DealBePoliceRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //成为警长
+    m_roomDialog->slot_bePolice();
+}
+
+void ckernel::slot_DealBePoliceRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //设置警长
+    m_roomDialog->slot_setPolice(*(STRU_BEPOLICE_RS*)buf);
+}
+
+void ckernel::slot_DealBeginVote(unsigned int lSendIP, char *buf, int nlen)
+{
+    //开始投票
+    m_roomDialog->slot_beginVote(*(STRU_SPEAKSTATE_END*)buf);
+}
+
+void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //设置竞选警长的玩家
+    m_roomDialog->slot_setPolicePlayer(*(STRU_TOBEPOLICE_RS*)buf);
+}
+
+
+
+
 
 void ckernel::initConfig()
 {
@@ -617,10 +711,15 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_SKYWHT_RQ)=&ckernel::slot_DealSkyWhiteRq;
     netMap(DEF_PACK_SPEAK_RQ)=&ckernel::slot_DealSpeakRq;
     netMap(DEF_PACK_TOBEPOLICE_RQ)=&ckernel::slot_DealPoliceRq;
+    netMap(DEF_PACK_TOBEPOLICE_RS)=&ckernel::slot_DealPolicePlayerRs;
+    netMap(DEF_PACK_BEPOLICE_RQ)=&ckernel::slot_DealBePoliceRq;
+    netMap(DEF_PACK_BEPOLICE_RS)=&ckernel::slot_DealBePoliceRs;
+    netMap(DEF_PACK_SPEAKSTATE_END)=&ckernel::slot_DealBeginVote;
 }
 
 void ckernel::slot_quitLogin()
 {
+    //退出登录，退出客户端
     STRU_CLIENTQUITLOGIN_RQ rq;
     rq.m_UserID=m_id;
     SendData(0,(char*)&rq,sizeof(rq));
@@ -629,6 +728,7 @@ void ckernel::slot_quitLogin()
 
 void ckernel::slot_quitClogin()
 {
+    //退出登录，返回主界面
     STRU_CLIENTQUITLOGIN_RQ rq;
     rq.m_UserID=m_id;
     SendData(0,(char*)&rq,sizeof(rq));
