@@ -406,9 +406,9 @@ color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>320</y>
+     <y>380</y>
      <width>261</width>
-     <height>381</height>
+     <height>431</height>
     </rect>
    </property>
   </widget>
@@ -439,6 +439,32 @@ color: rgb(255, 255, 255);</string>
    </property>
    <property name="text">
     <string>放手</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_order">
+   <property name="geometry">
+    <rect>
+     <x>120</x>
+     <y>330</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>逆序发言</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_deorder">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>330</y>
+     <width>93</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>顺序发言</string>
    </property>
   </widget>
  </widget>

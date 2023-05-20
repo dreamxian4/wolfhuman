@@ -1,7 +1,6 @@
 <RCC>
     <qresource prefix="/">
         <file>tupian/startBackGround.jpg</file>
-        <file>tupian/empty.png</file>
         <file>tx/1.png</file>
         <file>tx/2.png</file>
         <file>tx/3.png</file>
@@ -41,7 +40,9 @@
         <file>tx/0.png</file>
         <file>tupian/register.png</file>
         <file>tupian/register2.png</file>
-        <file>tupian/男.png</file>
-        <file>tupian/女.png</file>
+        <file>tupian/boy.png</file>
+        <file>tupian/girl.png</file>
+        <file>tupian/lock.png</file>
+        <file>tx/00.png</file>
     </qresource>
 </RCC>

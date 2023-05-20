@@ -44,13 +44,15 @@ signals:
     void SIG_imPolice(int);//我是警长
     void SIG_SpeakStateEnd(int state);//发言阶段结束
     void SIG_votePolice(int,int,int);//警长投票
+    void SIG_VoteEnd(int);//投票结束
+    void SIG_speakOrder(int,int);//发言顺序
 
 
 public:
     explicit roomDialog(QWidget *parent = nullptr);
     ~roomDialog();
     void slot_setInfo(int roomid,int mode,int method,bool lock,
-                     QString password,int num,int userid);
+                      QString password,int num,int userid);
     void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
     void slot_destroyRoom();
     void slot_ready();
@@ -66,6 +68,9 @@ public:
     void slot_setPolicePlayer(STRU_TOBEPOLICE_RS& rs);
     void slot_setPolice(STRU_BEPOLICE_RS& rs);
     void slot_beginVote(STRU_SPEAKSTATE_END& end);
+    void slot_VoteRs(STRU_VOTE_RS& rs);
+    void slot_SpeakOrder(STRU_SPEAK_ORDER& order);
+
 
 private slots:
     void on_pb_min_clicked();
@@ -82,11 +87,16 @@ private slots:
     void slot_OverTimerTips();
     void slot_OverTimerskyBlk();
     void slot_OverTimerPolice();
+    void slot_OverTimerVote();
 
 
     void on_pb_0_end_clicked();
 
     void on_pb_operate_clicked();
+
+    void on_pb_order_clicked();
+
+    void on_pb_deorder_clicked();
 
 private:
     Ui::roomDialog *ui;
@@ -99,7 +109,7 @@ private:
     int m_mode        ;//模式
     int m_method      ;//玩法
     int m_roomid      ;
-//    char    roomName[_MAX_SIZE]    ;
+    //    char    roomName[_MAX_SIZE]    ;
     int m_count       ;
     int m_currentCou  ;
     bool m_pass        ;
@@ -118,12 +128,14 @@ private:
     QTimer* m_timer_ready;//5秒准备
     QTimer* m_timer_skyBlk;//夜晚
     QTimer* m_timer_police;//竞选警长
+    QTimer* m_timer_vote;//投票
 
     //用于倒计时
     int num;//5秒
     bool state;//判断是否在准备开始倒计时中
     int blk;//30s
     int police;//10s
+    int vote;//10s
 
     //用于控制组件
     int m_pb_icon;//控制头像点击信号
@@ -136,6 +148,12 @@ private:
     bool m_d_police;//自己是否竞选
     int m_d_state;//当前阶段，用于控制发言
     int m_d_speak;//发言阶段，用于控制结束发言：如果当前阶段已经发过言，发送阶段结束包
+    int m_d_vote;//投票阶段，用于发送投票结束包 1：上警
+    bool m_d_bePolice;//自己是否为警长
+    int m_d_nextSpeak;//发言顺序
+
+    //其他
+    QString Text_upPolice;//上警玩家提示信息
 };
 
 #endif // ROOMDIALOG_H

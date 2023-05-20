@@ -101,6 +101,10 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendSpeakStateEnd(int)));
     connect(m_roomDialog,SIGNAL(SIG_votePolice(int,int,int)),
             this,SLOT(slot_sendVotePolice(int,int,int)));
+    connect(m_roomDialog,SIGNAL(SIG_VoteEnd(int)),
+            this,SLOT(slot_sendVoteEnd(int)));
+    connect(m_roomDialog,SIGNAL(SIG_speakOrder(int,int)),
+            this,SLOT(slot_sendSpeakOrder(int,int)));
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -413,6 +417,23 @@ void ckernel::slot_sendVotePolice(int seat, int toseat,int state)
     SendData(0,(char*)&rq,sizeof(rq));
 }
 
+void ckernel::slot_sendVoteEnd(int state)
+{
+    STRU_VOTE_END end;
+    end.roomid=m_roomid;
+    end.state=state;
+    SendData(0,(char*)&end,sizeof(end));
+}
+
+void ckernel::slot_sendSpeakOrder(int seat, int next)
+{
+    STRU_SPEAK_ORDER order;
+    order.roomid=m_roomid;
+    order.seat=seat;
+    order.next=next;
+    SendData(0,(char*)&order,sizeof(order));
+}
+
 
 
 
@@ -645,6 +666,18 @@ void ckernel::slot_DealBeginVote(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_beginVote(*(STRU_SPEAKSTATE_END*)buf);
 }
 
+void ckernel::slot_DeaVoteRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //处理投票结果
+    m_roomDialog->slot_VoteRs(*(STRU_VOTE_RS*)buf);
+}
+
+void ckernel::slot_DealSpeakOrder(unsigned int lSendIP, char *buf, int nlen)
+{
+    //发言顺序：如果是空，说明是要警长选择，如果有值，说明是通知房间成员警长的选择
+    m_roomDialog->slot_SpeakOrder(*(STRU_SPEAK_ORDER*)buf);
+}
+
 void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
 {
     //设置竞选警长的玩家
@@ -715,6 +748,8 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_BEPOLICE_RQ)=&ckernel::slot_DealBePoliceRq;
     netMap(DEF_PACK_BEPOLICE_RS)=&ckernel::slot_DealBePoliceRs;
     netMap(DEF_PACK_SPEAKSTATE_END)=&ckernel::slot_DealBeginVote;
+    netMap(DEF_PACK_VOTE_RS)=&ckernel::slot_DeaVoteRs;
+    netMap(DEF_PACK_SPEAK_ORDER)=&ckernel::slot_DealSpeakOrder;
 }
 
 void ckernel::slot_quitLogin()
@@ -722,6 +757,7 @@ void ckernel::slot_quitLogin()
     //退出登录，退出客户端
     STRU_CLIENTQUITLOGIN_RQ rq;
     rq.m_UserID=m_id;
+    rq.roomid=m_roomid;
     SendData(0,(char*)&rq,sizeof(rq));
     exit(0);
 }
@@ -731,6 +767,7 @@ void ckernel::slot_quitClogin()
     //退出登录，返回主界面
     STRU_CLIENTQUITLOGIN_RQ rq;
     rq.m_UserID=m_id;
+    rq.roomid=m_roomid;
     SendData(0,(char*)&rq,sizeof(rq));
     m_mainDialog->hide();
     m_loginDialog->showNormal();

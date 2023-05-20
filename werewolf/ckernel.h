@@ -74,6 +74,8 @@ public slots:
     void slot_sendImPolice(int seat);
     void slot_sendSpeakStateEnd(int state);
     void slot_sendVotePolice(int seat,int toseat,int state);
+    void slot_sendVoteEnd(int state);
+    void slot_sendSpeakOrder(int seat,int next);
 
 
 
@@ -124,6 +126,10 @@ public slots:
     void slot_DealBePoliceRs( unsigned int lSendIP , char* buf , int nlen );
     //开始投票
     void slot_DealBeginVote( unsigned int lSendIP , char* buf , int nlen );
+    //投票结果
+    void slot_DeaVoteRs( unsigned int lSendIP , char* buf , int nlen );
+    //警长选择发言顺序
+    void slot_DealSpeakOrder( unsigned int lSendIP , char* buf , int nlen );
 
 
 
