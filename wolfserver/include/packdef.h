@@ -131,7 +131,10 @@
 #define DEF_PACK_VOTE_RQ    (DEF_PACK_BASE + 37)
 //投票结果
 #define DEF_PACK_VOTE_RS     (DEF_PACK_BASE + 38)
-
+//投票阶段结束
+#define DEF_PACK_VOTE_END     (DEF_PACK_BASE + 39)
+//警长选择发言顺序
+# define DEF_PACK_SPEAK_ORDER       (DEF_PACK_BASE + 40)
 
 
 
@@ -235,6 +238,7 @@ typedef struct RoomInfo
         i_day=0;
         i_police=0;
         i_policeNum=0;
+        memset(i_vote,0,sizeof(int)*13);
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -258,6 +262,7 @@ typedef struct RoomInfo
     int i_day           ;
     int i_police        ;
     int i_policeNum     ;
+    int i_vote[13]      ;
 
 }RoomInfo;
 
@@ -420,9 +425,11 @@ typedef struct STRU_CLIENTQUITLOGIN_RQ
     {
         m_nType = DEF_PACK_CLIENTQUITLOGIN_RQ;
         m_UserID = 0;
+        roomid=0;
     }
     PackType m_nType;   //包类型
     int m_UserID;
+    int roomid;
 
 }STRU_CLIENTQUITLOGIN_RQ;
 
@@ -858,7 +865,7 @@ typedef struct STRU_SPEAKSTATE_END
     }
     PackType   m_nType;   //包类型
     int roomid;
-    int state;//1:上警
+    int state;//1:上警 2:白天
 }STRU_SPEAKSTATE_END;
 
 //玩家投票包
@@ -886,13 +893,43 @@ typedef struct STRU_VOTE_RS
     {
         m_nType = DEF_PACK_VOTE_RS;
         state=0;
-        memset(result,0,sizeof(int)*12);
+        memset(result,0,sizeof(int)*13);
     }
     PackType   m_nType;   //包类型
     int state;//1:上警
-    int result[12];
+    int result[13];
 }STRU_VOTE_RS;
 
+//投票阶段结束
+typedef struct STRU_VOTE_END
+{
+    STRU_VOTE_END()
+    {
+        m_nType = DEF_PACK_VOTE_END;
+        roomid=0;
+        state=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int state;//1:上警
+}STRU_VOTE_END;
+
+
+//警长选择发言顺序
+typedef struct STRU_SPEAK_ORDER
+{
+    STRU_SPEAK_ORDER()
+    {
+        m_nType = DEF_PACK_SPEAK_ORDER;
+        roomid=0;
+        seat=0;
+        next=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;//警长座位号
+    int next;//发言顺序
+}STRU_SPEAK_ORDER;
 
 
 ////注册音频

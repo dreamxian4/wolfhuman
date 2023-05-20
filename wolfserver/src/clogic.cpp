@@ -17,14 +17,16 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_SKYBLACK_RS)        = &CLogic::Skyblack;
     NetPackMap(DEF_PACK_SKYBLACK_END)       = &CLogic::SkyblackEnd;
     NetPackMap(DEF_PACK_LRTONW_SKYBLK_RS)   = &CLogic::NWSilverWater;
-    NetPackMap(DEF_PACK_SKYWHT_RS)          = &CLogic::DierIden;
     NetPackMap(DEF_PACK_TOBEPOLICE_RS)      = &CLogic::ToBePolice;
     NetPackMap(DEF_PACK_POLICEEND)          = &CLogic::PoliceEnd;
     NetPackMap(DEF_PACK_SPEAK_RS)           = &CLogic::SpeakEnd;
     NetPackMap(DEF_PACK_BEPOLICE_RS)        = &CLogic::BePolice;
     NetPackMap(DEF_PACK_SPEAKSTATE_END)     = &CLogic::SpeakStateEnd;
     NetPackMap(DEF_PACK_VOTE_RQ)            = &CLogic::Vote;
+    NetPackMap(DEF_PACK_VOTE_END)           = &CLogic::VoteEnd;
+    NetPackMap(DEF_PACK_SPEAK_ORDER)        = &CLogic::SpeakOrder;
 }
+
 
 
 void CLogic::RegisterRq(sock_fd clientfd, char *szbuf, int nlen)
@@ -150,7 +152,42 @@ void CLogic::QuitLogin(sock_fd clientfd, char *szbuf, int nlen)
     printf("QuitLogin:%d\n",clientfd);
     STRU_CLIENTQUITLOGIN_RQ* rq=(STRU_CLIENTQUITLOGIN_RQ*)szbuf;
     int id=rq->m_UserID;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(id,user))return;
+    if(rq->roomid){
+        //判断是不是房主
+        STRU_LEAVEROOM_RS rs;
+        list<int>lst;
+        if(!m_mapRoomidToMemberlist.find(rq->roomid,lst))return;
+        if(user->m_seat==1){
+            //给房间的每个成员发送房间不存在包
+            rs.m_roomisExist=false;
+            //如果是，将房间销毁，从三个映射表中将该房间删除
+            m_mapRoomidToRoomInfo.erase(rq->roomid);
+            m_mapRoomidToMemberlist.erase(rq->roomid);
+            m_roomList.remove(rq->roomid);
+            lst.remove(rq->roomid);
+        }else{
+            //如果不是，在房间信息中更新当前人数、空闲座位
+            RoomInfo* room=nullptr;
+            if(!m_mapRoomidToRoomInfo.find(rq->roomid,room))return;
+            room->m_currentNum--;
+            room->m_seat[user->m_seat]=0;
+            //将该用户从房间成员列表中删除，给该房间的其他成员发送退出包
+            rs.m_roomisExist=true;
+            rs.m_id=user->m_seat;
+            lst.remove(rq->roomid);
+            m_mapRoomidToMemberlist.insert(rq->roomid,lst);
+        }
+
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            UserInfo* muser;
+            if(!m_mapIdToUserInfo.find(*ite,muser))continue;
+            SendData(muser->m_sockfd,(char*)&rs,sizeof(rs));
+        }
+    }
     if(m_mapIdToUserInfo.IsExist(id))m_mapIdToUserInfo.erase(id);
+
     //TODO:给好友发送离线申请
 }
 
@@ -560,16 +597,46 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
             STRU_SKYWHT_RQ rq;
             rq.die[0]=room->i_die[0];
             rq.die[1]=room->i_die[1];
+            UserInfo* user=nullptr;
             for(auto ite=lst.begin();ite!=lst.end();ite++){
-                UserInfo* user=nullptr;
                 if(!m_mapIdToUserInfo.find(*ite,user))continue;
                 SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
             }
-            if(room->i_die[0]==0&&room->i_die[1]==0){
-                //直接发送发言包
-                //发送给警长，让警长选择发言顺序（顺序或逆序）
-                //警长选择后，服务器将次序发送给客户端
-                //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁TODO
+            //更新房间信息
+            for(int i=0;i<2;i++){
+                if(room->i_die[i]){
+                    if(room->m_identify[room->i_die[i]]==2)room->i_farmerNum--;
+                    else if(room->m_identify[room->i_die[i]]==3)room->i_wolfNum--;
+                    else room->i_godNum--;
+                }
+            }
+
+            //判断是否结束游戏
+            if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+                //结束：给每个人发送结束包TODO
+            }else{
+                //不结束：
+                //发送发言信息
+                if(room->i_police){
+                    //发送给警长，让警长选择发言顺序（顺序或逆序）
+                    //警长选择后，服务器将次序发送给客户端
+                    //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁
+                    //发送给所有人，客户端自行判断自己是不是警长
+                    STRU_SPEAK_ORDER orderRq;
+                    for(auto ite=lst.begin();ite!=lst.end();ite++){
+                        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                        SendData(user->m_sockfd,(char*)&orderRq,sizeof(orderRq));
+                    }
+                }else{
+                    //没有警长，从房主开始顺序发言
+                    STRU_SPEAK_RQ speakRq;
+                    speakRq.state=3;
+                    speakRq.seat=1;
+                    for(auto ite=lst.begin();ite!=lst.end();ite++){
+                        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                        SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
+                    }
+                }
             }
             memset(room->i_die,0,8);
             memset(room->i_kill,0,16);
@@ -587,36 +654,6 @@ void CLogic::NWSilverWater(sock_fd clientfd, char *szbuf, int nlen)
     if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
     //将杀人清空
     room->i_die[0]=0;
-}
-
-void CLogic::DierIden(sock_fd clientfd, char *szbuf, int nlen)
-{
-    printf("DierIden:%d\n",clientfd);
-    //找到房间
-    STRU_SKYWHT_RS* rs=(STRU_SKYWHT_RS*)szbuf;
-    RoomInfo* room=nullptr;
-    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
-    //更新存活信息
-    if(rs->iden==2)room->i_farmerNum--;
-    else if(rs->iden==3)room->i_wolfNum--;
-    else room->i_godNum--;
-    //判断是否结束游戏
-    if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
-        //结束：给每个人发送结束包TODO
-    }else{
-        //不结束：
-        list<int>lst;
-        if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
-        UserInfo* user=nullptr;
-        //发送发言信息
-        //发送给警长，让警长选择发言顺序（顺序或逆序）
-        //警长选择后，服务器将次序发送给客户端
-        //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁TODO
-        if(!m_mapIdToUserInfo.find(lst.front(),user))return;
-        STRU_SPEAK_RQ rq;
-        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
-
-    }
 }
 
 void CLogic::ToBePolice(sock_fd clientfd, char *szbuf, int nlen)
@@ -662,13 +699,47 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
         //直接发言，没有警长
         rq.state=2;
         rq.seat=1;
-        //发送死亡信息TODO
-    }else if(room->i_policeNum==1){
-        //如果只有一个人上警，直接成为警长，发送一个警长包给所有玩家
-        STRU_BEPOLICE_RQ rq;
+        //发送死亡信息
+        STRU_SKYWHT_RQ rq;
+        rq.die[0]=room->i_die[0];
+        rq.die[1]=room->i_die[1];
         for(auto ite=lst.begin();ite!=lst.end();ite++){
             if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
+
+        for(int i=0;i<2;i++){
+            if(room->i_die[i]){
+                if(room->m_identify[room->i_die[i]]==2)room->i_farmerNum--;
+                else if(room->m_identify[room->i_die[i]]==3)room->i_wolfNum--;
+                else room->i_godNum--;
+            }
+        }
+
+        //判断是否结束游戏
+        if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+            //结束：给每个人发送结束包TODO
+        }else{
+            //没有警长，从房主开始顺序发言
+            STRU_SPEAK_RQ speakRq;
+            speakRq.state=2;
+            speakRq.seat=1;
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
+            }
+        }
+        memset(room->i_die,0,8);
+        memset(room->i_kill,0,16);
+    }else if(room->i_policeNum==1){
+        //如果只有一个人上警，直接成为警长，发送一个警长包给所有玩家
+        STRU_BEPOLICE_RQ rq;
+        STRU_SPEAK_ORDER orderRq;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+            //警长选择发言顺序
+            SendData(user->m_sockfd,(char*)&orderRq,sizeof(orderRq));
         }
     }else{
         //发送上警玩家发言包
@@ -692,7 +763,7 @@ void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
     if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
     UserInfo* user=nullptr;
     STRU_SPEAK_RQ rq;
-    rq.seat=rs->seat+rs->next;
+    rq.seat=(rs->seat+rs->next)%room->m_beginNum;
     rq.state=rs->state;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
@@ -708,15 +779,66 @@ void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
     RoomInfo* room=nullptr;
     if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
     room->i_police=rs->seat;
-    //当选警长，将警长信息发送给玩家
     list<int>lst;
-    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
+    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst));
     UserInfo* user=nullptr;
-    for(auto ite=lst.begin();ite!=lst.end();ite++){
-        if(!m_mapIdToUserInfo.find(*ite,user))continue;
-        SendData(user->m_sockfd,szbuf,nlen);
+    //当选警长，将警长信息发送给玩家
+    if(rs->seat){
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,szbuf,nlen);
+        }
     }
-    //发送死亡信息TODO
+    if(room->i_day==1){
+        //是第一天，发送死亡信息
+        STRU_SKYWHT_RQ rq;
+        rq.die[0]=room->i_die[0];
+        rq.die[1]=room->i_die[1];
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
+
+        for(int i=0;i<2;i++){
+            if(room->i_die[i]){
+                if(room->m_identify[room->i_die[i]]==2)room->i_farmerNum--;
+                else if(room->m_identify[room->i_die[i]]==3)room->i_wolfNum--;
+                else room->i_godNum--;
+            }
+        }
+
+        //判断是否结束游戏
+        if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+            //结束：给每个人发送结束包TODO
+        }else{
+            //不结束：
+            //发送发言信息
+            if(rs->seat){
+                //发送给警长，让警长选择发言顺序（顺序或逆序）
+                //警长选择后，服务器将次序发送给客户端
+                //客户端在发送发言结束包的时候，将次序一并发过来，服务端根据次序判断下一个人是谁
+                //发送给所有人，客户端自行判断自己是不是警长
+                STRU_SPEAK_ORDER orderRq;
+                for(auto ite=lst.begin();ite!=lst.end();ite++){
+                    if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                    SendData(user->m_sockfd,(char*)&orderRq,sizeof(orderRq));
+                }
+            }else{
+                //没有警长，从房主开始顺序发言
+                STRU_SPEAK_RQ speakRq;
+                speakRq.state=2;
+                speakRq.seat=1;
+                for(auto ite=lst.begin();ite!=lst.end();ite++){
+                    if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                    SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
+                }
+            }
+        }
+        memset(room->i_die,0,8);
+        memset(room->i_kill,0,16);
+    }else{
+        //不是第一天，说明是撕警徽或者移交警徽，发生在白天结束，不用发送死亡信息，应该发送进入夜晚TODO
+    }
 }
 
 void CLogic::SpeakStateEnd(sock_fd clientfd, char *szbuf, int nlen)
@@ -738,4 +860,53 @@ void CLogic::SpeakStateEnd(sock_fd clientfd, char *szbuf, int nlen)
 void CLogic::Vote(sock_fd clientfd, char *szbuf, int nlen)
 {
     printf("Vote:%d\n",clientfd);
+    //保存投票结果
+    STRU_VOTE_RQ* rq=(STRU_VOTE_RQ*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(rq->roomid,room))return;
+    room->i_vote[rq->seat]=rq->toseat;
+}
+
+void CLogic::VoteEnd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("VoteEnd:%d\n",clientfd);
+    //将投票结果发送给房间成员
+    STRU_VOTE_END* end=(STRU_VOTE_END*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
+    UserInfo* user=nullptr;
+    STRU_VOTE_RS rs;
+    rs.state=end->state;
+    memcpy(rs.result,room->i_vote,sizeof(int)*13);
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+    }
+    //清空结果数组
+    memset(room->i_vote,0,sizeof(int)*13);
+}
+
+void CLogic::SpeakOrder(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("VoteEnd:%d\n",clientfd);
+    //转发给所有玩家
+    STRU_SPEAK_ORDER* order=(STRU_SPEAK_ORDER*)szbuf;
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(order->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(order->roomid,lst))return;
+    UserInfo* user=nullptr;
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+    STRU_SPEAK_RQ speakRq;
+    speakRq.state=3;
+    speakRq.seat=(order->seat+order->next)%room->m_beginNum;
+    for(auto ite=lst.begin();ite!=lst.end();ite++){
+        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
+    }
 }
