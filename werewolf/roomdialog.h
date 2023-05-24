@@ -20,6 +20,14 @@
 #define VOTE_POLICE 5
 /***************************************/
 
+/**************************************/
+#define NW_RESCUE 0
+#define NW_POISON 1
+#define NW_NODIE 2
+#define WANT_BEPOLICE 3
+/***************************************/
+
+
 
 namespace Ui {
 class roomDialog;
@@ -73,31 +81,25 @@ public:
 
 
 private slots:
+    void slot_addPlayer(QWidget* player,int id);
+    void slot_removePlayer(QWidget* player,int id);
+    void slot_click_icon(int id);
+    void slot_operate_button(int state,int kill);//0:女巫救人 1：女巫毒人 2：发言顺序
     void on_pb_min_clicked();
     void on_pb_close_clicked();
     void on_pb_quitroom_clicked();
     void on_pb_0_begin_clicked();
+    void on_pb_0_end_clicked();
+    void on_pb_operate_clicked();
+    void on_pb_order_clicked();
+    void on_pb_deorder_clicked();
 
-    void slot_addPlayer(QWidget* player,int id);
-    void slot_removePlayer(QWidget* player,int id);
-
-    void slot_click_icon(int id);
-
+private slots:
     void slot_OverTimerReady();
     void slot_OverTimerTips();
     void slot_OverTimerskyBlk();
     void slot_OverTimerPolice();
     void slot_OverTimerVote();
-
-
-    void on_pb_0_end_clicked();
-
-    void on_pb_operate_clicked();
-
-    void on_pb_order_clicked();
-
-    void on_pb_deorder_clicked();
-
 private:
     Ui::roomDialog *ui;
     QVBoxLayout* m_playerLayoutRight;
@@ -139,6 +141,7 @@ private:
 
     //用于控制组件
     int m_pb_icon;//控制头像点击信号
+    int m_pb_oper;//控制上部操作信号
 
 
     int m_d_kill;//被杀的人
@@ -151,6 +154,7 @@ private:
     int m_d_vote;//投票阶段，用于发送投票结束包 1：上警
     bool m_d_bePolice;//自己是否为警长
     int m_d_nextSpeak;//发言顺序
+    bool m_d_alive;//是否活着
 
     //其他
     QString Text_upPolice;//上警玩家提示信息

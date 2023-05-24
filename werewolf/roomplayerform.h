@@ -31,6 +31,8 @@ public:
     int getUserid();
     QString getJing();
     void setAbleToVoted(bool vote);
+    void resumeVoted();
+    void setAbleToOper(int who);
 
 private slots:
     void on_pb_icon_clicked();
@@ -41,10 +43,14 @@ private:
     QString     m_sex    ;
     QString     m_name   ;
     int         m_userid ;
-    int         m_id;
-    int m_num;
 
 
+
+public:
+    int m_num;//总人数
+    bool alive;//是否存活
+    bool beKnown;//是否被验过
+    int  m_id;//座位号
 };
 
 #endif // ROOMPLAYERFORM_H

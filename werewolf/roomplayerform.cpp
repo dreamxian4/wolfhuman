@@ -6,7 +6,8 @@
 
 roomPlayerform::roomPlayerform(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::roomPlayerform),m_id(0)
+    ui(new Ui::roomPlayerform),m_id(0),
+    alive(true),beKnown(false)
 {
     ui->setupUi(this);
     setImage("0");
@@ -35,6 +36,7 @@ void roomPlayerform::setInfo(int id,bool isme)
     if(isme)ui->pb_edge->setStyleSheet("background-color: rgb(0, 255, 127);");
     ui->lb_num->setText(QString("%1").arg(id));
     m_id=id;
+    ui->pb_icon->setEnabled(true);
 }
 
 void roomPlayerform::setImage(QString icon)
@@ -114,19 +116,33 @@ QString roomPlayerform::getJing()
     return ui->lb_badge->text();
 }
 
-void roomPlayerform::setAbleToVoted(bool vote)
+void roomPlayerform::setAbleToVoted(bool ok)
 {
-    if(vote){//可以被投票
+    if(ok){//可以被投票
         ui->pb_edge->setStyleSheet("background-color: rgb(0, 85, 255);");
     }else{//不可以被投票
         ui->pb_icon->setEnabled(false);
     }
 }
 
+void roomPlayerform::resumeVoted()
+{
+    if(alive){
+        ui->pb_icon->setEnabled(true);
+        ui->pb_edge->setStyleSheet("background-color: rgb(255, 255, 255);");
+    }
+}
+
+void roomPlayerform::setAbleToOper(int who)
+{
+
+}
+
+
+
 
 void roomPlayerform::on_pb_icon_clicked()
 {
-
     Q_EMIT SIG_click_icon(m_id);
 }
 

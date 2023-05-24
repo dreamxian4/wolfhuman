@@ -44,5 +44,6 @@
         <file>tupian/girl.png</file>
         <file>tupian/lock.png</file>
         <file>tx/00.png</file>
+        <file>tx/000.png</file>
     </qresource>
 </RCC>

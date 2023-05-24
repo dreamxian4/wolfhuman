@@ -13,7 +13,7 @@ roomDialog::roomDialog(QWidget *parent) :
     m_playing(false),m_day(0),m_pb_icon(USERINFO),m_d_kill(0),
     m_d_antidote(false),m_d_poison(false),m_d_protect(0),m_d_speak(0),
     m_d_vote(0),Text_upPolice("上警玩家:"),m_d_bePolice(false),
-    m_d_nextSpeak(0)
+    m_d_nextSpeak(0),m_pb_oper(0),m_d_alive(true)
 {
     //身份信息初始化
     BASEIDENTIFY={"预言家","女巫","平民","狼人","猎人","守卫"};
@@ -120,7 +120,7 @@ void roomDialog::slot_ready()
 void roomDialog::slot_setIden(int iden)
 {
     m_user_iden=iden;
-    if(iden==1){
+    if(iden==1){//女巫的解药和毒药
         m_d_antidote=true;
         m_d_poison=true;
     }
@@ -137,37 +137,50 @@ void roomDialog::slot_skyBlack()
     ui->pb_day->setText(QString("第%1天").arg(m_day));
     ui->pb_day->setStyleSheet("background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);");
     ui->lb_operate->setStyleSheet("color: rgb(0, 255, 127);font: 8pt \"隶书\";");
-    switch(m_user_iden){
-    case 0://预言家
-        //        ui->lb_operate->setText("请选择一位玩家，验证其身份");
-        ui->tb_message->append("请选择一位玩家，验证其身份");
-        m_pb_icon=SKYBLK_YYJ;
-        break;
-    case 1://女巫
-        //        ui->lb_operate->setText("等待操作");
-        ui->tb_message->append("稍作等待，完成操作");
-        m_pb_icon=USERINFO;
-        break;
-    case 2://平民
-        //        ui->lb_operate->setText("等待天亮");
-        ui->tb_message->append("等待天亮");
-        m_pb_icon=USERINFO;
-        break;
-    case 3://狼人
-        //        ui->lb_operate->setText("请选择一位玩家，杀掉他");
-        ui->tb_message->append("请选择一位玩家，杀掉他");
-        m_pb_icon=SKYBLK_LR;
-        break;
-    case 4://猎人
-        //        ui->lb_operate->setText("等待天亮");
-        ui->tb_message->append("等待天亮");
-        m_pb_icon=USERINFO;
-        break;
-    case 5://守卫
-        //        ui->lb_operate->setText("请选择一位玩家，守护他不被杀害");
-        ui->tb_message->append("请选择一位玩家，守护其不被杀害");
-        m_pb_icon=SKYBLK_SW;
-        break;
+    if(m_d_alive){
+        switch(m_user_iden){//根据身份做不同的操作
+        case 0://预言家
+            //        ui->lb_operate->setText("请选择一位玩家，验证其身份");
+            ui->tb_message->append("请选择一位玩家，验证其身份");
+            for(int i=1;i<=m_count;i++){
+                if(m_mapIdToPlayer[i]->m_id!=m_seat&&m_mapIdToPlayer[i]->alive
+                        &&!m_mapIdToPlayer[i]->beKnown){//不是自己，没被验过，还活着
+                    m_mapIdToPlayer[i]->setAbleToVoted(true);
+                }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+            }
+            m_pb_icon=SKYBLK_YYJ;
+            break;
+        case 1://女巫
+            //        ui->lb_operate->setText("等待操作");
+            ui->tb_message->append("稍作等待，完成操作");
+            m_pb_icon=USERINFO;
+            break;
+        case 2://平民
+            //        ui->lb_operate->setText("等待天亮");
+            ui->tb_message->append("等待天亮");
+            m_pb_icon=USERINFO;
+            break;
+        case 3://狼人
+            //        ui->lb_operate->setText("请选择一位玩家，杀掉他");
+            ui->tb_message->append("请选择一位玩家，杀掉他");
+            for(int i=1;i<=m_count;i++){
+                if(m_mapIdToPlayer[i]->alive){//还活着
+                    m_mapIdToPlayer[i]->setAbleToVoted(true);
+                }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+            }
+            m_pb_icon=SKYBLK_LR;
+            break;
+        case 4://猎人
+            //        ui->lb_operate->setText("等待天亮");
+            ui->tb_message->append("等待天亮");
+            m_pb_icon=USERINFO;
+            break;
+        case 5://守卫TODO
+            //        ui->lb_operate->setText("请选择一位玩家，守护他不被杀害");
+            ui->tb_message->append("请选择一位玩家，守护其不被杀害");
+            m_pb_icon=SKYBLK_SW;
+            break;
+        }
     }
     blk=30;
     m_timer_skyBlk->start(1000);
@@ -176,49 +189,67 @@ void roomDialog::slot_skyBlack()
 void roomDialog::slot_yyj(int id, int iden)
 {
     //    ui->lb_operate->setText(QString("您选择的玩家是%1号，他的身份是:%2").arg(id).arg(BASEIDENTIFY[iden]));
-    ui->tb_message->append(QString("您选择的玩家是%1号，他的身份是:%2").arg(id).arg(BASEIDENTIFY[iden]));
+    if(m_d_alive){
+        ui->tb_message->append(QString("您选择的玩家是%1号，他的身份是:%2").arg(id).arg(BASEIDENTIFY[iden]));
+        m_mapIdToPlayer[id]->setIden(iden);
+        m_mapIdToPlayer[id]->beKnown=true;
+    }
 }
 
 void roomDialog::slot_lr(int id, int toid)
 {
-    if(m_user_iden!=3)return;
-    //TODO
-    ui->tb_message->append(QString("杀人信息：%1号 选择杀掉 %2号").arg(id).arg(toid));
+    if(m_d_alive){
+        if(m_user_iden!=3)return;
+        ui->tb_message->append(QString("杀人信息：%1号 选择杀掉 %2号").arg(id).arg(toid));
+    }
 }
 
 void roomDialog::slot_nw(int kill)
 {
-    //判断自己是不是女巫
-    if(m_user_iden==1){
-        //是
-        //判断还有没有解药
-        if(m_d_antidote){
-            //有，弹出框显示杀人信息，询问是否救人
-            if(kill==0)QMessageBox::about(this,"死亡信息","昨夜无人死亡");
-            else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
-                //救，发送救人信息
-                Q_EMIT SIG_nvSilverWater();
-                m_d_antidote=false;
-                return;
+    if(m_d_alive){
+        //判断自己是不是女巫
+        if(m_user_iden==1){
+            //是
+            //判断还有没有解药
+            if(m_d_antidote){
+                //有，弹出框显示杀人信息，询问是否救人（不能是弹出框，弹出框是阻塞执行且不能按时退出）
+                if(kill==0){
+                    //QMessageBox::about(this,"死亡信息","昨夜无人死亡");
+                    slot_operate_button(NW_NODIE,0);
+                }
+    //            else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
+    //                //救，发送救人信息
+    //                Q_EMIT SIG_nvSilverWater();
+    //                m_d_antidote=false;
+    //                return;
+    //            }
+                else slot_operate_button(NW_RESCUE,kill);
             }
+            //不救，没有解药，没有杀人
+            //判断有没有毒药
+    //        if(m_d_poison){
+    //            //询问是否毒人（将按钮状态设置成女巫），发送操作信息
+    //            if(QMessageBox::question(this,"提示",QString("你有一瓶毒药，是否毒人？"))==QMessageBox::Yes){
+    //                //毒
+    //                //ui->lb_operate->setText("选择一位玩家，毒死他");
+    //                ui->tb_message->append("选择一位玩家，毒死他");
+    //                for(int i=1;i<=m_count;i++){
+    //                    if(&m_mapIdToPlayer[i]->alive){//活着
+    //                        m_mapIdToPlayer[i]->setAbleToVoted(true);
+    //                    }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+    //                }
+    //                m_pb_icon=SKYBLK_NW;
+    //                return;
+    //            }
+    //            slot_operate_button(1,0);
+    //        }
+    //        //        ui->lb_operate->setText("等待天亮");
+    //        ui->tb_message->append("等待天亮");
+    //        m_pb_icon=USERINFO;
+    //
         }
-        //不救，没有解药，没有杀人
-        //判断有没有毒药
-        if(m_d_poison){
-            //询问是否毒人（将按钮状态设置成女巫），发送操作信息
-            if(QMessageBox::question(this,"提示",QString("你有一瓶毒药，是否毒人？"))==QMessageBox::Yes){
-                //毒TODO
-                //                ui->lb_operate->setText("选择一位玩家，毒死他");
-                ui->tb_message->append("选择一位玩家，毒死他");
-                m_pb_icon=SKYBLK_NW;
-                return;
-            }
-        }
-        //        ui->lb_operate->setText("等待天亮");
-        ui->tb_message->append("等待天亮");
-        m_pb_icon=USERINFO;
+        //不是忽略
     }
-    //不是忽略
 }
 
 void roomDialog::slot_skyWhite(int *die)
@@ -226,10 +257,17 @@ void roomDialog::slot_skyWhite(int *die)
     //判断死的是不是自己
     QString show="昨晚死亡的玩家是：";
     for(int i=0;i<2;i++){
-        //是,不能在进行操作TODO
-        if(die[i]==m_seat){ui->tb_message->append("你死了");}
+        //是自己,不能在进行操作TODO
+        if(die[i]==m_seat){
+            ui->tb_message->append("你死了");
+            m_d_alive=false;
+        }
         //显示死亡信息
-        if(die[i]!=0)show+=QString("%1号 ").arg(die[i]);
+        if(die[i]!=0){
+            show+=QString("%1号 ").arg(die[i]);
+            m_mapIdToPlayer[die[i]]->setImage("000");
+            m_mapIdToPlayer[die[i]]->alive=false;
+        }
     }
     ui->tb_message->append("天亮了！！！！");
     ui->tb_message->append(show);
@@ -256,7 +294,7 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
     case 1://上警玩家发言
         ui->pb_day->setText("竞选阶段");
         m_d_state=1;
-        if(m_d_police)ui->pb_operate->setEnabled(true);
+        if(m_d_police)ui->pb_operate->setEnabled(true);//可以放手
         if(rq.seat==m_seat){
             //如果已经发过言了，发言阶段结束
             if(m_d_speak==1){
@@ -300,11 +338,12 @@ void roomDialog::slot_police()
     police=10;
     m_timer_police->start(1000);
     //询问是否竞选警长
-    if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
-        //是：回复竞选
-        m_d_police=true;
-        Q_EMIT SIG_police(m_seat,true);
-    }else m_d_police=false;
+//    if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
+//        //是：回复竞选
+//        m_d_police=true;
+//        Q_EMIT SIG_police(m_seat,true);
+//    }else m_d_police=false;
+    slot_operate_button(WANT_BEPOLICE,0);
 }
 
 void roomDialog::slot_bePolice()
@@ -465,6 +504,119 @@ roomDialog::~roomDialog()
     delete ui;
 }
 
+
+/////////////////////////////////////////////////////////
+//////////////////////组合类槽函数/////////////////////////
+/////////////////////////////////////////////////////////
+
+//玩家头像被点击
+void roomDialog::slot_click_icon(int id)
+{
+    //1预言家 2狼人  3女巫毒 4守卫 0无操作
+    //判断当前是什么状态
+    switch(m_pb_icon){
+    case USERINFO:
+        //显示玩家资料TODO
+        QMessageBox::about(this,"资料","xxxxx");
+        break;
+    case SKYBLK_YYJ:
+        //直接发送选择，TODO:等待计时结束，将最后一个选择的发送出去
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,1,id);
+        //操作完，将状态恢复成默认
+        m_pb_icon=USERINFO;
+        for(int i=1;i<=m_count;i++){
+            if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                m_mapIdToPlayer[i]->resumeVoted();
+            }else m_mapIdToPlayer[i]->setInfo(i,true);
+        }
+        break;
+    case SKYBLK_LR:
+        //直接发送杀人信息
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,2,id);
+        for(int i=1;i<=m_count;i++){
+            if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                m_mapIdToPlayer[i]->resumeVoted();
+            }else m_mapIdToPlayer[i]->setInfo(i,true);
+        }
+        m_pb_icon=USERINFO;
+        break;
+    case SKYBLK_NW:
+        //在收到杀人信息时进行的操作：弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
+        //毒人
+        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,3,id);
+        ui->lb_operate->setText("等待天亮");
+        m_d_poison=false;
+        ui->tb_message->append(QString("您选择毒死的玩家是%1号").arg(id));
+        for(int i=1;i<=m_count;i++){
+            if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                m_mapIdToPlayer[i]->resumeVoted();
+            }else m_mapIdToPlayer[i]->setInfo(i,true);
+        }
+        m_pb_icon=USERINFO;
+        break;
+    case SKYBLK_SW:
+        //发送守人信息，TODO:等待计时结束，将最后一个选择的发送出去
+        if(m_d_protect==id)QMessageBox::about(this,"提示","不能连续两晚守护同一个人");
+        else{
+            Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,4,id);
+            m_d_protect=id;
+            m_pb_icon=USERINFO;
+        }
+        break;
+    case VOTE_POLICE://投票竞选警长
+        //发送投票信息
+        Q_EMIT SIG_votePolice(m_seat,id,1);
+        m_pb_icon=USERINFO;
+        for(int i=1;i<=m_count;i++){
+            if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                m_mapIdToPlayer[i]->resumeVoted();
+            }
+        }
+        break;
+    }
+}
+
+void roomDialog::slot_operate_button(int state,int kill)
+{
+    //0:女巫救人 1：女巫毒人 2：没死人
+    switch(state){
+    case NW_RESCUE://女巫救人
+        ui->lb_operate->setText(QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill));
+        m_pb_oper=NW_RESCUE;
+        ui->pb_order->setEnabled(true);
+        ui->pb_deorder->setEnabled(true);
+        ui->pb_order->setText("是");
+        ui->pb_deorder->setText("否");
+        break;
+    case NW_POISON://女巫毒人
+        ui->lb_operate->setText(QString("你有一瓶毒药，是否毒人？"));
+        m_pb_oper=NW_POISON;
+        ui->pb_order->setEnabled(true);
+        ui->pb_deorder->setEnabled(true);
+        ui->pb_order->setText("是");
+        ui->pb_deorder->setText("否");
+        break;
+    case NW_NODIE://无人死亡
+        ui->lb_operate->setText(QString("昨夜无人死亡"));
+        ui->pb_order->setEnabled(true);
+        ui->pb_order->setText("知道了");
+        m_pb_oper=NW_NODIE;
+        break;
+    case WANT_BEPOLICE:
+        ui->lb_operate->setText(QString("是否竞选警长？"));
+        ui->pb_order->setEnabled(true);
+        ui->pb_deorder->setEnabled(true);
+        ui->pb_order->setText("是");
+        ui->pb_deorder->setText("否");
+        m_pb_oper=WANT_BEPOLICE;
+        break;
+    }
+}
+
+/////////////////////////////////////////////////////////
+//////////////////////组件槽函数///////////////////////////
+/////////////////////////////////////////////////////////
+
 void roomDialog::on_pb_min_clicked()
 {
     this->showMinimized();
@@ -516,51 +668,121 @@ void roomDialog::on_pb_0_begin_clicked()
     }
 }
 
-//玩家头像被点击
-void roomDialog::slot_click_icon(int id)
+
+
+
+void roomDialog::on_pb_0_end_clicked()
 {
-    //1预言家 2狼人  3女巫毒 4守卫 0无操作
-    //判断当前是什么状态
-    switch(m_pb_icon){
-    case USERINFO:
-        //显示玩家资料TODO
-        QMessageBox::about(this,"资料","xxxxx");
-        break;
-    case SKYBLK_YYJ:
-        //直接发送选择，TODO:等待计时结束，将最后一个选择的发送出去
-        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,1,id);
-        //操作完，将状态恢复成默认
+    //结束发言
+    Q_EMIT SIG_SpeakEnd(m_seat,m_d_nextSpeak,m_d_state);
+    ui->pb_0_end->setEnabled(false);
+}
+
+
+void roomDialog::on_pb_operate_clicked()
+{
+    //放手
+    m_d_police=false;
+    Q_EMIT SIG_police(m_seat,false);
+}
+
+
+void roomDialog::on_pb_order_clicked()
+{//救，毒，顺序,知道了,竞选
+    switch(m_pb_oper){
+    case NW_RESCUE:
+        Q_EMIT SIG_nvSilverWater();
+        m_d_antidote=false;
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
         m_pb_icon=USERINFO;
         break;
-    case SKYBLK_LR:
-        //直接发送杀人信息
-        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,2,id);
-        m_pb_icon=USERINFO;
+    case NW_POISON:
+        for(int i=1;i<=m_count;i++){
+            if(&m_mapIdToPlayer[i]->alive){//活着
+                m_mapIdToPlayer[i]->setAbleToVoted(true);
+            }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+        }
+        m_pb_icon=SKYBLK_NW;
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
         break;
-    case SKYBLK_NW:
-        //在收到杀人信息时进行的操作：弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
-        //毒人
-        Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,3,id);
-        ui->lb_operate->setText("等待天亮");
-        m_d_poison=false;
-        m_pb_icon=USERINFO;
-        break;
-    case SKYBLK_SW:
-        //发送守人信息，TODO:等待计时结束，将最后一个选择的发送出去
-        if(m_d_protect==id)QMessageBox::about(this,"提示","不能连续两晚守护同一个人");
-        else{
-            Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,4,id);
-            m_d_protect=id;
-            m_pb_icon=USERINFO;
+    case NW_NODIE://如果有毒药，询问是否毒人
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
+        if(m_d_poison){
+            slot_operate_button(NW_POISON,0);
         }
         break;
-    case VOTE_POLICE://投票竞选警长
-        //发送投票信息
-        Q_EMIT SIG_votePolice(m_seat,id,1);
-        m_pb_icon=USERINFO;
+    case WANT_BEPOLICE://竞选
+        m_d_police=true;
+        Q_EMIT SIG_police(m_seat,true);
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
         break;
     }
+
+//    //顺序发言
+//    Q_EMIT SIG_speakOrder(m_seat,1);
+//    ui->pb_operate->setEnabled(false);
+//    ui->pb_deorder->setEnabled(false);
 }
+
+
+void roomDialog::on_pb_deorder_clicked()
+{//不救，不毒，逆序，不竞选
+    switch(m_pb_oper){
+    case NW_RESCUE:
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
+        if(m_d_poison){
+            slot_operate_button(NW_POISON,0);
+        }
+        break;
+    case NW_POISON:
+        ui->tb_message->append("等待天亮");
+        m_pb_icon=USERINFO;
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
+        break;
+    case WANT_BEPOLICE://不竞选
+        m_d_police=false;
+        ui->lb_operate->setText("");
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
+        break;
+    }
+//    //逆序发言
+//    Q_EMIT SIG_speakOrder(m_seat,-1);
+//    ui->pb_operate->setEnabled(false);
+//    ui->pb_deorder->setEnabled(false);
+}
+
+
+
+/////////////////////////////////////////////////////////
+//////////////////////计时器函数///////////////////////////
+/////////////////////////////////////////////////////////
 
 void roomDialog::slot_OverTimerReady()
 {
@@ -578,6 +800,7 @@ void roomDialog::slot_OverTimerReady()
     }
 }
 
+
 void roomDialog::slot_OverTimerTips()
 {
     //开始按钮提醒恢复
@@ -591,13 +814,31 @@ void roomDialog::slot_OverTimerskyBlk()
     ui->lb_time->setText(QString("%1").arg(blk));
     blk--;
     //判断是不是房主
-    if(m_seat==1&&blk==15){
+    if(blk==15){
         //是房主发送结束包
-        Q_EMIT SIG_skyBlk15(true);
-    }else if(m_seat==1&&blk==0){
-        Q_EMIT SIG_skyBlk15(false);
+        if(m_seat==1)Q_EMIT SIG_skyBlk15(true);
+        //狼人不能行动了
+        if(m_user_iden==3){
+            for(int i=1;i<=m_count;i++){
+                if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                    m_mapIdToPlayer[i]->resumeVoted();
+                }else m_mapIdToPlayer[i]->setInfo(i,true);
+            }
+            m_pb_icon=USERINFO;
+        }
+    }
+    if(blk==0){
+        //房主发送夜晚结束包
+        if(m_seat==1)Q_EMIT SIG_skyBlk15(false);
+        //所有玩家不能行动
+        for(int i=1;i<=m_count;i++){
+            if(m_mapIdToPlayer[i]->m_id!=m_seat){
+                m_mapIdToPlayer[i]->resumeVoted();
+            }else m_mapIdToPlayer[i]->setInfo(i,true);
+        }
+        m_pb_icon=USERINFO;
         m_timer_skyBlk->stop();
-    }else if(blk==0) m_timer_skyBlk->stop();
+    }
 }
 
 void roomDialog::slot_OverTimerPolice()
@@ -634,38 +875,3 @@ void roomDialog::slot_OverTimerVote()
         ui->lb_time->setText("");
     }
 }
-
-
-void roomDialog::on_pb_0_end_clicked()
-{
-    //结束发言
-    Q_EMIT SIG_SpeakEnd(m_seat,m_d_nextSpeak,m_d_state);
-    ui->pb_0_end->setEnabled(false);
-}
-
-
-void roomDialog::on_pb_operate_clicked()
-{
-    //放手
-    m_d_police=false;
-    Q_EMIT SIG_police(m_seat,false);
-}
-
-
-void roomDialog::on_pb_order_clicked()
-{
-    //顺序发言
-    Q_EMIT SIG_speakOrder(m_seat,1);
-    ui->pb_operate->setEnabled(false);
-    ui->pb_deorder->setEnabled(false);
-}
-
-
-void roomDialog::on_pb_deorder_clicked()
-{
-    //逆序发言
-    Q_EMIT SIG_speakOrder(m_seat,-1);
-    ui->pb_operate->setEnabled(false);
-    ui->pb_deorder->setEnabled(false);
-}
-
