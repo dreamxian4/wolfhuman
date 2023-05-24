@@ -729,7 +729,7 @@ typedef struct STRU_SPEAKSTATE_END
     }
     PackType   m_nType;   //包类型
     int roomid;
-    int state;//1:上警 2:白天
+    int state;//1:上警 2:白天 3:平票
 }STRU_SPEAKSTATE_END;
 
 
