@@ -499,6 +499,7 @@ void CLogic::BeginGame(sock_fd clientfd, char *szbuf, int nlen)
     room->i_godNum=pai[0]+pai[1]+pai[4]+pai[5];
     room->i_wolfNum=pai[3];
     room->i_farmerNum=pai[2];
+    MyMap<int,int>map;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         UserInfo* user=nullptr;
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
@@ -512,7 +513,9 @@ void CLogic::BeginGame(sock_fd clientfd, char *szbuf, int nlen)
         SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
         //发送天黑包
         SendData(user->m_sockfd,(char*)&skyrq,sizeof(skyrq));
+        map.insert(user->m_seat,user->m_sockfd);
     }
+    m_mapRoomidToSeatidToSockfd.insert(rq->m_RoomId,map);
 }
 
 void CLogic::Skyblack(sock_fd clientfd, char *szbuf, int nlen)
@@ -721,13 +724,18 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
             //结束：给每个人发送结束包TODO
         }else{
             //没有警长，从房主开始顺序发言
+            //给所有人发送发言阶段开始包
+            //给发言人发送开始发言包
             STRU_SPEAK_RQ speakRq;
+            STRU_SPEAKSTATE_BEGIN begin;
             speakRq.state=2;
             speakRq.seat=1;
             for(auto ite=lst.begin();ite!=lst.end();ite++){
                 if(!m_mapIdToUserInfo.find(*ite,user))continue;
-                SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
+                SendData(user->m_sockfd,(char*)&begin,sizeof(begin));
             }
+
+
         }
         memset(room->i_die,0,8);
         memset(room->i_kill,0,16);

@@ -52,6 +52,7 @@ private:
     MyMap<int,RoomInfo*>m_mapRoomidToRoomInfo;//roomid->roominfo的映射，保存房间
     std::list<int>m_roomList;//房间号列表
     MyMap<int,list<int>>m_mapRoomidToMemberlist;//roomid->房间成员列表的映射
+    MyMap<int,MyMap<int,int>>m_mapRoomidToSeatidToSockfd;
 };
 
 #endif // CLOGIC_H
