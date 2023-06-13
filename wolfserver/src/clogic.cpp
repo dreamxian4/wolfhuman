@@ -632,9 +632,21 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
                     }
                 }else{
                     //没有警长，从房主开始顺序发言
+                    STRU_SPEAKSTATE_BEGIN begin;
+                    for(auto ite=lst.begin();ite!=lst.end();ite++){
+                        if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                        SendData(user->m_sockfd,(char*)&begin,sizeof(begin));
+                    }
                     STRU_SPEAK_RQ speakRq;
                     speakRq.state=3;
-                    speakRq.seat=1;
+                    MyMap<int,int>seat;
+                    if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
+                    for(int a=1;a<13;a++){
+                        if(seat.IsExist(a)){
+                            speakRq.seat=a;
+                            break;
+                        }
+                    }
                     for(auto ite=lst.begin();ite!=lst.end();ite++){
                         if(!m_mapIdToUserInfo.find(*ite,user))continue;
                         SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
@@ -694,14 +706,11 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
     STRU_POLICE_END* end=(STRU_POLICE_END*)szbuf;
     RoomInfo* room=nullptr;
     if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
-    STRU_SPEAK_RQ rq;
+    STRU_SPEAK_RQ speakRq;
     list<int>lst;
     if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
     UserInfo* user=nullptr;
     if(room->i_policeNum==0||room->i_policeNum==room->m_beginNum){
-        //直接发言，没有警长
-        rq.state=2;
-        rq.seat=1;
         //发送死亡信息
         STRU_SKYWHT_RQ rq;
         rq.die[0]=room->i_die[0];
@@ -726,16 +735,20 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
             //没有警长，从房主开始顺序发言
             //给所有人发送发言阶段开始包
             //给发言人发送开始发言包
-            STRU_SPEAK_RQ speakRq;
             STRU_SPEAKSTATE_BEGIN begin;
             speakRq.state=2;
-            speakRq.seat=1;
+            MyMap<int,int>seat;
+            if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
+            for(int a=1;a<13;a++){
+                if(seat.IsExist(a)){
+                    speakRq.seat=a;
+                    break;
+                }
+            }
             for(auto ite=lst.begin();ite!=lst.end();ite++){
                 if(!m_mapIdToUserInfo.find(*ite,user))continue;
                 SendData(user->m_sockfd,(char*)&begin,sizeof(begin));
             }
-
-
         }
         memset(room->i_die,0,8);
         memset(room->i_kill,0,16);
@@ -751,12 +764,12 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
         }
     }else{
         //发送上警玩家发言包
-        rq.state=1;
-        rq.seat=1;
+        speakRq.state=1;
+        speakRq.seat=1;
     }
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
-        SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
     }
 }
 
@@ -771,7 +784,17 @@ void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
     if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
     UserInfo* user=nullptr;
     STRU_SPEAK_RQ rq;
-    rq.seat=(rs->seat+rs->next)%room->m_beginNum;
+    MyMap<int,int>seat;
+    if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
+    int next=(rs->seat+rs->next)%room->m_beginNum;
+    int a;
+    for(a=1;a<13;a++){
+        if(seat.IsExist(next)){
+            rq.seat=next;
+            break;
+        }else next=(rs->seat+rs->next)%room->m_beginNum;
+    }
+    if(a==13)rq.seat=rs->seat;
     rq.state=rs->state;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
@@ -835,7 +858,14 @@ void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
                 //没有警长，从房主开始顺序发言
                 STRU_SPEAK_RQ speakRq;
                 speakRq.state=2;
-                speakRq.seat=1;
+                MyMap<int,int>seat;
+                if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
+                for(int a=1;a<13;a++){
+                    if(seat.IsExist(a)){
+                        speakRq.seat=a;
+                        break;
+                    }
+                }
                 for(auto ite=lst.begin();ite!=lst.end();ite++){
                     if(!m_mapIdToUserInfo.find(*ite,user))continue;
                     SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
@@ -912,7 +942,17 @@ void CLogic::SpeakOrder(sock_fd clientfd, char *szbuf, int nlen)
     }
     STRU_SPEAK_RQ speakRq;
     speakRq.state=3;
-    speakRq.seat=(order->seat+order->next)%room->m_beginNum;
+    MyMap<int,int>seat;
+    if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
+    int next=(order->seat+order->next)%room->m_beginNum;
+    int a;
+    for(a=1;a<13;a++){
+        if(seat.IsExist(next)){
+            speakRq.seat=next;
+            break;
+        }else next=(next+order->next)%room->m_beginNum;
+    }
+    if(a==13)speakRq.seat=order->seat;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
         SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));

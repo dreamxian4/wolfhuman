@@ -241,6 +241,7 @@ typedef struct RoomInfo
         i_police=0;
         i_policeNum=0;
         memset(i_vote,0,sizeof(int)*13);
+        i_order=1;//默认为顺序发言
     }
     //房间id（6位数），开始人数，当前人数，房间状态，等级，是否加密，密码，模式，玩法
     int  m_roomid   ;
@@ -256,15 +257,16 @@ typedef struct RoomInfo
     int  m_identify[13];
 
     //游戏开始后的信息
-    int i_godNum        ;
-    int i_farmerNum     ;
-    int i_wolfNum       ;
-    int i_die[2]        ;
-    int i_kill[4]       ;
-    int i_day           ;
-    int i_police        ;
-    int i_policeNum     ;
-    int i_vote[13]      ;
+    int i_godNum        ;//神牌人数
+    int i_farmerNum     ;//平民人数
+    int i_wolfNum       ;//狼人数
+    int i_die[2]        ;//夜晚死亡玩家
+    int i_kill[4]       ;//狼人杀人信息
+    int i_day           ;//天数
+    int i_police        ;//上警人数
+    int i_policeNum     ;//警长座位号
+    int i_vote[13]      ;//投票信息
+    int i_order         ;//发言顺序
 
 }RoomInfo;
 
