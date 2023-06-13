@@ -678,6 +678,12 @@ void ckernel::slot_DealSpeakOrder(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_SpeakOrder(*(STRU_SPEAK_ORDER*)buf);
 }
 
+void ckernel::slot_DealSpeakStateBegin(unsigned int lSendIP, char *buf, int nlen)
+{
+    //发言阶段开始，客户端房间内显示发言开始信息
+    m_roomDialog->slot_SpeakStateBegin();
+}
+
 void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
 {
     //设置竞选警长的玩家
@@ -750,6 +756,7 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_SPEAKSTATE_END)=&ckernel::slot_DealBeginVote;
     netMap(DEF_PACK_VOTE_RS)=&ckernel::slot_DeaVoteRs;
     netMap(DEF_PACK_SPEAK_ORDER)=&ckernel::slot_DealSpeakOrder;
+    netMap(DEF_PACK_SPEAKSTATE_BEGIN)=&ckernel::slot_DealSpeakStateBegin;
 }
 
 void ckernel::slot_quitLogin()

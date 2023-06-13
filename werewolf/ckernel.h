@@ -130,6 +130,8 @@ public slots:
     void slot_DeaVoteRs( unsigned int lSendIP , char* buf , int nlen );
     //警长选择发言顺序
     void slot_DealSpeakOrder( unsigned int lSendIP , char* buf , int nlen );
+    //发言阶段开始
+    void slot_DealSpeakStateBegin( unsigned int lSendIP , char* buf , int nlen );
 
 
 

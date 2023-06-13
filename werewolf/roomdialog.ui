@@ -451,7 +451,7 @@ color: rgb(255, 255, 255);</string>
     </rect>
    </property>
    <property name="text">
-    <string>逆序发言</string>
+    <string/>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_deorder">
@@ -464,7 +464,7 @@ color: rgb(255, 255, 255);</string>
     </rect>
    </property>
    <property name="text">
-    <string>顺序发言</string>
+    <string/>
    </property>
   </widget>
  </widget>

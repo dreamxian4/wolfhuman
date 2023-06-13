@@ -280,11 +280,13 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
     case 3://白天正常发言
         ui->pb_day->setText("1白天");
         m_d_state=3;
+        ui->tb_message->append(QString("%1号开始发言，请下一位做好准备").arg(rq.seat).arg(rq.seat+1));
         if(rq.seat==m_seat){
             //如果已经发过言了，发言阶段结束
             if(m_d_speak==1){
                 Q_EMIT SIG_SpeakStateEnd(2);
                 m_d_speak=0;
+                return;
             }
             m_d_speak=1;
             ui->tb_message->append("开始发言");
@@ -293,13 +295,17 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
         break;
     case 1://上警玩家发言
         ui->pb_day->setText("竞选阶段");
+        m_d_nextSpeak=1;
         m_d_state=1;
         if(m_d_police)ui->pb_operate->setEnabled(true);//可以放手
+        ui->tb_message->append(QString("竞选发言：%1号开始发言").arg(rq.seat));
         if(rq.seat==m_seat){
             //如果已经发过言了，发言阶段结束
             if(m_d_speak==1){
+                ui->tb_message->append("发言阶段结束！！");
                 Q_EMIT SIG_SpeakStateEnd(1);
                 m_d_speak=0;
+                return;
             }
             m_d_speak=1;
             //判断自己有没有上警
@@ -318,11 +324,13 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
         ui->pb_day->setText("1白天");
         m_d_state=2;
         m_d_nextSpeak=1;
+        ui->tb_message->append(QString("%1号开始发言，请%2号做好准备").arg(rq.seat).arg(rq.seat+1));
         if(rq.seat==m_seat){
             //如果已经发过言了，发言阶段结束
             if(m_d_speak==1){
                 Q_EMIT SIG_SpeakStateEnd(2);
                 m_d_speak=0;
+                return;
             }
             m_d_speak=1;
             ui->tb_message->append("开始发言");
@@ -468,13 +476,21 @@ void roomDialog::slot_SpeakOrder(STRU_SPEAK_ORDER &order)
         //如果next=0，说明发言顺序还没定，要警长选择发言顺序
         if(m_d_bePolice){
             ui->lb_operate->setText("请选择发言顺序");
+            ui->pb_order->setText("顺序发言");
+            ui->pb_deorder->setText("逆序发言");
             ui->pb_order->setEnabled(true);
             ui->pb_deorder->setEnabled(true);
         }
     }else{
-        //如果next右值，说明发言顺序已经定好，设置自己的发言顺序
-        m_d_speak=order.next;
+        //如果next有值，说明发言顺序已经定好，设置自己的发言顺序
+        m_d_nextSpeak=order.next;
     }
+}
+
+//发言阶段开始
+void roomDialog::slot_SpeakStateBegin()
+{
+    ui->tb_message->append("---------进入发言阶段---------");
 }
 
 

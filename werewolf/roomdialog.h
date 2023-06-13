@@ -78,6 +78,7 @@ public:
     void slot_beginVote(STRU_SPEAKSTATE_END& end);
     void slot_VoteRs(STRU_VOTE_RS& rs);
     void slot_SpeakOrder(STRU_SPEAK_ORDER& order);
+    void slot_SpeakStateBegin();
 
 
 private slots:
