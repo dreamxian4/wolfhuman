@@ -83,16 +83,18 @@
 #define DEF_PACK_BEPOLICE_RS        (_DEF_PACK_BASE + 34)
 //竞选阶段结束
 #define DEF_PACK_POLICEEND     (_DEF_PACK_BASE + 35)
+//发言阶段开始
+#define DEF_PACK_SPEAKSTATE_BEGIN       (_DEF_PACK_BASE + 36)
 //发言阶段结束（开始投票）
-#define DEF_PACK_SPEAKSTATE_END     (_DEF_PACK_BASE + 36)
+#define DEF_PACK_SPEAKSTATE_END     (_DEF_PACK_BASE + 37)
 //玩家投票
-#define DEF_PACK_VOTE_RQ    (_DEF_PACK_BASE + 37)
+#define DEF_PACK_VOTE_RQ    (_DEF_PACK_BASE + 38)
 //投票结果
-#define DEF_PACK_VOTE_RS     (_DEF_PACK_BASE + 38)
+#define DEF_PACK_VOTE_RS     (_DEF_PACK_BASE + 39)
 //投票阶段结束
-#define DEF_PACK_VOTE_END     (_DEF_PACK_BASE + 39)
+#define DEF_PACK_VOTE_END     (_DEF_PACK_BASE + 40)
 //警长选择发言顺序
-# define DEF_PACK_SPEAK_ORDER       (_DEF_PACK_BASE + 40)
+# define DEF_PACK_SPEAK_ORDER       (_DEF_PACK_BASE + 41)
 
 
 
@@ -716,6 +718,16 @@ typedef struct STRU_POLICE_END
     int roomid;
 }STRU_POLICE_END;
 
+
+//发言阶段开始
+typedef struct STRU_SPEAKSTATE_BEGIN
+{
+    STRU_SPEAKSTATE_BEGIN()
+    {
+        m_nType = DEF_PACK_SPEAKSTATE_BEGIN;
+    }
+    PackType   m_nType;   //包类型
+}STRU_SPEAKSTATE_BEGIN;
 
 
 //发言阶段结束（开始投票包）
