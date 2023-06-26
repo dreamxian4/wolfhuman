@@ -95,18 +95,20 @@
 #define DEF_PACK_VOTE_END     (_DEF_PACK_BASE + 40)
 //警长选择发言顺序
 # define DEF_PACK_SPEAK_ORDER       (_DEF_PACK_BASE + 41)
-
-
-
-////音频数据
-//#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 9)
+//白天投票放逐信息
+#define DEF_PACK_DAY_EXILE         (_DEF_PACK_BASE + 42)
+//游戏结束
+#define DEF_PACK_GAMEOVER           (_DEF_PACK_BASE + 43)
+//音频数据
+#define DEF_PACK_AUDIO_FRAME    (_DEF_PACK_BASE + 44)
 ////视频数据
 //#define DEF_PACK_VIDEO_FRAME    (_DEF_PACK_BASE + 10)
-
-////音频注册
-//#define DEF_PACK_AUDIO_REGISTER (_DEF_PACK_BASE + 13)
+//音频注册
+#define DEF_PACK_AUDIO_REGISTER (_DEF_PACK_BASE + 45)
 ////视频注册
 //#define DEF_PACK_VIDEO_REGISTER (_DEF_PACK_BASE + 14)
+//暂停发言
+#define DEF_PACK_SPEAK_PAUSE       (_DEF_PACK_BASE + 46)
 
 
 
@@ -632,10 +634,12 @@ typedef struct STRU_SPEAK_RQ
         m_nType = DEF_PACK_SPEAK_RQ;
         state=0;
         seat=0;
+        next=0;
     }
     PackType   m_nType;   //包类型
-    int state;//1:uppolice 2:nopolice 3:normal
+    int state;//1:uppolice 2:nopolice 3:normal 4:exile
     int seat;
+    int next;
 }STRU_SPEAK_RQ;
 
 typedef struct STRU_SPEAK_RS
@@ -775,7 +779,7 @@ typedef struct STRU_VOTE_RQ
     }
     PackType   m_nType;   //包类型
     int roomid;
-    int state;//1:票选警长
+    int state;//1:票选警长 2:放逐投票
     int seat;
     int toseat;
 }STRU_VOTE_RQ;
@@ -809,6 +813,51 @@ typedef struct STRU_VOTE_END
     int state;//1:上警
 }STRU_VOTE_END;
 
+
+
+//白天投票放逐信息
+typedef struct STRU_DAY_EXILE
+{
+    STRU_DAY_EXILE()
+    {
+        m_nType = DEF_PACK_DAY_EXILE;
+        roomid=0;
+        die=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int die;
+}STRU_DAY_EXILE;
+
+
+
+//游戏结束
+typedef struct STRU_GAMEOVER
+{
+    STRU_GAMEOVER()
+    {
+        m_nType = DEF_PACK_GAMEOVER;
+    }
+    PackType   m_nType;   //包类型
+}STRU_GAMEOVER;
+
+
+
+//暂停发言
+typedef struct STRU_SPEAKPAUSE
+{
+    STRU_SPEAKPAUSE()
+    {
+        m_nType = DEF_PACK_SPEAK_PAUSE;
+        roomid=0;
+        seat=0;
+        wolf=false;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+    bool wolf;//是否为狼人夜间发言
+}STRU_SPEAKPAUSE;
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER
