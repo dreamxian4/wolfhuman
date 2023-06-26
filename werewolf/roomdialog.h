@@ -12,21 +12,33 @@
 #include"packdef.h"
 
 /**************************************/
+//控制头像点击事件
 #define USERINFO 0
 #define SKYBLK_YYJ 1
 #define SKYBLK_LR 2
 #define SKYBLK_NW 3
 #define SKYBLK_SW 4
 #define VOTE_POLICE 5
+#define VOTE_DAY 6
 /***************************************/
 
 /**************************************/
+//控制操作按钮事件
 #define NW_RESCUE 0
 #define NW_POISON 1
 #define NW_NODIE 2
 #define WANT_BEPOLICE 3
+#define SPEAK_ORDER 4
 /***************************************/
 
+/**************************************/
+//控制开始游戏/发言按钮事件
+#define BEGIN_GAME 0
+#define BEGIN_SPEAK 1
+#define END_SPEAK 2
+#define WOLF_SPEAK 3
+#define WOLF_SPEAK_END 4
+/***************************************/
 
 
 namespace Ui {
@@ -45,15 +57,17 @@ signals:
     void SIG_skyBlkRs(int,int,int,int);//夜晚的操作
     void SIG_skyBlk15(bool);//是：前半夜结束  否：后半夜结束
     void SIG_nvSilverWater();//女巫救人
-    void SIG_imDie(int);//我死了，发送我的身份到服务端
+//    void SIG_imDie(int);//我死了，发送我的身份到服务端
     void SIG_police(int,bool);//是否竞选警长,是：举手 否：放手
     void SIG_PoliceEnd();//竞选阶段结束
     void SIG_SpeakEnd(int,int,int);//发言结束
     void SIG_imPolice(int);//我是警长
     void SIG_SpeakStateEnd(int state);//发言阶段结束
-    void SIG_votePolice(int,int,int);//警长投票
+    void SIG_vote(int,int,int);//警长投票
     void SIG_VoteEnd(int);//投票结束
     void SIG_speakOrder(int,int);//发言顺序
+    void SIG_dayExile(int);//白天放逐
+    void SIG_Audio(bool,bool,bool);//开始/停止语音;是否给服务器发送包；是否为狼人夜间发言
 
 
 public:
@@ -65,6 +79,7 @@ public:
     void slot_destroyRoom();
     void slot_ready();
     void slot_setIden(int iden);
+    int slot_getIden();
     void slot_skyBlack();
     void slot_yyj(int id,int iden);
     void slot_lr(int id,int toid);
@@ -79,6 +94,10 @@ public:
     void slot_VoteRs(STRU_VOTE_RS& rs);
     void slot_SpeakOrder(STRU_SPEAK_ORDER& order);
     void slot_SpeakStateBegin();
+    void slot_dayExile(STRU_DAY_EXILE& exile);
+    void slot_gameOver();
+    void slot_playerSpeak(int seat,bool speak);
+    void slot_speakEnd(STRU_SPEAK_RS& end);
 
 
 private slots:
@@ -101,6 +120,10 @@ private slots:
     void slot_OverTimerskyBlk();
     void slot_OverTimerPolice();
     void slot_OverTimerVote();
+
+
+
+
 private:
     Ui::roomDialog *ui;
     QVBoxLayout* m_playerLayoutRight;
@@ -143,6 +166,7 @@ private:
     //用于控制组件
     int m_pb_icon;//控制头像点击信号
     int m_pb_oper;//控制上部操作信号
+    int m_pb_begin;//控制开始游戏/发言按钮
 
 
     int m_d_kill;//被杀的人
@@ -152,7 +176,7 @@ private:
     bool m_d_police;//自己是否竞选
     int m_d_state;//当前阶段，用于控制发言
     int m_d_speak;//发言阶段，用于控制结束发言：如果当前阶段已经发过言，发送阶段结束包
-    int m_d_vote;//投票阶段，用于发送投票结束包 1：上警
+    int m_d_vote;//投票阶段，用于发送投票结束包 1：上警 2：放逐
     bool m_d_bePolice;//自己是否为警长
     int m_d_nextSpeak;//发言顺序
     bool m_d_alive;//是否活着

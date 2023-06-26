@@ -83,22 +83,15 @@ void roomPlayerform::setIden(int iden)
     //设置身份
     switch(iden){
     case 0://预言家
-        ui->lb_identify->setText("预");
         break;
     case 1://女巫
-        ui->lb_identify->setText("女");
-        break;
     case 2://平民
-        ui->lb_identify->setText("民");
+    case 4://猎人
+    case 5://守卫
+        ui->lb_identify->setText("好");
         break;
     case 3://狼人
-        ui->lb_identify->setText("狼");
-        break;
-    case 4://猎人
-        ui->lb_identify->setText("猎");
-        break;
-    case 5://守卫
-        ui->lb_identify->setText("守");
+        ui->lb_identify->setText("坏");
         break;
     default:
         ui->lb_identify->setText("");
@@ -136,6 +129,12 @@ void roomPlayerform::resumeVoted()
 void roomPlayerform::setAbleToOper(int who)
 {
 
+}
+
+void roomPlayerform::setSpeak(bool speak)
+{
+    if(speak)ui->pb_edge->setStyleSheet("background-color: rgb(255, 255, 127);");
+    else ui->pb_edge->setStyleSheet("background-color: rgb(75,24,56);");
 }
 
 

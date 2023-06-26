@@ -47,12 +47,16 @@ FORMS += \
 include(./netapi/netapi.pri)
 include(./uiapi/uiapi.pri)
 include(./MD5/md5.pri)
+include(./AudioApi/audioapi.pri)
+include(./VideoApi/videoapi.pri)
 
 INCLUDE += \
     ./netapi \
     ./uiapi \
     ./MD5 \
-    ./identify
+    ./identify\
+    ./AudioApi\
+    ./VideoApi
 
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin

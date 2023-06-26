@@ -12,6 +12,8 @@
 #include"roomdialog.h"
 #include"roomplayerform.h"
 #include"roomlistdialog.h"
+#include"AudioApi/audioread.h"
+#include"AudioApi/audiowrite.h"
 
 class ckernel;
 typedef void (ckernel::*PFUN)(unsigned int,char*,int);
@@ -47,7 +49,7 @@ public slots:
     void slot_qie_createRoomButton();
     //创建房间->主界面
     void slot_qie_cancel();
-    //房间->主界面
+    //房间->主界面sendQuitRoom
     void slot_qie_quitRoom(int id);
     //房间列表->主界面
     void slot_qie_listMain();
@@ -67,15 +69,18 @@ public slots:
     void slot_sendSkyBlkRs(int iden,int seat,int operate,int toseat);
     void slot_sendskyBlk15(bool mid);
     void slot_sendNvSW();
-    void slot_sendImDie(int iden);
+//    void slot_sendImDie(int iden);
     void slot_sendPolice(int seat,bool raise);
     void slot_sendPoliceEnd();
     void slot_sendSpeakEnd(int seat,int next,int state);
     void slot_sendImPolice(int seat);
     void slot_sendSpeakStateEnd(int state);
-    void slot_sendVotePolice(int seat,int toseat,int state);
+    void slot_sendVote(int seat,int toseat,int state);
     void slot_sendVoteEnd(int state);
     void slot_sendSpeakOrder(int seat,int next);
+    void slot_sendDayExile(int seat);
+    void slot_Audio(bool begin,bool sent,bool wolf);
+    void slot_sendAudio(QByteArray& frame);
 
 
 
@@ -132,6 +137,17 @@ public slots:
     void slot_DealSpeakOrder( unsigned int lSendIP , char* buf , int nlen );
     //发言阶段开始
     void slot_DealSpeakStateBegin( unsigned int lSendIP , char* buf , int nlen );
+    //白天放逐玩家
+    void slot_DealDayExile( unsigned int lSendIP , char* buf , int nlen );
+    //游戏结束
+    void slot_DealGameOver( unsigned int lSendIP , char* buf , int nlen );
+    //音频包
+    void slot_DealAudioFrame( unsigned int lSendIP , char* buf , int nlen );
+    //暂停发言
+    void slot_DealSpeakPause( unsigned int lSendIP , char* buf , int nlen );
+    //玩家结束发言
+    void slot_DealSpeakEnd( unsigned int lSendIP , char* buf , int nlen );
+
 
 
 
@@ -163,6 +179,10 @@ private:
     int m_id;//用户id
     int m_roomid;//房间id
     int m_zuowei;//座位号
+    AudioRead* audioRead;
+    //每个玩家一个播放对象
+    std::map<int,AudioWrite*>m_mapSeatToWrite;
+    bool m_wolf;//是否为狼人发言
 };
 
 #endif // CKERNEL_H

@@ -6,6 +6,7 @@
 #include<qDebug>
 #include<QDate>
 #include"MD5/md5.h"
+#include<QTime>
 
 #define netMap(a) m_netMap[a-_DEF_PACK_BASE]
 #define MD5_KEY 1234
@@ -22,7 +23,7 @@ static std::string GetMD5(QString str){
     return md5.toString();
 }
 
-ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
+ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(false)
 {
     initConfig();
     setNetMap();
@@ -35,6 +36,7 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
     m_createRoomDialog=new createRoomForm;
     m_roomDialog=new roomDialog;
     m_roomListDialog=new roomListDialog;
+    audioRead=new AudioRead;
 
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
@@ -87,8 +89,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendskyBlk15(bool)));
     connect(m_roomDialog,SIGNAL(SIG_nvSilverWater()),
             this,SLOT(slot_sendNvSW()));
-    connect(m_roomDialog,SIGNAL(SIG_imDie(int)),
-            this,SLOT(slot_sendImDie(int)));
+    //    connect(m_roomDialog,SIGNAL(SIG_imDie(int)),
+    //            this,SLOT(slot_sendImDie(int)));
     connect(m_roomDialog,SIGNAL(SIG_police(int,bool)),
             this,SLOT(slot_sendPolice(int,bool)));
     connect(m_roomDialog,SIGNAL(SIG_PoliceEnd()),
@@ -99,12 +101,17 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_sendImPolice(int)));
     connect(m_roomDialog,SIGNAL(SIG_SpeakStateEnd(int)),
             this,SLOT(slot_sendSpeakStateEnd(int)));
-    connect(m_roomDialog,SIGNAL(SIG_votePolice(int,int,int)),
-            this,SLOT(slot_sendVotePolice(int,int,int)));
+    connect(m_roomDialog,SIGNAL(SIG_vote(int,int,int)),
+            this,SLOT(slot_sendVote(int,int,int)));
     connect(m_roomDialog,SIGNAL(SIG_VoteEnd(int)),
             this,SLOT(slot_sendVoteEnd(int)));
     connect(m_roomDialog,SIGNAL(SIG_speakOrder(int,int)),
             this,SLOT(slot_sendSpeakOrder(int,int)));
+    connect(m_roomDialog,SIGNAL(SIG_dayExile(int)),
+            this,SLOT(slot_sendDayExile(int)));
+    connect(m_roomDialog,SIGNAL(SIG_Audio(bool,bool,bool)),
+            this,SLOT(slot_Audio(bool,bool,bool)));
+
 
 
     connect(m_roomListDialog,SIGNAL(SIG_REFRESH(int,int,int)),
@@ -115,6 +122,10 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0)
             this,SLOT(slot_quitLogin()));
     connect(m_roomListDialog,SIGNAL(SIG_returnMain()),
             this,SLOT(slot_qie_listMain()));
+
+
+    connect(audioRead,SIGNAL(SIG_audioFrame(QByteArray&)),
+            this,SLOT(slot_sendAudio(QByteArray&)));
 }
 
 
@@ -127,13 +138,6 @@ ckernel::~ckernel()
         m_startDialog->hide();
         delete m_startDialog;
         m_startDialog=nullptr;
-    }
-    if(m_client){
-        slot_quitLogin();
-        if(m_roomid)slot_qie_quitRoom(m_zuowei);
-        m_client->CloseNet();
-        delete m_client;
-        m_client=nullptr;
     }
     if(m_loginDialog){
         m_loginDialog->hide();
@@ -164,6 +168,16 @@ ckernel::~ckernel()
         m_roomListDialog->hide();
         delete m_roomListDialog;
         m_roomListDialog==nullptr;
+    }
+    if(audioRead){
+        delete audioRead;
+        audioRead=nullptr;
+    }
+    if(m_client){
+        slot_quitLogin();
+        m_client->CloseNet();
+        delete m_client;
+        m_client=nullptr;
     }
 }
 
@@ -357,13 +371,13 @@ void ckernel::slot_sendNvSW()
     SendData(0,(char*)&rs,sizeof(rs));
 }
 
-void ckernel::slot_sendImDie(int iden)
-{
-    STRU_SKYWHT_RS rs;
-    rs.iden=iden;
-    rs.roomid=m_roomid;
-    SendData(0,(char*)&rs,sizeof(rs));
-}
+//void ckernel::slot_sendImDie(int iden)
+//{
+//    STRU_SKYWHT_RS rs;
+//    rs.iden=iden;
+//    rs.roomid=m_roomid;
+//    SendData(0,(char*)&rs,sizeof(rs));
+//}
 
 void ckernel::slot_sendPolice(int seat,bool raise)
 {
@@ -407,7 +421,7 @@ void ckernel::slot_sendSpeakStateEnd(int state)
     SendData(0,(char*)&end,sizeof(end));
 }
 
-void ckernel::slot_sendVotePolice(int seat, int toseat,int state)
+void ckernel::slot_sendVote(int seat, int toseat,int state)
 {
     STRU_VOTE_RQ rq;
     rq.roomid=m_roomid;
@@ -434,6 +448,78 @@ void ckernel::slot_sendSpeakOrder(int seat, int next)
     SendData(0,(char*)&order,sizeof(order));
 }
 
+void ckernel::slot_sendDayExile(int seat)
+{
+    STRU_DAY_EXILE exile;
+    exile.roomid=m_roomid;
+    exile.die=seat;
+    SendData(0,(char*)&exile,sizeof(exile));
+}
+
+void ckernel::slot_sendAudio(QByteArray &frame)
+{
+    ///音频数据帧
+    /// 成员描述
+    /// int type;
+    /// int zuowei;
+    /// int roomId;
+    /// int min;
+    /// int sec;
+    /// int msec;
+    /// int hour;
+    /// int wolf;
+    /// QByteArray audioFrame;  --> char frame[]; 柔性数组
+    int type=DEF_PACK_AUDIO_FRAME;
+    int zuowei=m_zuowei;
+    int roomid=m_roomid;
+    QTime tm=QTime::currentTime();
+    int min=tm.minute();
+    int sec=tm.second();
+    int msec=tm.msec();
+    int hour=tm.hour();
+    int wolf=m_wolf?1:0;
+    char* audioData=frame.data();
+    int len=frame.size();
+    char* buf=new char[sizeof(int)*8+len];
+    //序列化数据
+    char* tmp=buf;
+    *(int*)tmp=type;
+    tmp+=sizeof(int);
+    *(int*)tmp=zuowei;
+    tmp+=sizeof(int);
+    *(int*)tmp=roomid;
+    tmp+=sizeof(int);
+    *(int*)tmp=hour;
+    tmp+=sizeof(int);
+    *(int*)tmp=min;
+    tmp+=sizeof(int);
+    *(int*)tmp=sec;
+    tmp+=sizeof(int);
+    *(int*)tmp=msec;
+    tmp+=sizeof(int);
+    *(int*)tmp=wolf;
+    tmp+=sizeof(int);
+    memcpy(tmp,audioData,len);
+    SendData(0,buf,sizeof(int)*8+len);
+    delete []buf;
+}
+
+void ckernel::slot_Audio(bool begin,bool sent,bool wolf)
+{
+    m_wolf=wolf;
+    if(begin){//开始采集音频
+        audioRead->start();
+    }else{//停止采集音频
+        audioRead->pause();
+        if(sent){
+            STRU_SPEAKPAUSE pause;
+            pause.roomid=m_roomid;
+            pause.seat=m_zuowei;
+            pause.wolf=wolf;
+            SendData(0,(char*)&pause,sizeof(pause));
+        }
+    }
+}
 
 
 
@@ -552,7 +638,11 @@ void ckernel::slot_DealRoomMemberRq(unsigned int lSendIP, char *buf, int nlen)
     //将该成员添加到对应的控件上
     m_roomDialog->slot_setPlayer(rq->m_seat,rq->m_icon,rq->m_level,QString::fromStdString(rq->m_sex)
                                  ,QString::fromStdString(rq->m_szUser),rq->m_UserID);
-    if(rq->m_UserID==m_id)m_zuowei=rq->m_seat;
+    if(rq->m_UserID==m_id){m_zuowei=rq->m_seat;}
+    else {
+        if(m_mapSeatToWrite.count(rq->m_seat)>0)m_mapSeatToWrite.erase(rq->m_seat);
+        m_mapSeatToWrite[rq->m_seat]=new AudioWrite;
+    }
 }
 
 void ckernel::slot_DealJoinRoomRs(unsigned int lSendIP, char *buf, int nlen)
@@ -569,6 +659,7 @@ void ckernel::slot_DealJoinRoomRs(unsigned int lSendIP, char *buf, int nlen)
         return;
     }
     //加入成功，隐藏房间列表界面，显示房间界面
+    m_mapSeatToWrite.clear();
     m_roomid=rs->m_RoomID;
     m_roomDialog->slot_setInfo(rs->m_RoomID,rs->mode,0,rs->lock,
                                QString::fromStdString(rs->passwd),rs->maxcount,m_id);
@@ -583,6 +674,8 @@ void ckernel::slot_DealLeaveRoomRs(unsigned int lSendIP, char *buf, int nlen)
     if(rs->m_roomisExist){
         //判断房间还在不在，如果在，从房间中删掉对应座位号的人
         m_roomDialog->slot_setPlayer(rs->m_id,0,0,"","",0);
+        //删掉对应的音频播放器
+        m_mapSeatToWrite.erase(rs->m_id);
     }else{
         //如果不在，提示房间已解散，返回房间列表
         QMessageBox::about(m_roomDialog,"提示","房间已解散");
@@ -590,6 +683,7 @@ void ckernel::slot_DealLeaveRoomRs(unsigned int lSendIP, char *buf, int nlen)
         m_roomListDialog->showNormal();
         m_roomDialog->slot_destroyRoom();
         m_roomid=0;
+        m_mapSeatToWrite.clear();
     }
 }
 
@@ -684,6 +778,87 @@ void ckernel::slot_DealSpeakStateBegin(unsigned int lSendIP, char *buf, int nlen
     m_roomDialog->slot_SpeakStateBegin();
 }
 
+void ckernel::slot_DealDayExile(unsigned int lSendIP, char *buf, int nlen)
+{
+    //将放逐玩家头像设置为出局，更新状态信息
+    m_roomDialog->slot_dayExile(*(STRU_DAY_EXILE*)buf);
+}
+
+void ckernel::slot_DealGameOver(unsigned int lSendIP, char *buf, int nlen)
+{
+    //游戏结束，显示游戏结果
+    m_roomDialog->slot_gameOver();
+}
+
+void ckernel::slot_DealAudioFrame(unsigned int lSendIP, char *buf, int nlen)
+{
+    ///音频数据帧
+    /// 成员描述
+    /// int type;
+    /// int zuowei;
+    /// int roomId;
+    /// int min;
+    /// int sec;
+    /// int msec;
+    /// int hour;
+    /// int wolf;
+    /// QByteArray audioFrame;  --> char frame[]; 柔性数组
+    //反序列化
+    int type;
+    int zuowei;
+    int roomid;
+    int min;
+    int sec;
+    int msec;
+    int hour;
+    int wolf;
+
+    //反序列化数据
+    char* tmp=buf;
+    type=*(int*)tmp;
+    tmp+=sizeof(int);
+    zuowei=*(int*)tmp;
+    tmp+=sizeof(int);
+    roomid=*(int*)tmp;
+    tmp+=sizeof(int);
+    min=*(int*)tmp;
+    tmp+=sizeof(int);
+    sec=*(int*)tmp;
+    tmp+=sizeof(int);
+    msec=*(int*)tmp;
+    tmp+=sizeof(int);
+    hour=*(int*)tmp;
+    tmp+=sizeof(int);
+    wolf=*(int*)tmp;
+    tmp+=sizeof(int);
+
+    int audiolen=nlen-8*sizeof(int);
+    //音频数据
+    if(!wolf||m_roomDialog->slot_getIden()==3){
+        if(zuowei!=m_zuowei){
+            QByteArray ba(tmp,audiolen);
+            if(m_mapSeatToWrite.count(zuowei)>0){
+                AudioWrite* aw=m_mapSeatToWrite[zuowei];
+                aw->slot_net_rx(ba);
+            }
+        }
+        m_roomDialog->slot_playerSpeak(zuowei,true);
+    }
+}
+
+void ckernel::slot_DealSpeakPause(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_SPEAKPAUSE* pause=(STRU_SPEAKPAUSE*)buf;
+    if(!pause->wolf)m_roomDialog->slot_playerSpeak(pause->seat,false);
+}
+
+void ckernel::slot_DealSpeakEnd(unsigned int lSendIP, char *buf, int nlen)
+{
+    //提示某玩家结束发言
+    m_roomDialog->slot_speakEnd(*(STRU_SPEAK_RS*)buf);
+}
+
+
 void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
 {
     //设置竞选警长的玩家
@@ -757,6 +932,11 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_VOTE_RS)=&ckernel::slot_DeaVoteRs;
     netMap(DEF_PACK_SPEAK_ORDER)=&ckernel::slot_DealSpeakOrder;
     netMap(DEF_PACK_SPEAKSTATE_BEGIN)=&ckernel::slot_DealSpeakStateBegin;
+    netMap(DEF_PACK_DAY_EXILE)=&ckernel::slot_DealDayExile;
+    netMap(DEF_PACK_GAMEOVER)=&ckernel::slot_DealGameOver;
+    netMap(DEF_PACK_AUDIO_FRAME)=&ckernel::slot_DealAudioFrame;
+    netMap(DEF_PACK_SPEAK_PAUSE)=&ckernel::slot_DealSpeakPause;
+    netMap(DEF_PACK_SPEAK_RS)=&ckernel::slot_DealSpeakEnd;
 }
 
 void ckernel::slot_quitLogin()
