@@ -136,20 +136,21 @@
 //投票阶段结束
 #define DEF_PACK_VOTE_END     (DEF_PACK_BASE + 40)
 //警长选择发言顺序
-# define DEF_PACK_SPEAK_ORDER       (DEF_PACK_BASE + 41)
-
-
-
-
-////音频数据
-//#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 9)
+#define DEF_PACK_SPEAK_ORDER       (DEF_PACK_BASE + 41)
+//白天投票放逐信息
+#define DEF_PACK_DAY_EXILE          (DEF_PACK_BASE + 42)
+//游戏结束
+#define DEF_PACK_GAMEOVER           (DEF_PACK_BASE + 43)
+//音频数据
+#define DEF_PACK_AUDIO_FRAME    (DEF_PACK_BASE + 44)
 ////视频数据
 //#define DEF_PACK_VIDEO_FRAME    (DEF_PACK_BASE + 10)
-
-////音频注册
-//#define DEF_PACK_AUDIO_REGISTER (DEF_PACK_BASE + 13)
+//音频注册
+#define DEF_PACK_AUDIO_REGISTER (DEF_PACK_BASE + 45)
 ////视频注册
 //#define DEF_PACK_VIDEO_REGISTER (DEF_PACK_BASE + 14)
+//暂停发言
+#define DEF_PACK_SPEAK_PAUSE        (DEF_PACK_BASE + 46)
 
 
 //注册请求结果
@@ -203,6 +204,7 @@ typedef struct UserInfo
 //        m_videofd = 0;
 //        m_audiofd = 0;
          m_seat=0;
+         m_alive=true;
     }
 //    struct bufferevent*  m_sockfd;
     int m_sockfd;
@@ -210,6 +212,7 @@ typedef struct UserInfo
     int  m_roomid;//方便下线的时候从房间移出
     char m_userName[MAX_SIZE];
     int  m_seat;
+    bool m_alive;
 //    int  m_videofd;
 //    int  m_audiofd;
 
@@ -772,10 +775,12 @@ typedef struct STRU_SPEAK_RQ
         m_nType = DEF_PACK_SPEAK_RQ;
         state=0;
         seat=0;
+        next=0;
     }
     PackType   m_nType;   //包类型
-    int state;//1:uppolice 2:nopolice 3:normal
+    int state;//1:uppolice 2:nopolice 3:normal 4:exile
     int seat;
+    int next;
 }STRU_SPEAK_RQ;
 
 typedef struct STRU_SPEAK_RS
@@ -948,6 +953,49 @@ typedef struct STRU_SPEAK_ORDER
 }STRU_SPEAK_ORDER;
 
 
+//白天投票放逐信息
+typedef struct STRU_DAY_EXILE
+{
+    STRU_DAY_EXILE()
+    {
+        m_nType = DEF_PACK_DAY_EXILE;
+        roomid=0;
+        die=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int die;
+}STRU_DAY_EXILE;
+
+
+//游戏结束
+typedef struct STRU_GAMEOVER
+{
+    STRU_GAMEOVER()
+    {
+        m_nType = DEF_PACK_GAMEOVER;
+    }
+    PackType   m_nType;   //包类型
+}STRU_GAMEOVER;
+
+
+
+//暂停发言
+typedef struct STRU_SPEAKPAUSE
+{
+    STRU_SPEAKPAUSE()
+    {
+        m_nType = DEF_PACK_SPEAK_PAUSE;
+        roomid=0;
+        seat=0;
+        wolf=false;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+    bool wolf;//是否为狼人夜间发言
+}STRU_SPEAKPAUSE;
+
 ////注册音频
 //struct STRU_AUDIO_REGISTER
 //{
@@ -970,6 +1018,7 @@ typedef struct STRU_SPEAK_ORDER
 //    int m_userid;
 //};
 
+
 ///音频数据帧
 /// 成员描述
 /// int type;
@@ -978,6 +1027,7 @@ typedef struct STRU_SPEAK_ORDER
 /// int min;
 /// int sec;
 /// int msec;
+/// int hour;
 /// QByteArray audioFrame;  --> char frame[]; 柔性数组
 ///
 

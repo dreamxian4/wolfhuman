@@ -42,6 +42,9 @@ public:
     void Vote( sock_fd clientfd, char*szbuf, int nlen );
     void VoteEnd( sock_fd clientfd, char*szbuf, int nlen );
     void SpeakOrder( sock_fd clientfd, char*szbuf, int nlen );
+    void DayExile( sock_fd clientfd, char*szbuf, int nlen );
+    void AudioData( sock_fd clientfd, char*szbuf, int nlen );
+    void SpeakPause( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

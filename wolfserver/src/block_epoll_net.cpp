@@ -158,7 +158,7 @@ void* Block_Epoll_Net::recv_task(void* arg)
     //接收和处理分离
     int nRelReadNum = 0;
     int nPackSize = 0;
-    char *pSzBuf = NULL;
+    char *pSzBuf = NULL;;
     do
     {
         nRelReadNum = read(ev->fd,&nPackSize,sizeof(nPackSize) );
