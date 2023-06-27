@@ -97,8 +97,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
             this,SLOT(slot_sendPoliceEnd()));
     connect(m_roomDialog,SIGNAL(SIG_SpeakEnd(int,int,int)),
             this,SLOT(slot_sendSpeakEnd(int,int,int)));
-    connect(m_roomDialog,SIGNAL(SIG_imPolice(int)),
-            this,SLOT(slot_sendImPolice(int)));
+    connect(m_roomDialog,SIGNAL(SIG_imPolice(int,int)),
+            this,SLOT(slot_sendImPolice(int,int)));
     connect(m_roomDialog,SIGNAL(SIG_SpeakStateEnd(int)),
             this,SLOT(slot_sendSpeakStateEnd(int)));
     connect(m_roomDialog,SIGNAL(SIG_vote(int,int,int)),
@@ -405,11 +405,12 @@ void ckernel::slot_sendSpeakEnd(int seat,int next,int state)
     SendData(0,(char*)&rs,sizeof(rs));
 }
 
-void ckernel::slot_sendImPolice(int seat)
+void ckernel::slot_sendImPolice(int seat,int state)
 {
     STRU_BEPOLICE_RS rs;
     rs.roomid=m_roomid;
     rs.seat=seat;
+    rs.state=state;
     SendData(0,(char*)&rs,sizeof(rs));
 }
 

@@ -371,7 +371,7 @@ color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>190</y>
+     <y>150</y>
      <width>261</width>
      <height>41</height>
     </rect>
@@ -416,7 +416,7 @@ color: rgb(255, 255, 255);</string>
    <property name="geometry">
     <rect>
      <x>110</x>
-     <y>130</y>
+     <y>110</y>
      <width>261</width>
      <height>41</height>
     </rect>
@@ -465,6 +465,28 @@ color: rgb(255, 255, 255);</string>
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="pb_operate_up">
+   <property name="geometry">
+    <rect>
+     <x>100</x>
+     <y>217</y>
+     <width>281</width>
+     <height>41</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="autoDefault">
+    <bool>false</bool>
+   </property>
+   <property name="default">
+    <bool>false</bool>
+   </property>
+   <property name="flat">
+    <bool>true</bool>
    </property>
   </widget>
  </widget>

@@ -702,10 +702,13 @@ typedef struct STRU_BEPOLICE_RS
     {
         m_nType = DEF_PACK_BEPOLICE_RS;
         roomid=0;
+        seat=0;
+        state=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
+    int state;//阶段：1当选（接下来选择发言顺序）/2移交（接下来进入黑夜）
 }STRU_BEPOLICE_RS;
 
 

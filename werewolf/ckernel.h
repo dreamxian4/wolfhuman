@@ -73,7 +73,7 @@ public slots:
     void slot_sendPolice(int seat,bool raise);
     void slot_sendPoliceEnd();
     void slot_sendSpeakEnd(int seat,int next,int state);
-    void slot_sendImPolice(int seat);
+    void slot_sendImPolice(int seat,int state);
     void slot_sendSpeakStateEnd(int state);
     void slot_sendVote(int seat,int toseat,int state);
     void slot_sendVoteEnd(int state);

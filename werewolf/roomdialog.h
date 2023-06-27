@@ -61,7 +61,7 @@ signals:
     void SIG_police(int,bool);//是否竞选警长,是：举手 否：放手
     void SIG_PoliceEnd();//竞选阶段结束
     void SIG_SpeakEnd(int,int,int);//发言结束
-    void SIG_imPolice(int);//我是警长
+    void SIG_imPolice(int,int);//我是警长
     void SIG_SpeakStateEnd(int state);//发言阶段结束
     void SIG_vote(int,int,int);//警长投票
     void SIG_VoteEnd(int);//投票结束
@@ -120,6 +120,8 @@ private slots:
     void slot_OverTimerskyBlk();
     void slot_OverTimerPolice();
     void slot_OverTimerVote();
+    void slot_OverTimerSpeakOrder();
+    void slot_OverTimerSpeak();
 
 
 
@@ -155,6 +157,8 @@ private:
     QTimer* m_timer_skyBlk;//夜晚
     QTimer* m_timer_police;//竞选警长
     QTimer* m_timer_vote;//投票
+    QTimer* m_timer_speakOrder;//警长选择发言顺序
+    QTimer* m_timer_speak;//发言
 
     //用于倒计时
     int num;//5秒
@@ -162,6 +166,8 @@ private:
     int blk;//30s
     int police;//10s
     int vote;//10s
+    int speakOrder;//10s
+    int speak;//120s
 
     //用于控制组件
     int m_pb_icon;//控制头像点击信号
@@ -180,6 +186,8 @@ private:
     bool m_d_bePolice;//自己是否为警长
     int m_d_nextSpeak;//发言顺序
     bool m_d_alive;//是否活着
+    int m_d_policer;//警长座位号
+    int m_speak;//当前发言人
 
     //其他
     QString Text_upPolice;//上警玩家提示信息

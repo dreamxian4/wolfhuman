@@ -90,11 +90,25 @@
     <bool>false</bool>
    </property>
   </widget>
+  <widget class="QLabel" name="lb_me">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>40</y>
+     <width>16</width>
+     <height>21</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
   <zorder>pb_edge</zorder>
   <zorder>pb_icon</zorder>
   <zorder>lb_identify</zorder>
   <zorder>lb_badge</zorder>
   <zorder>lb_num</zorder>
+  <zorder>lb_me</zorder>
  </widget>
  <resources/>
  <connections/>

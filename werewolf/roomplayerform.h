@@ -34,6 +34,8 @@ public:
     void resumeVoted();//恢复非投票状态
     void setAbleToOper(int who);//设置可以
     void setSpeak(bool speak);//设置正在讲话
+    void setYYJIden(int iden);//预言家验人信息
+    void setMe(bool is);//是否是玩家自己
 
 private slots:
     void on_pb_icon_clicked();

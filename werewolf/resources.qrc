@@ -45,5 +45,29 @@
         <file>tupian/lock.png</file>
         <file>tx/00.png</file>
         <file>tx/000.png</file>
+        <file>tupian/1die.png</file>
+        <file>tupian/selectSpeakOrder.png</file>
+        <file>tupian/waitDayLight.png</file>
+        <file>tupian/2die.png</file>
+        <file>tupian/3die.png</file>
+        <file>tupian/4die.png</file>
+        <file>tupian/5die.png</file>
+        <file>tupian/6die.png</file>
+        <file>tupian/7die.png</file>
+        <file>tupian/8die.png</file>
+        <file>tupian/9die.png</file>
+        <file>tupian/10die.png</file>
+        <file>tupian/11die.png</file>
+        <file>tupian/12die.png</file>
+        <file>tupian/beginSpeak.png</file>
+        <file>tupian/kong.png</file>
+        <file>tupian/lrSkyBlack.png</file>
+        <file>tupian/nv0SkyBlack.png</file>
+        <file>tupian/nvNoDie.png</file>
+        <file>tupian/nvPosion.png</file>
+        <file>tupian/policeYesOrNo.png</file>
+        <file>tupian/voteToPolice.png</file>
+        <file>tupian/yyjSkyBlack.png</file>
+        <file>tupian/turnPolice.png</file>
     </qresource>
 </RCC>
