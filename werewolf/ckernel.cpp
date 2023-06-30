@@ -111,6 +111,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
             this,SLOT(slot_sendDayExile(int)));
     connect(m_roomDialog,SIGNAL(SIG_Audio(bool,bool,bool)),
             this,SLOT(slot_Audio(bool,bool,bool)));
+    connect(m_roomDialog,SIGNAL(SIG_lrKillSelf()),
+            this,SLOT(slot_sendLrKillSelf()));
 
 
 
@@ -505,6 +507,14 @@ void ckernel::slot_sendAudio(QByteArray &frame)
     delete []buf;
 }
 
+void ckernel::slot_sendLrKillSelf()
+{
+    STRU_LR_KILLSELF kill;
+    kill.roomid=m_roomid;
+    kill.seat=m_zuowei;
+    SendData(0,(char*)&kill,sizeof(kill));
+}
+
 void ckernel::slot_Audio(bool begin,bool sent,bool wolf)
 {
     m_wolf=wolf;
@@ -859,6 +869,11 @@ void ckernel::slot_DealSpeakEnd(unsigned int lSendIP, char *buf, int nlen)
     m_roomDialog->slot_speakEnd(*(STRU_SPEAK_RS*)buf);
 }
 
+void ckernel::slot_DealFriendInfo(unsigned int lSendIP, char *buf, int nlen)
+{
+    qDebug()<<"111111";
+}
+
 
 void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
 {
@@ -938,6 +953,7 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_AUDIO_FRAME)=&ckernel::slot_DealAudioFrame;
     netMap(DEF_PACK_SPEAK_PAUSE)=&ckernel::slot_DealSpeakPause;
     netMap(DEF_PACK_SPEAK_RS)=&ckernel::slot_DealSpeakEnd;
+    netMap(DEF_PACK_FRIEND_INFO)=&ckernel::slot_DealFriendInfo;
 }
 
 void ckernel::slot_quitLogin()

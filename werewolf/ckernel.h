@@ -81,6 +81,7 @@ public slots:
     void slot_sendDayExile(int seat);
     void slot_Audio(bool begin,bool sent,bool wolf);
     void slot_sendAudio(QByteArray& frame);
+    void slot_sendLrKillSelf();
 
 
 
@@ -147,6 +148,8 @@ public slots:
     void slot_DealSpeakPause( unsigned int lSendIP , char* buf , int nlen );
     //玩家结束发言
     void slot_DealSpeakEnd( unsigned int lSendIP , char* buf , int nlen );
+    //好友信息
+    void slot_DealFriendInfo( unsigned int lSendIP , char* buf , int nlen );
 
 
 

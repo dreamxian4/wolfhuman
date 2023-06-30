@@ -69,5 +69,6 @@
         <file>tupian/voteToPolice.png</file>
         <file>tupian/yyjSkyBlack.png</file>
         <file>tupian/turnPolice.png</file>
+        <file>tupian/turnPoliceYes.png</file>
     </qresource>
 </RCC>

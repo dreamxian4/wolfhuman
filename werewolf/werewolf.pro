@@ -9,40 +9,49 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    chatdialog.cpp \
     ckernel.cpp \
     createroomform.cpp \
     logindialog.cpp \
     main.cpp \
     maindialog.cpp \
+    mychatdialog.cpp \
     registerdialog.cpp \
     roomdialog.cpp \
     roomlistdialog.cpp \
     roomlistform.cpp \
     roomplayerform.cpp \
-    startdialog.cpp
+    startdialog.cpp \
+    useritem.cpp
 
 HEADERS += \
+    chatdialog.h \
     ckernel.h \
     createroomform.h \
     logindialog.h \
     maindialog.h \
+    mychatdialog.h \
     registerdialog.h \
     roomdialog.h \
     roomlistdialog.h \
     roomlistform.h \
     roomplayerform.h \
-    startdialog.h
+    startdialog.h \
+    useritem.h
 
 FORMS += \
+    chatdialog.ui \
     createroomform.ui \
     logindialog.ui \
     maindialog.ui \
+    mychatdialog.ui \
     registerdialog.ui \
     roomdialog.ui \
     roomlistdialog.ui \
     roomlistform.ui \
     roomplayerform.ui \
-    startdialog.ui
+    startdialog.ui \
+    useritem.ui
 
 include(./netapi/netapi.pri)
 include(./uiapi/uiapi.pri)

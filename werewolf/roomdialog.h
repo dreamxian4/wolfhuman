@@ -20,6 +20,7 @@
 #define SKYBLK_SW 4
 #define VOTE_POLICE 5
 #define VOTE_DAY 6
+#define TURN_POLICE_ICON 7
 /***************************************/
 
 /**************************************/
@@ -29,6 +30,7 @@
 #define NW_NODIE 2
 #define WANT_BEPOLICE 3
 #define SPEAK_ORDER 4
+#define TURN_POLICE 5
 /***************************************/
 
 /**************************************/
@@ -68,6 +70,7 @@ signals:
     void SIG_speakOrder(int,int);//发言顺序
     void SIG_dayExile(int);//白天放逐
     void SIG_Audio(bool,bool,bool);//开始/停止语音;是否给服务器发送包；是否为狼人夜间发言
+    void SIG_lrKillSelf();//狼人自爆
 
 
 public:
@@ -122,9 +125,12 @@ private slots:
     void slot_OverTimerVote();
     void slot_OverTimerSpeakOrder();
     void slot_OverTimerSpeak();
+    void slot_OverTimerTurnPolice();
 
 
 
+
+    void on_pb_lrKillself_clicked();
 
 private:
     Ui::roomDialog *ui;
@@ -159,6 +165,7 @@ private:
     QTimer* m_timer_vote;//投票
     QTimer* m_timer_speakOrder;//警长选择发言顺序
     QTimer* m_timer_speak;//发言
+    QTimer* m_timer_turnPolice;//移交警徽
 
     //用于倒计时
     int num;//5秒
@@ -168,6 +175,7 @@ private:
     int vote;//10s
     int speakOrder;//10s
     int speak;//120s
+    int turnPolice;//10s
 
     //用于控制组件
     int m_pb_icon;//控制头像点击信号
