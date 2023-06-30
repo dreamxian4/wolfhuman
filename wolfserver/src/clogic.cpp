@@ -28,6 +28,7 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_DAY_EXILE)          = &CLogic::DayExile;
     NetPackMap(DEF_PACK_AUDIO_FRAME)        = &CLogic::AudioData;
     NetPackMap(DEF_PACK_SPEAK_PAUSE)        = &CLogic::SpeakPause;
+    NetPackMap(DEF_PACK_LR_KILLSELF)        = &CLogic::LrKillSelf;
 }
 
 
@@ -128,22 +129,97 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
             m_mapIdToUserInfo.insert(id,user);
             //给客户发送个人信息
             STRU_USER_INFO_RQ userRq;
+            STRU_TCP_FRIEND_INFO loginInfo;
             sprintf(sql,"select id,username,name,sex,icon,level from t_user where username='%s'",
                     rq->username);
             m_sql->SelectMysql(sql,6,lst);
             userRq.m_UserID=atoi(lst.front().c_str());
+            loginInfo.userid=userRq.m_UserID;
             lst.pop_front();
             strcpy(userRq.m_username,lst.front().c_str());
+            strcpy(loginInfo.username,userRq.m_username);
             lst.pop_front();
             strcpy(userRq.m_name,lst.front().c_str());
+            strcpy(loginInfo.name,userRq.m_name);
             lst.pop_front();
             strcpy(userRq.m_sex,lst.front().c_str());
+            strcpy(loginInfo.sex,userRq.m_sex);
             lst.pop_front();
             userRq.m_iconid=atoi(lst.front().c_str());
+            loginInfo.icon=userRq.m_iconid;
             lst.pop_front();
             userRq.m_level=atoi(lst.front().c_str());
+            loginInfo.level=userRq.m_level;
             lst.pop_front();
+            loginInfo.state=1;
             SendData(clientfd,(char*)&userRq,sizeof(userRq));
+            //给用户发送好友信息
+            //4.根据用户id查找所有的好友id
+            list<string> resultList;
+            char sqlBuf[1024] = "";
+            sprintf(sqlBuf, "select id_b from t_friend where id_a = %d;", user->m_id);
+            if (!m_sql->SelectMysql(sqlBuf, 1, resultList)) {
+                cout << "selectMysql error:" << sqlBuf << endl;
+                return;
+            }
+
+            //5.遍历查找结果
+            int friendId = 0;
+            STRU_TCP_FRIEND_INFO friendInfo;
+            UserInfo* friendIf=nullptr;
+            while (!resultList.empty()) {
+                //6.取出好友id，根据好友id查找好友信息
+                friendId = atoi(resultList.front().c_str());
+                resultList.pop_front();
+                //1.保存id
+                friendInfo.userid = friendId;
+
+                //2.根据id查信息
+                list<string> resultList;
+                char sqlBuf[1024] = "";
+                sprintf(sqlBuf, "select username,sex,icon,name,level from t_user where id=%d;", friendId);
+                if (!m_sql->SelectMysql(sqlBuf, 5, resultList)) {
+                    cout << "selectMysql error:" << sqlBuf << endl;
+                    return;
+                }
+
+                //3.遍历查询结果
+                if (resultList.size() == 5) {
+                    strcpy(friendInfo.username, resultList.front().c_str());
+                    resultList.pop_front();
+
+                    strcpy(friendInfo.sex, resultList.front().c_str());
+                    resultList.pop_front();
+
+                    friendInfo.icon = atoi(resultList.front().c_str());
+                    resultList.pop_front();
+
+                    strcpy(friendInfo.name, resultList.front().c_str());
+                    resultList.pop_front();
+
+                    friendInfo.level = atoi(resultList.front().c_str());
+                    resultList.pop_front();
+                }
+
+                //4.判断用户是否存在
+                if (m_mapIdToUserInfo.find(friendId,friendIf)) {
+                    friendInfo.state = 1;		//在线
+                }
+                else {
+                    friendInfo.state = 2;		//不在线
+                }
+
+
+                //7.把好友信息发给客户端
+                SendData(clientfd, (char*)&friendInfo, sizeof(friendInfo));
+
+                //8.如果好友在线，通知好友登陆人上线
+                if (!friendIf) {
+                    continue;//好友不在线，进行下一次循环
+                }
+                //9.如果好友在线，取出好友的套接字，给好友发送登陆人的上线通知
+                SendData(friendIf->m_sockfd, (char*)&loginInfo, sizeof(loginInfo));
+            }
         }else rs.result=password_error;
     }
     //返回结果
@@ -877,11 +953,10 @@ void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
     STRU_BEPOLICE_RS* rs=(STRU_BEPOLICE_RS*)szbuf;
     //设置警长信息
     RoomInfo* room=nullptr;
-    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
-    room->i_police=rs->seat;
-    list<int>lst;
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;list<int>lst;
     if(!m_mapRoomidToMemberlist.find(rs->roomid,lst));
     UserInfo* user=nullptr;
+    room->i_police=rs->seat;
     //当选警长，将警长信息发送给玩家
     if(rs->seat){
         for(auto ite=lst.begin();ite!=lst.end();ite++){
@@ -959,6 +1034,11 @@ void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
         memset(room->i_kill,0,16);
     }else{
         //不是第一天，说明是撕警徽或者移交警徽，发生在白天结束，不用发送死亡信息，应该发送进入夜晚TODO
+        STRU_SKYBLACK_RQ SkyRq;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&SkyRq,sizeof(SkyRq));
+        }
     }
 }
 
@@ -1120,7 +1200,6 @@ void CLogic::SpeakPause(sock_fd clientfd, char *szbuf, int nlen)
     printf("SpeakPause:%d\n",clientfd);
     //拆包
     STRU_SPEAKPAUSE* pause=(STRU_SPEAKPAUSE*)szbuf;
-    printf("%d",pause->seat);
     //找到房间成员列表
     RoomInfo* room=nullptr;
     if(!m_mapRoomidToRoomInfo.find(pause->roomid,room))return;
@@ -1131,5 +1210,53 @@ void CLogic::SpeakPause(sock_fd clientfd, char *szbuf, int nlen)
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
         //发送暂停发言包
         SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::LrKillSelf(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("LrKillSelf:%d\n",clientfd);
+    //拆包
+    STRU_LR_KILLSELF* kill=(STRU_LR_KILLSELF*)szbuf;
+    //找到房间成员列表
+    RoomInfo* room=nullptr;
+    if(!m_mapRoomidToRoomInfo.find(kill->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(kill->roomid,lst))return;
+    UserInfo* user;
+    //更新房间状态
+    if(room->m_identify[kill->seat]==2)room->i_farmerNum--;
+    else if(room->m_identify[kill->seat]==3)room->i_wolfNum--;
+    else room->i_godNum--;
+
+    //判断是否结束游戏
+    if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+        //如果游戏结束：发送游戏结束包
+        STRU_GAMEOVER over;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&over,sizeof(over));
+        }
+    }else{
+        //不结束：给淘汰玩家发送发言包；结束发言后，发送天黑包
+        MyMap<int,int>ma;
+        if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,ma))return;
+        STRU_SPEAK_RQ rq;
+        rq.state=4;
+        rq.seat=kill->seat;
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+        }
+        //将淘汰玩家从存活玩家中删除;
+        ma.erase(kill->seat);
+        m_mapRoomidToSeatidToSockfd.insert(kill->roomid,ma);
+        for(auto ite=lst.begin();ite!=lst.end();ite++){
+            if(!m_mapIdToUserInfo.find(*ite,user))continue;
+            if(user->m_seat==kill->seat){
+                user->m_alive=false;
+                break;
+            }
+        }
     }
 }

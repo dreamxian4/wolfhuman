@@ -45,6 +45,7 @@ public:
     void DayExile( sock_fd clientfd, char*szbuf, int nlen );
     void AudioData( sock_fd clientfd, char*szbuf, int nlen );
     void SpeakPause( sock_fd clientfd, char*szbuf, int nlen );
+    void LrKillSelf( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

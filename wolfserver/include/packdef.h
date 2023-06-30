@@ -151,6 +151,10 @@
 //#define DEF_PACK_VIDEO_REGISTER (DEF_PACK_BASE + 14)
 //暂停发言
 #define DEF_PACK_SPEAK_PAUSE        (DEF_PACK_BASE + 46)
+//狼人自爆
+#define DEF_PACK_LR_KILLSELF       (DEF_PACK_BASE + 47)
+//好友信息
+#define DEF_PACK_FRIEND_INFO        (DEF_PACK_BASE + 48)
 
 
 //注册请求结果
@@ -850,18 +854,21 @@ typedef struct STRU_BEPOLICE_RQ
     PackType   m_nType;   //包类型
 }STRU_BEPOLICE_RQ;
 
+
 typedef struct STRU_BEPOLICE_RS
 {
     STRU_BEPOLICE_RS()
     {
         m_nType = DEF_PACK_BEPOLICE_RS;
         roomid=0;
+        seat=0;
+        state=0;
     }
     PackType   m_nType;   //包类型
     int roomid;
     int seat;
+    int state;//阶段：1当选（接下来选择发言顺序）/2移交（接下来进入黑夜）
 }STRU_BEPOLICE_RS;
-
 
 
 //发言阶段开始
@@ -995,6 +1002,42 @@ typedef struct STRU_SPEAKPAUSE
     int seat;
     bool wolf;//是否为狼人夜间发言
 }STRU_SPEAKPAUSE;
+
+
+//狼人自爆
+typedef struct STRU_LR_KILLSELF
+{
+    STRU_LR_KILLSELF()
+    {
+        m_nType = DEF_PACK_LR_KILLSELF;
+        roomid=0;
+        seat=0;
+    }
+    PackType   m_nType;   //包类型
+    int roomid;
+    int seat;
+}STRU_LR_KILLSELF;
+
+
+//好友信息
+typedef struct STRU_TCP_FRIEND_INFO {
+    //协议头 好友id 头像 状态 手机号 昵称 签名
+    STRU_TCP_FRIEND_INFO() :type(DEF_PACK_FRIEND_INFO), userid(0), icon(0), state(0) {
+        memset(username, 0, MAX_SIZE);
+        memset(name, 0, MAX_SIZE);
+        memset(sex, 0, MAX_SIZE);
+        level=0;
+    }
+    PackType type;
+    int userid;
+    int icon;
+    int state;//1：在线 2：离线 3：游戏中 4：房间中
+    char username[MAX_SIZE];
+    char name[MAX_SIZE];
+    char level;
+    char sex[MAX_SIZE];
+}STRU_TCP_FRIEND_INFO;
+
 
 ////注册音频
 //struct STRU_AUDIO_REGISTER
