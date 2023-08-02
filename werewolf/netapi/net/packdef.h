@@ -113,6 +113,13 @@
 #define DEF_PACK_LR_KILLSELF       (_DEF_PACK_BASE + 47)
 //好友信息
 #define DEF_PACK_FRIEND_INFO        (_DEF_PACK_BASE + 48)
+//聊天请求
+#define DEF_PACK_CHAT_RQ       (_DEF_PACK_BASE + 49)
+#define DEF_PACK_CHAT_RS       (_DEF_PACK_BASE + 50)
+//好友详细信息
+#define DEF_PACK_FRIEND_ZILIAO_RQ       (_DEF_PACK_BASE + 51)
+#define DEF_PACK_FRIEND_ZILIAO_RS       (_DEF_PACK_BASE + 52)
+
 
 
 
@@ -135,6 +142,16 @@
 #define room_no_exist        0
 #define join_success         1
 #define level_unqualified    2
+
+//信息发送结果
+#define send_success 0
+#define send_error 1
+
+//好友状态 1：在线 2：离线 3：游戏中 4：房间中
+#define online 1
+#define offline 2
+#define playing 3
+#define inroom 4
 
 typedef int PackType;
 
@@ -883,9 +900,9 @@ typedef struct STRU_LR_KILLSELF
 
 
 //好友信息
-typedef struct STRU_TCP_FRIEND_INFO {
+typedef struct STRU_FRIEND_INFO {
     //协议头 好友id 头像 状态 手机号 昵称 签名
-    STRU_TCP_FRIEND_INFO() :type(DEF_PACK_FRIEND_INFO), userid(0), icon(0), state(0) {
+    STRU_FRIEND_INFO() :type(DEF_PACK_FRIEND_INFO), userid(0), icon(0), state(0) {
         memset(username, 0, _MAX_SIZE);
         memset(name, 0, _MAX_SIZE);
         memset(sex, 0, _MAX_SIZE);
@@ -899,7 +916,70 @@ typedef struct STRU_TCP_FRIEND_INFO {
     char name[_MAX_SIZE];
     char level;
     char sex[_MAX_SIZE];
-}STRU_TCP_FRIEND_INFO;
+}STRU_FRIEND_INFO;
+
+
+//聊天
+typedef struct STRU_CHAT_RQ {
+    //协议头  内容 发送人id 接收人id
+    STRU_CHAT_RQ() :type(DEF_PACK_CHAT_RQ), userid(0), friendid(0) {
+        memset(content, 0, _DEF_CONTENT_SIZE);
+    }
+    PackType type;
+    int userid;
+    int friendid;
+    char content[_DEF_CONTENT_SIZE];
+}STRU_CHAT_RQ;
+
+typedef struct STRU_CHAT_RS {
+    //协议头 结果
+    STRU_CHAT_RS() :type(DEF_PACK_CHAT_RS), userid(0), friendid(0), result(send_success) {}
+    PackType type;
+    int userid;
+    int friendid;
+    int result;
+}STRU_CHAT_RS;
+
+
+
+//好友详细资料
+typedef struct STRU_FRIEND_ZILIAO_RQ {
+    //协议头  内容 发送人id 接收人id
+    STRU_FRIEND_ZILIAO_RQ() :type(DEF_PACK_FRIEND_ZILIAO_RQ),friendid(0) {
+    }
+    PackType type;
+    int friendid;
+}STRU_FRIEND_ZILIAO_RQ;
+
+typedef struct STRU_FRIEND_ZILIAO_RS {
+    //协议头 结果
+    STRU_FRIEND_ZILIAO_RS() :type(DEF_PACK_FRIEND_ZILIAO_RS), friendid(0) {
+        icon=0;
+        roomid=0;
+        level=0;
+        gameNum=0;
+        space=false;
+        state=0;
+        memset(name, 0, _MAX_SIZE);
+        memset(username, 0, _MAX_SIZE);
+        memset(sex, 0, _MAX_SIZE);
+        memset(content, 0, _DEF_CONTENT_SIZE);
+        memset(time, 0, _MAX_SIZE);
+    }
+    PackType type;
+    int friendid;
+    int icon;
+    char name[_MAX_SIZE];
+    int state;//状态 //1：在线 2：离线 3：游戏中 4：房间中
+    int roomid;
+    char username[_MAX_SIZE];
+    char sex[_MAX_SIZE];
+    int level;
+    int gameNum;//游戏次数
+    bool space;//是否有动态
+    char content[_DEF_CONTENT_SIZE];//动态内容
+    char time[_MAX_SIZE];
+}STRU_FRIEND_ZILIAO_RS;
 
 
 ////注册音频
