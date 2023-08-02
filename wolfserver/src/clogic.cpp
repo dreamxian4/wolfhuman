@@ -29,6 +29,8 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_AUDIO_FRAME)        = &CLogic::AudioData;
     NetPackMap(DEF_PACK_SPEAK_PAUSE)        = &CLogic::SpeakPause;
     NetPackMap(DEF_PACK_LR_KILLSELF)        = &CLogic::LrKillSelf;
+    NetPackMap(DEF_PACK_CHAT_RQ)            = &CLogic::ChatRq;
+    NetPackMap(DEF_PACK_FRIEND_ZILIAO_RQ)   = &CLogic::FriendZiLiao;
 }
 
 
@@ -72,6 +74,7 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
     //用户名不存在，返回登陆失败
     STRU_LOGIN_RS rs;
     if(lst.empty())rs.result=user_not_exist;
+
     //用户名存在，判断密码是否正确
     else {
         int id=atoi(lst.front().c_str());
@@ -125,6 +128,7 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
             user=new UserInfo;
             user->m_id=id;
             user->m_sockfd=clientfd;
+            user->m_state=1;
             strcpy(user->m_userName,rq->username);
             m_mapIdToUserInfo.insert(id,user);
             //给客户发送个人信息
@@ -301,6 +305,7 @@ void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
     user->m_seat=1;
     room->m_seat[1]=1;
     user->m_roomid=id;
+    user->m_state=4;
     m_mapRoomidToRoomInfo.insert(room->m_roomid,room);
     m_roomList.push_back(room->m_roomid);
     list<int>lst;
@@ -418,6 +423,7 @@ void CLogic::JoinRoom(sock_fd clientfd, char *szbuf, int nlen)
                     user->m_seat=i;
                     room->m_seat[i]=1;
                     user->m_roomid=room->m_roomid;
+                    user->m_state=4;
                     break;
                 }
             }
@@ -525,6 +531,7 @@ void CLogic::LeaveRoom(sock_fd clientfd, char *szbuf, int nlen)
     }
 
     user->m_roomid=0;
+    user->m_state=1;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         UserInfo* muser;
         if(!m_mapIdToUserInfo.find(*ite,muser))continue;
@@ -598,6 +605,7 @@ void CLogic::BeginGame(sock_fd clientfd, char *szbuf, int nlen)
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         UserInfo* user=nullptr;
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        user->m_state=3;
         int iden=rand()%6;
         while(pai[iden]==0)iden=rand()%6;
         //将身份信息发送给玩家
@@ -700,12 +708,21 @@ void CLogic::SkyblackEnd(sock_fd clientfd, char *szbuf, int nlen)
                 if(!m_mapIdToUserInfo.find(*ite,user))continue;
                 SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
             }
+
+
+            //将淘汰玩家从存活玩家中删除;
+            MyMap<int,int>ma;
+            if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,ma))return;
+
+
             //更新房间信息
             for(int i=0;i<2;i++){
                 if(room->i_die[i]){
                     if(room->m_identify[room->i_die[i]]==2)room->i_farmerNum--;
                     else if(room->m_identify[room->i_die[i]]==3)room->i_wolfNum--;
                     else room->i_godNum--;
+                    ma.erase(room->i_die[i]);
+                    m_mapRoomidToSeatidToSockfd.insert(room->m_roomid,ma);
                     for(auto ite=lst.begin();ite!=lst.end();ite++){
                         if(!m_mapIdToUserInfo.find(*ite,user))continue;
                         if(user->m_seat==room->i_die[i]){
@@ -815,7 +832,6 @@ void CLogic::ToBePolice(sock_fd clientfd, char *szbuf, int nlen)
 void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
 {
     printf("PoliceEnd:%d\n",clientfd);
-    //判断上警人数，如果为0或为游戏人数，直接发言，没有警长
     STRU_POLICE_END* end=(STRU_POLICE_END*)szbuf;
     RoomInfo* room=nullptr;
     if(!m_mapRoomidToRoomInfo.find(end->roomid,room))return;
@@ -823,6 +839,7 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
     list<int>lst;
     if(!m_mapRoomidToMemberlist.find(end->roomid,lst))return;
     UserInfo* user=nullptr;
+    //判断上警人数，如果为0或为游戏人数，直接发言，没有警长
     if(room->i_policeNum==0||room->i_policeNum==room->m_beginNum){
         //发送死亡信息
         STRU_SKYWHT_RQ rq;
@@ -833,11 +850,26 @@ void CLogic::PoliceEnd(sock_fd clientfd, char *szbuf, int nlen)
             SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
         }
 
+        //将淘汰玩家从存活玩家中删除;
+        MyMap<int,int>ma;
+        if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,ma))return;
+
+
+        //更新房间信息
         for(int i=0;i<2;i++){
             if(room->i_die[i]){
                 if(room->m_identify[room->i_die[i]]==2)room->i_farmerNum--;
                 else if(room->m_identify[room->i_die[i]]==3)room->i_wolfNum--;
                 else room->i_godNum--;
+                ma.erase(room->i_die[i]);
+                m_mapRoomidToSeatidToSockfd.insert(room->m_roomid,ma);
+                for(auto ite=lst.begin();ite!=lst.end();ite++){
+                    if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                    if(user->m_seat==room->i_die[i]){
+                        user->m_alive=false;
+                        break;
+                    }
+                }
             }
         }
 
@@ -913,6 +945,7 @@ void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
         STRU_DAY_EXILE exile;
         exile.die=rs->seat;
         STRU_SKYBLACK_RQ rq;
+        room->i_day++;
         for(auto ite=lst.begin();ite!=lst.end();ite++){
             if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&exile,sizeof(exile));
@@ -922,7 +955,7 @@ void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
         STRU_SPEAK_RQ rq;
         MyMap<int,int>seat;
         if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
-        int next=(rs->seat+rs->next)%room->m_beginNum;
+        int next=(rs->seat+rs->next)%(room->m_beginNum+1);
         int a;
         bool key=true;
         rq.seat=rs->seat;
@@ -931,12 +964,12 @@ void CLogic::SpeakEnd(sock_fd clientfd, char *szbuf, int nlen)
                 if(key){
                     rq.seat=next;
                     key=false;
-                    next=(next+rs->next)%room->m_beginNum;
+                    next=(next+rs->next)%(room->m_beginNum+1);
                 }else {
                     rq.next=next;
                     break;
                 }
-            }else next=(next+rs->next)%room->m_beginNum;
+            }else next=(next+rs->next)%(room->m_beginNum+1);
         }
         if(a==13)rq.next=0;
         rq.state=rs->state;
@@ -953,8 +986,9 @@ void CLogic::BePolice(sock_fd clientfd, char *szbuf, int nlen)
     STRU_BEPOLICE_RS* rs=(STRU_BEPOLICE_RS*)szbuf;
     //设置警长信息
     RoomInfo* room=nullptr;
-    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;list<int>lst;
-    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst));
+    if(!m_mapRoomidToRoomInfo.find(rs->roomid,room))return;
+    list<int>lst;
+    if(!m_mapRoomidToMemberlist.find(rs->roomid,lst))return;
     UserInfo* user=nullptr;
     room->i_police=rs->seat;
     //当选警长，将警长信息发送给玩家
@@ -1107,7 +1141,8 @@ void CLogic::SpeakOrder(sock_fd clientfd, char *szbuf, int nlen)
     speakRq.state=3;
     MyMap<int,int>seat;
     if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
-    int next=(order->seat+order->next)%room->m_beginNum;
+//    int next=(order->seat+order->next)%(room->m_beginNum+1)<=0?room->m_beginNum:(order->seat+order->next)%(room->m_beginNum+1);
+    int next=(order->seat+order->next)%(room->m_beginNum+1);
     int a;
     bool key=true;
     speakRq.seat=order->seat;
@@ -1115,17 +1150,19 @@ void CLogic::SpeakOrder(sock_fd clientfd, char *szbuf, int nlen)
         if(seat.IsExist(next)){
             if(key){
                 speakRq.seat=next;
-                next=(next+order->next)%room->m_beginNum;
+                next=(next+order->next)%(room->m_beginNum+1);
                 key=false;
             }else {
                 speakRq.next=next;
                 break;
             }
-        }else next=(next+order->next)%room->m_beginNum;
+        }else next=(next+order->next)%(room->m_beginNum+1);
     }
     if(a==13)speakRq.next=0;
+    STRU_SPEAKSTATE_BEGIN speakState;
     for(auto ite=lst.begin();ite!=lst.end();ite++){
         if(!m_mapIdToUserInfo.find(*ite,user))continue;
+        SendData(user->m_sockfd,(char*)&speakState,sizeof(speakState));
         SendData(user->m_sockfd,(char*)&speakRq,sizeof(speakRq));
     }
 }
@@ -1139,39 +1176,49 @@ void CLogic::DayExile(sock_fd clientfd, char *szbuf, int nlen)
     list<int>lst;
     if(!m_mapRoomidToMemberlist.find(exile->roomid,lst))return;
     UserInfo *user=nullptr;
-    //更新房间状态
-    if(room->m_identify[exile->die]==2)room->i_farmerNum--;
-    else if(room->m_identify[exile->die]==3)room->i_wolfNum--;
-    else room->i_godNum--;
+    if(exile->die!=0){
+        //更新房间状态
+        if(room->m_identify[exile->die]==2)room->i_farmerNum--;
+        else if(room->m_identify[exile->die]==3)room->i_wolfNum--;
+        else room->i_godNum--;
 
-    //判断是否结束游戏
-    if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
-        //如果游戏结束：发送游戏结束包
-        STRU_GAMEOVER over;
-        for(auto ite=lst.begin();ite!=lst.end();ite++){
-            if(!m_mapIdToUserInfo.find(*ite,user))continue;
-            SendData(user->m_sockfd,(char*)&over,sizeof(over));
+        //判断是否结束游戏
+        if(room->i_godNum==0||room->i_wolfNum==0||room->i_farmerNum==0){
+            //如果游戏结束：发送游戏结束包
+            STRU_GAMEOVER over;
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&over,sizeof(over));
+            }
+        }else{
+            //不结束：给淘汰玩家发送发言包；结束发言后，发送天黑包
+            MyMap<int,int>ma;
+            if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,ma))return;
+            STRU_SPEAK_RQ rq;
+            rq.state=4;
+            rq.seat=exile->die;
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
+            }
+            //将淘汰玩家从存活玩家中删除;
+            ma.erase(exile->die);
+            m_mapRoomidToSeatidToSockfd.insert(exile->roomid,ma);
+            for(auto ite=lst.begin();ite!=lst.end();ite++){
+                if(!m_mapIdToUserInfo.find(*ite,user))continue;
+                if(user->m_seat==exile->die){
+                    user->m_alive=false;
+                    break;
+                }
+            }
         }
     }else{
-        //不结束：给淘汰玩家发送发言包；结束发言后，发送天黑包
-        MyMap<int,int>ma;
-        if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,ma))return;
-        STRU_SPEAK_RQ rq;
-        rq.state=4;
-        rq.seat=exile->die;
+        //发送天黑包
+        STRU_SKYBLACK_RQ rq;
+        room->i_day++;
         for(auto ite=lst.begin();ite!=lst.end();ite++){
             if(!m_mapIdToUserInfo.find(*ite,user))continue;
             SendData(user->m_sockfd,(char*)&rq,sizeof(rq));
-        }
-        //将淘汰玩家从存活玩家中删除;
-        ma.erase(exile->die);
-        m_mapRoomidToSeatidToSockfd.insert(exile->roomid,ma);
-        for(auto ite=lst.begin();ite!=lst.end();ite++){
-            if(!m_mapIdToUserInfo.find(*ite,user))continue;
-            if(user->m_seat==exile->die){
-                user->m_alive=false;
-                break;
-            }
         }
     }
 }
@@ -1259,4 +1306,91 @@ void CLogic::LrKillSelf(sock_fd clientfd, char *szbuf, int nlen)
             }
         }
     }
+}
+
+void CLogic::ChatRq(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("ChatRq:%d\n",clientfd);
+    //1.拆包
+    STRU_CHAT_RQ* rq = (STRU_CHAT_RQ*)szbuf;
+
+    //2.看接收方是否在线
+    UserInfo* user=nullptr;
+    if (m_mapIdToUserInfo.find(rq->friendid,user)) {
+        //3.如果对方在线，获取套接字，转发数据
+        SendData(user->m_sockfd, szbuf, nlen);
+    }
+    else {
+        //4.如果对方不在线，回复客户端好友不在线
+        STRU_CHAT_RS rs;
+        rs.result = send_error;
+        rs.userid = rq->userid;
+        rs.friendid = rq->friendid;
+        SendData(clientfd, (char*)&rs, sizeof(rs));
+    }
+}
+
+void CLogic::FriendZiLiao(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("FriendZiLiao:%d\n",clientfd);
+    //拆包
+    STRU_FRIEND_ZILIAO_RQ* rq=(STRU_FRIEND_ZILIAO_RQ*)szbuf;
+    //查找数据库
+    /*
+    int friendid;
+    int icon;
+    char name[MAX_SIZE];
+    int state;
+    int roomid;
+    char username[MAX_SIZE];
+    char sex[MAX_SIZE];
+    int level;
+    int gameNum;
+    bool space;
+    char content[MAX_CONTENT_LEN];
+    char time[MAX_SIZE];
+    */
+
+    list<string>lst;
+    char sql[1024];
+    //从用户表查询
+    sprintf(sql,"select username,sex,icon,name,level,gameNum from t_user where id=%d"
+            ,rq->friendid);
+    m_sql->SelectMysql(sql,6,lst);
+    STRU_FRIEND_ZILIAO_RS rs;
+    rs.friendid=rq->friendid;
+    strcpy(rs.username,lst.front().c_str());
+    lst.pop_front();
+    strcpy(rs.sex,lst.front().c_str());
+    lst.pop_front();
+    rs.icon=atoi(lst.front().c_str());
+    lst.pop_front();
+    strcpy(rs.name,lst.front().c_str());
+    lst.pop_front();
+    rs.level=atoi(lst.front().c_str());
+    lst.pop_front();
+    rs.gameNum=atoi(lst.front().c_str());
+    lst.pop_front();
+
+    //从空间表查询
+    sprintf(sql,"select content,time from t_space where id=%d order by time limit 1"
+            ,rq->friendid);
+    m_sql->SelectMysql(sql,2,lst);
+    if(!lst.empty()){
+        rs.space=true;
+        strcpy(rs.content,lst.front().c_str());
+        lst.pop_front();
+        printf("%s\n",lst.front().c_str());
+        strcpy(rs.time,lst.front().c_str());
+        lst.pop_front();
+    }else rs.space=false;
+
+    //根据在线信息查询用户状态
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->friendid,user))rs.state=2;
+    else{
+        rs.roomid=user->m_roomid;
+        rs.state=user->m_state;
+    }
+    SendData(clientfd,(char*)&rs,sizeof(rs));
 }

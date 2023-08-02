@@ -46,6 +46,8 @@ public:
     void AudioData( sock_fd clientfd, char*szbuf, int nlen );
     void SpeakPause( sock_fd clientfd, char*szbuf, int nlen );
     void LrKillSelf( sock_fd clientfd, char*szbuf, int nlen );
+    void ChatRq( sock_fd clientfd, char*szbuf, int nlen );
+    void FriendZiLiao( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
