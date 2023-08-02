@@ -14,6 +14,25 @@
 #include"roomlistdialog.h"
 #include"AudioApi/audioread.h"
 #include"AudioApi/audiowrite.h"
+#include"useritem.h"
+#include"chatdialog.h"
+#include"chatitem.h"
+#include"ziliaodialog.h"
+
+//////////////////////////////////////////////////////
+///
+///数据库:
+///
+/// t_user 用户信息：id username password sex icon name level
+///                 用户id 用户名 密码 性别 头像 昵称 等级
+///
+/// t_space 动态：id time content user_id
+///                 动态id 发布时间 内容 发布人id
+///
+/// t_friend 好友：id_a id_b
+///                 用户a 用户b
+///
+//////////////////////////////////////////////////////
 
 class ckernel;
 typedef void (ckernel::*PFUN)(unsigned int,char*,int);
@@ -53,6 +72,12 @@ public slots:
     void slot_qie_quitRoom(int id);
     //房间列表->主界面
     void slot_qie_listMain();
+    //点击聊天界面的[发消息]->聊天窗口
+    void slot_qie_chatItemSend(int id);
+    //退出聊天窗口
+    void slot_qie_quitChat(int id);
+    //从详细资料跳转到发送消息
+    void slot_qie_ziliaoToSendMag(int id);
 
 
 
@@ -82,6 +107,8 @@ public slots:
     void slot_Audio(bool begin,bool sent,bool wolf);
     void slot_sendAudio(QByteArray& frame);
     void slot_sendLrKillSelf();
+    void slot_SendChatMsg(int friendID, QString content);
+    void slot_sendUserZiLiaoRq(int id);
 
 
 
@@ -120,7 +147,7 @@ public slots:
     void slot_DealLRKillSkyBlk( unsigned int lSendIP , char* buf , int nlen );
     //天亮了,包含死亡信息
     void slot_DealSkyWhiteRq( unsigned int lSendIP , char* buf , int nlen );
-    //天亮发言
+    //发言
     void slot_DealSpeakRq( unsigned int lSendIP , char* buf , int nlen );
     //竞选警长
     void slot_DealPoliceRq( unsigned int lSendIP , char* buf , int nlen );
@@ -150,6 +177,12 @@ public slots:
     void slot_DealSpeakEnd( unsigned int lSendIP , char* buf , int nlen );
     //好友信息
     void slot_DealFriendInfo( unsigned int lSendIP , char* buf , int nlen );
+    //聊天请求
+    void slot_DealChatRq( unsigned int lSendIP , char* buf , int nlen );
+    //聊天回复
+    void slot_DealChatRs( unsigned int lSendIP , char* buf , int nlen );
+    //好友资料
+    void slot_DealFriendZiLiao( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -175,6 +208,8 @@ private:
     roomDialog* m_roomDialog;//房间窗口
     roomListDialog* m_roomListDialog;//房间列表窗口
     TcpClientMediator* m_client;//网络
+    ZiLiaoDialog* m_ziliao;//好友详细资料
+
 
     PFUN m_netMap[_DEF_PROTOCOL_COUNT];//协议映射表
 
@@ -184,7 +219,10 @@ private:
     int m_zuowei;//座位号
     AudioRead* audioRead;
     //每个玩家一个播放对象
-    std::map<int,AudioWrite*>m_mapSeatToWrite;
+    std::map<int,AudioWrite*>m_mapSeatToWrite;//座位号对应的播放器
+    std::map<int,UserItem*>m_mapIdToUserItem;//id对应的好友控件
+    std::map<int,ChatDialog*>m_mapIdToChatDialog;//id对应的聊天窗口
+    std::map<int,ChatItem*>m_mapIdToChatItem;//id对应的聊天控件
     bool m_wolf;//是否为狼人发言
 };
 

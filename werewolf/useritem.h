@@ -16,7 +16,7 @@ public:
     explicit UserItem(QWidget *parent = nullptr);
     ~UserItem();
     //设置用户信息
-    void slot_setInfo(int id,QString name,int state,int iconid=1,QString feeling="比较懒，什么也没写");
+    void slot_setInfo(int userid, QString name, int state, int iconid, QString sex,int level,QString username);
     //设置用户下线
     void slot_setOffline();
 
@@ -31,6 +31,9 @@ private:
     int m_id;       //用户id
     int m_iconid;   //用户头像
     QString m_feeling;//用户签名
+    QString m_sex;//用户性别
+    int m_level;//用户等级
+    QString m_username;//用户名
 public:
     int m_state;     //用户状态
     QString m_name; //昵称

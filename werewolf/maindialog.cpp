@@ -2,6 +2,7 @@
 #include "ui_maindialog.h"
 #include<QIcon>
 #include<QMessageBox>
+#include<QDebug>
 
 mainDialog::mainDialog(QWidget *parent)
     : CustomMoveDialog(parent)
@@ -12,9 +13,22 @@ mainDialog::mainDialog(QWidget *parent)
     m_layout=new QVBoxLayout;
     m_layout->setContentsMargins(0,0,0,0);  //控件上下左右的间距
     m_layout->setSpacing(3);        //设置每个控件彼此间的距离
+
+    m_layout_chat=new QVBoxLayout;
+    m_layout_chat->setContentsMargins(0,0,0,0);
+    m_layout_chat->setSpacing(3);
+
+    m_layout_space=new QVBoxLayout;
+    m_layout_space->setContentsMargins(0,0,0,0);
+    m_layout_space->setSpacing(3);
+
+
     //设置控件的层
     ui->wdg_3_list->setLayout(m_layout);
+    ui->wdg_2_list->setLayout(m_layout_chat);
+    ui->wdg_2_list_2->setLayout(m_layout_space);
 
+    slot_addSpace(new spqceForm);
 }
 
 mainDialog::~mainDialog()
@@ -41,6 +55,39 @@ void mainDialog::slot_addFriend(UserItem *userItem)
 {
     //往层上添加控件
     m_layout->addWidget(userItem);
+}
+
+void mainDialog::slot_addChat(ChatItem *chatItem)
+{
+    //layout->insertwidght(0,item);
+//    m_layout_chat->insertWidget(0,chatItem);
+    m_layout_chat->addWidget(chatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+    m_layout_chat->addWidget(new ChatItem);
+}
+
+void mainDialog::slot_addSpace(spqceForm *spaceform)
+{
+    m_layout_space->addWidget(spaceform);
 }
 
 

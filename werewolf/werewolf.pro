@@ -10,6 +10,7 @@ CONFIG += c++11
 
 SOURCES += \
     chatdialog.cpp \
+    chatitem.cpp \
     ckernel.cpp \
     createroomform.cpp \
     logindialog.cpp \
@@ -21,11 +22,14 @@ SOURCES += \
     roomlistdialog.cpp \
     roomlistform.cpp \
     roomplayerform.cpp \
+    spqceform.cpp \
     startdialog.cpp \
-    useritem.cpp
+    useritem.cpp \
+    ziliaodialog.cpp
 
 HEADERS += \
     chatdialog.h \
+    chatitem.h \
     ckernel.h \
     createroomform.h \
     logindialog.h \
@@ -36,11 +40,14 @@ HEADERS += \
     roomlistdialog.h \
     roomlistform.h \
     roomplayerform.h \
+    spqceform.h \
     startdialog.h \
-    useritem.h
+    useritem.h \
+    ziliaodialog.h
 
 FORMS += \
     chatdialog.ui \
+    chatitem.ui \
     createroomform.ui \
     logindialog.ui \
     maindialog.ui \
@@ -50,8 +57,10 @@ FORMS += \
     roomlistdialog.ui \
     roomlistform.ui \
     roomplayerform.ui \
+    spqceform.ui \
     startdialog.ui \
-    useritem.ui
+    useritem.ui \
+    ziliaodialog.ui
 
 include(./netapi/netapi.pri)
 include(./uiapi/uiapi.pri)
@@ -74,3 +83,5 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 
 RESOURCES += \
     resources.qrc
+
+QT +=sql

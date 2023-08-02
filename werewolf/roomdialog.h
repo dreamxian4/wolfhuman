@@ -76,31 +76,56 @@ signals:
 public:
     explicit roomDialog(QWidget *parent = nullptr);
     ~roomDialog();
-    void slot_setInfo(int roomid,int mode,int method,bool lock,
-                      QString password,int num,int userid);
-    void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
+    //设置房间信息
+    void slot_setInfo(int roomid,int mode,int method,bool lock,QString password,int num,int userid);
+    //恢复房间配置
     void slot_destroyRoom();
+    //房间人员变更
+    void slot_setPlayer(int id,int icon,int level,QString sex,QString name,int userid);
+    //停止计时器，恢复头像等操作
+    void slot_resume();
+    //准备开始游戏
     void slot_ready();
+    //分配身份
     void slot_setIden(int iden);
+    //获取自己的身份
     int slot_getIden();
+    //天黑
     void slot_skyBlack();
+    //预言家验人信息
     void slot_yyj(int id,int iden);
+    //狼人杀人信息
     void slot_lr(int id,int toid);
+    //女巫收到的杀人信息
     void slot_nw(int kill);
+    //白天
     void slot_skyWhite(int* die);
-    void slot_speak(STRU_SPEAK_RQ& rq);
+    //是否竞选警长
     void slot_police();
+    //只有一人上警，判断是否竞选，返回当选警长包
     void slot_bePolice();
+    //设置警长信息
     void slot_setPolicePlayer(STRU_TOBEPOLICE_RS& rs);
+    //当选警长
     void slot_setPolice(STRU_BEPOLICE_RS& rs);
+    //开始投票
     void slot_beginVote(STRU_SPEAKSTATE_END& end);
+    //投票结果
     void slot_VoteRs(STRU_VOTE_RS& rs);
+    //警长选择发言顺序/警长选择的发言顺序
     void slot_SpeakOrder(STRU_SPEAK_ORDER& order);
+    //发言阶段开始
     void slot_SpeakStateBegin();
-    void slot_dayExile(STRU_DAY_EXILE& exile);
-    void slot_gameOver();
+    //发言
+    void slot_speak(STRU_SPEAK_RQ& rq);
+    //玩家开始讲话
     void slot_playerSpeak(int seat,bool speak);
+    //玩家暂停讲话
     void slot_speakEnd(STRU_SPEAK_RS& end);
+    //白天放逐结果
+    void slot_dayExile(STRU_DAY_EXILE& exile);
+    //游戏结束
+    void slot_gameOver();
 
 
 private slots:
@@ -158,14 +183,14 @@ private:
     int m_user_iden;
 
     //定时器
-    QTimer* m_timer_tips;//提示消失
-    QTimer* m_timer_ready;//5秒准备
-    QTimer* m_timer_skyBlk;//夜晚
-    QTimer* m_timer_police;//竞选警长
-    QTimer* m_timer_vote;//投票
-    QTimer* m_timer_speakOrder;//警长选择发言顺序
-    QTimer* m_timer_speak;//发言
-    QTimer* m_timer_turnPolice;//移交警徽
+    QTimer* m_timer_tips;       //提示消失
+    QTimer* m_timer_ready;      //5秒准备
+    QTimer* m_timer_skyBlk;     //夜晚
+    QTimer* m_timer_police;     //竞选警长
+    QTimer* m_timer_vote;       //投票
+    QTimer* m_timer_speakOrder; //警长选择发言顺序
+    QTimer* m_timer_speak;      //发言
+    QTimer* m_timer_turnPolice; //移交警徽
 
     //用于倒计时
     int num;//5秒

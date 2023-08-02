@@ -27,6 +27,7 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
 {
     initConfig();
     setNetMap();
+
     m_startDialog=new startDialog;
     m_startDialog->show();
     m_client=new TcpClientMediator;
@@ -37,6 +38,7 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
     m_roomDialog=new roomDialog;
     m_roomListDialog=new roomListDialog;
     audioRead=new AudioRead;
+    m_ziliao=new ZiLiaoDialog;
 
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
@@ -128,6 +130,11 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
 
     connect(audioRead,SIGNAL(SIG_audioFrame(QByteArray&)),
             this,SLOT(slot_sendAudio(QByteArray&)));
+
+    connect(m_ziliao,SIGNAL(SIG_sendMsg(int)),
+            this,SLOT(slot_qie_ziliaoToSendMag(int)));
+    connect(m_ziliao,SIGNAL(SIG_joinRoom(int)),
+            this,SLOT(slot_sendJoinRoomRq(int)));
 }
 
 
@@ -246,7 +253,8 @@ void ckernel::slot_qie_quitRoom(int id)
     }else{
         m_roomDialog->hide();
         //显示房间列表
-        m_roomListDialog->showNormal();
+//        m_roomListDialog->showNormal();
+        slot_sendroomListRQ(-1,-1,0);
     }
     m_roomDialog->slot_destroyRoom();
     m_roomid=0;
@@ -258,6 +266,41 @@ void ckernel::slot_qie_listMain()
     m_roomListDialog->hide();
     //显示主界面
     m_mainDialog->showNormal();
+}
+
+void ckernel::slot_sendUserZiLiaoRq(int id)
+{
+    //发送好友详细信息请求
+    STRU_FRIEND_ZILIAO_RQ rq;
+    rq.friendid=id;
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+void ckernel::slot_qie_chatItemSend(int id)
+{
+    //显示聊天窗口·
+    if(m_mapIdToChatDialog.find(id)!=m_mapIdToChatDialog.end()){
+        ChatDialog* chat=m_mapIdToChatDialog[id];
+        chat->showNormal();
+    }
+}
+
+void ckernel::slot_qie_quitChat(int id)
+{
+    //关闭聊天窗口
+    if(m_mapIdToChatDialog.find(id)!=m_mapIdToChatDialog.end()){
+        ChatDialog* chat=m_mapIdToChatDialog[id];
+        chat->close();
+    }
+}
+
+void ckernel::slot_qie_ziliaoToSendMag(int id)
+{
+    //显示聊天窗口
+    if(m_mapIdToChatDialog.find(id)!=m_mapIdToChatDialog.end()){
+        ChatDialog* chat=m_mapIdToChatDialog[id];
+        chat->showNormal();
+    }
 }
 
 
@@ -399,6 +442,7 @@ void ckernel::slot_sendPoliceEnd()
 
 void ckernel::slot_sendSpeakEnd(int seat,int next,int state)
 {
+    audioRead->pause();
     STRU_SPEAK_RS rs;
     rs.seat=seat;
     rs.roomid=m_roomid;
@@ -513,6 +557,21 @@ void ckernel::slot_sendLrKillSelf()
     kill.roomid=m_roomid;
     kill.seat=m_zuowei;
     SendData(0,(char*)&kill,sizeof(kill));
+}
+
+void ckernel::slot_SendChatMsg(int friendID, QString content)
+{
+    //1.拆包
+    STRU_CHAT_RQ rq;
+    rq.userid=m_id;
+    rq.friendid=friendID;
+
+    //2.兼容中文
+    std::string strContent=content.toStdString();
+    strcpy(rq.content,strContent.c_str());
+
+    //3.聊天内容发给服务器
+    SendData(0,(char*)&rq,sizeof(rq));
 }
 
 void ckernel::slot_Audio(bool begin,bool sent,bool wolf)
@@ -669,12 +728,14 @@ void ckernel::slot_DealJoinRoomRs(unsigned int lSendIP, char *buf, int nlen)
         QMessageBox::about(m_roomListDialog,"提示","不满足等级条件，加入失败");
         return;
     }
-    //加入成功，隐藏房间列表界面，显示房间界面
+    //加入成功，隐藏房间列表界面，显示房间界面(隐藏主界面，好友资料界面，聊天界面)
     m_mapSeatToWrite.clear();
     m_roomid=rs->m_RoomID;
     m_roomDialog->slot_setInfo(rs->m_RoomID,rs->mode,0,rs->lock,
                                QString::fromStdString(rs->passwd),rs->maxcount,m_id);
     m_roomListDialog->hide();
+    m_mainDialog->hide();
+    m_ziliao->hide();
     m_roomDialog->showNormal();
 }
 
@@ -743,7 +804,7 @@ void ckernel::slot_DealSkyWhiteRq(unsigned int lSendIP, char *buf, int nlen)
 
 void ckernel::slot_DealSpeakRq(unsigned int lSendIP, char *buf, int nlen)
 {
-    //语音TODO
+    //语音
     m_roomDialog->slot_speak(*(STRU_SPEAK_RQ*)buf);
 }
 
@@ -871,7 +932,105 @@ void ckernel::slot_DealSpeakEnd(unsigned int lSendIP, char *buf, int nlen)
 
 void ckernel::slot_DealFriendInfo(unsigned int lSendIP, char *buf, int nlen)
 {
-    qDebug()<<"111111";
+    //拆包
+    STRU_FRIEND_INFO* info=(STRU_FRIEND_INFO*)buf;
+    //存储好友信息
+    //显示好友信息
+    //4.不是自己，查看当前窗口是否已经有这个好友了
+    if(m_mapIdToUserItem.find(info->userid)==m_mapIdToUserItem.end()){
+        //4.1 如果没有，把好友添加到控件上
+        //4.1.1 创建一个useritem和chatitem
+        UserItem* item=new UserItem;
+        ChatItem* citem=new ChatItem;
+
+        //4.1.2 给控件赋值
+        item->slot_setInfo(info->userid,QString::fromStdString(info->name),info->state,info->icon,QString::fromStdString(info->sex),
+                           info->level,QString::fromStdString(info->username));
+        citem->slot_setInfo(QString::fromStdString(info->name),info->state,info->icon,QString::fromStdString(info->sex),info->userid);
+
+        //4.1.3 绑定控件点击事件的信号和槽TODO
+        connect(item,SIGNAL(SIG_UserItemClicked(int)),
+                this,SLOT(slot_sendUserZiLiaoRq(int)));
+        connect(citem,SIGNAL(SIG_chatItemSend(int)),
+                this,SLOT(slot_qie_chatItemSend(int)));
+
+        //4.1.4 创建聊天窗口
+        ChatDialog* chat=new ChatDialog;
+        chat->setInfo(info->name,info->userid);
+
+
+        //4.1.5 绑定聊天窗口发送数据的信号和槽函数
+        connect(chat,SIGNAL(SIG_SendChatMsg(int , QString )),
+                this,SLOT(slot_SendChatMsg(int , QString )));
+        connect(chat,SIGNAL(SIG_quitChat(int)),
+                this,SLOT(slot_qie_quitChat(int)));
+
+        //4.1.6 把聊天窗口放在map中管理
+        m_mapIdToChatDialog[info->userid]=chat;
+
+        //4.1.7 把useritem添加到好友列表里/把chatitem放在聊天列表里
+        m_mainDialog->slot_addFriend(item);
+        m_mainDialog->slot_addChat(citem);
+
+        //4.1.8 把useritem放在map中管理/把chatitem放在map中管理
+        m_mapIdToUserItem[info->userid]=item;
+        m_mapIdToChatItem[info->userid]=citem;
+    }else{
+        //4.2 如果有，更新控件信息
+        UserItem* item=m_mapIdToUserItem[info->userid];
+        if(item&&item->m_state==2&&info->state==1){//之前是离线，现在是上线
+            //可以弹窗提示用户xxx已上线
+            qDebug()<<QString("用户[%1]已上线").arg(info->name);
+        }
+        ChatItem* citem=m_mapIdToChatItem[info->userid];
+        //更新控件
+        item->slot_setInfo(info->userid,QString::fromStdString(info->name),info->state,info->icon,QString::fromStdString(info->sex),
+                           info->level,QString::fromStdString(info->username));
+        citem->slot_setInfo(QString::fromStdString(info->name),info->state,info->icon,QString::fromStdString(info->sex),info->userid);
+    }
+}
+
+void ckernel::slot_DealChatRq(unsigned int lSendIP, char *buf, int nlen)
+{
+    //1.拆包
+    STRU_CHAT_RQ* rq=(STRU_CHAT_RQ*)buf;
+
+    //2.查看聊天窗口是否存在
+    if(m_mapIdToChatDialog.find(rq->userid)!=m_mapIdToChatDialog.end()){
+        //3.如果存在，根据id查找窗口并显示
+        ChatDialog* chat=m_mapIdToChatDialog[rq->userid];
+
+        //4.设置聊天内容
+        chat->slot_setChatMsg(rq->content);
+    }
+    //5.查看聊天控件是否存在
+    if(m_mapIdToChatItem.find(rq->userid)!=m_mapIdToChatItem.end()){
+        //6.存在，更新最新消息,将该用户的控件移到最上面
+        ChatItem* item=m_mapIdToChatItem[rq->userid];
+        item->slot_setChatMsg(rq->content);
+    }
+}
+
+void ckernel::slot_DealChatRs(unsigned int lSendIP, char *buf, int nlen)
+{
+    //1.拆包
+    STRU_CHAT_RS* rs=(STRU_CHAT_RS*)buf;
+
+    //2.查看聊天窗口是否存在
+    if(m_mapIdToChatDialog.find(rs->friendid)!=m_mapIdToChatDialog.end()){
+        //3.如果存在，根据id查找窗口并显示
+        ChatDialog* chat=m_mapIdToChatDialog[rs->friendid];
+
+        //4.设置聊天内容
+        chat->slot_UserOffline();
+    }
+}
+
+void ckernel::slot_DealFriendZiLiao(unsigned int lSendIP, char *buf, int nlen)
+{
+    STRU_FRIEND_ZILIAO_RS* rs=(STRU_FRIEND_ZILIAO_RS*)buf;
+    m_ziliao->slot_setInfo(*rs);
+    m_ziliao->show();
 }
 
 
@@ -954,6 +1113,9 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_SPEAK_PAUSE)=&ckernel::slot_DealSpeakPause;
     netMap(DEF_PACK_SPEAK_RS)=&ckernel::slot_DealSpeakEnd;
     netMap(DEF_PACK_FRIEND_INFO)=&ckernel::slot_DealFriendInfo;
+    netMap(DEF_PACK_CHAT_RQ)=&ckernel::slot_DealChatRq;
+    netMap(DEF_PACK_CHAT_RS)=&ckernel::slot_DealChatRs;
+    netMap(DEF_PACK_FRIEND_ZILIAO_RS)=&ckernel::slot_DealFriendZiLiao;
 }
 
 void ckernel::slot_quitLogin()

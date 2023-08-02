@@ -7,6 +7,8 @@
 #include"useritem.h"
 #include<QMenu>
 #include<QCloseEvent>
+#include"chatitem.h"
+#include"spqceform.h"
 
 QT_BEGIN_NAMESPACE
 namespace Ui { class mainDialog; }
@@ -30,6 +32,8 @@ public:
     void slot_setInfo(int userid,int icon,QString name,QString sex,QString username,int level);
     //添加好友
     void slot_addFriend(UserItem* userItem);
+    void slot_addChat(ChatItem* chatItem);
+    void slot_addSpace(spqceForm* spqceform);
 
 private slots:
     void on_pb_1_createRoom_clicked();
@@ -51,5 +55,7 @@ private:
     int m_userid;
     //QVBoxLayout是一个垂直布局的层
     QVBoxLayout* m_layout;
+    QVBoxLayout* m_layout_chat;
+    QVBoxLayout* m_layout_space;
 };
 #endif // MAINDIALOG_H

@@ -4,7 +4,7 @@
 #include<QDebug>
 
 ChatDialog::ChatDialog(QWidget *parent) :
-    QWidget(parent),
+    CustomMoveDialog(parent),
     ui(new Ui::ChatDialog)
 {
     ui->setupUi(this);
@@ -31,7 +31,7 @@ void ChatDialog::setInfo(QString name,int id)
     m_name=name;
     m_id=id;
     //设置窗口标题：与【IP】的聊天
-    setWindowTitle(QString("与[%1]的聊天").arg(m_name));
+    ui->lb_title_2->setText(QString("与%1的聊天").arg(name));
 }
 
 //在控件上显示收到的聊天内容
@@ -84,3 +84,20 @@ void ChatDialog::slot_dealMenu(QAction *action)
         qDebug()<<"删除好友！！";
     }
 }
+
+void ChatDialog::slot_getMsg(int id)
+{
+
+}
+
+void ChatDialog::on_pb_min_2_clicked()
+{
+    this->showMinimized();
+}
+
+
+void ChatDialog::on_pb_close_2_clicked()
+{
+    Q_EMIT SIG_quitChat(m_id);
+}
+

@@ -101,15 +101,6 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
     m_speak=0;
     turnPolice=0;
 
-    //倒计时初始化
-    m_timer_police->stop();
-    m_timer_ready->stop();
-    m_timer_skyBlk->stop();
-    m_timer_tips->stop();
-    m_timer_vote->stop();
-    m_timer_speakOrder->stop();
-    m_timer_speak->stop();
-    m_timer_turnPolice->stop();
 
     //房间内组件初始化
     ui->lb_roomNum->setText(QString("%1").arg(roomid));
@@ -143,11 +134,13 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
         slot_addPlayer(player,i);
     }
 
+    slot_resume();
     Q_EMIT SIG_Audio(false,false,false);
     //设置TODO
 }
 
 void roomDialog::slot_destroyRoom(){
+    slot_resume();
     m_currentCou=0;
     m_playing=false;
     if(state){
@@ -160,7 +153,7 @@ void roomDialog::slot_destroyRoom(){
         slot_removePlayer(player,i);
     }
     ui->lb_ready->setText("");
-//    ui->lb_operate->setText("");
+    //    ui->lb_operate->setText("");
     ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
     ui->pb_operate_up->setIconSize(QSize(280,40));
 }
@@ -173,12 +166,15 @@ void roomDialog::slot_ready()
     state=true;
     //    ui->lb_ready->setText(QString("游戏即将开始"));
     ui->tb_message->append((QString("游戏即将开始")));
+
+    //开始按钮设置为不可点击
     ui->pb_0_begin->setText("");
     ui->pb_0_begin->setEnabled(false);
 }
 
 void roomDialog::slot_setIden(int iden)
 {
+    slot_resume();
     ui->pb_0_begin->setText("点击发言");
     m_user_iden=iden;
     if(iden==1){//女巫的解药和毒药
@@ -201,17 +197,20 @@ int roomDialog::slot_getIden()
 
 void roomDialog::slot_skyBlack()
 {
-    m_timer_speak->stop();
+    slot_resume();
+    //1.设置房内显示
     ui->tb_message->append("天黑啦！！！！");
     m_day++;
     ui->pb_day->setText(QString("第%1天").arg(m_day));
     ui->pb_day->setStyleSheet("background-color: rgb(0, 0, 0);color: rgb(255, 255, 255);");
-//    ui->lb_operate->setStyleSheet("color: rgb(0, 255, 127);font: 8pt \"隶书\";");
+    //    ui->lb_operate->setStyleSheet("color: rgb(0, 255, 127);font: 8pt \"隶书\";");
+
+    //2.根据身份做不同的操作
     if(m_d_alive){
-        switch(m_user_iden){//根据身份做不同的操作
+        switch(m_user_iden){
         case 0://预言家
             //        ui->lb_operate->setText("请选择一位玩家，验证其身份");
-//            ui->tb_message->append("请选择一位玩家，验证其身份");
+            //            ui->tb_message->append("请选择一位玩家，验证其身份");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/yyjSkyBlack.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             for(int i=1;i<=m_count;i++){
@@ -224,7 +223,7 @@ void roomDialog::slot_skyBlack()
             break;
         case 1://女巫
             //        ui->lb_operate->setText("等待操作");
-//            ui->tb_message->append("稍作等待，完成操作");
+            //            ui->tb_message->append("稍作等待，完成操作");
 
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/nv0SkyBlack.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
@@ -232,14 +231,14 @@ void roomDialog::slot_skyBlack()
             break;
         case 2://平民
             //        ui->lb_operate->setText("等待天亮");
-//            ui->tb_message->append("等待天亮");
+            //            ui->tb_message->append("等待天亮");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/waitDayLight.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             m_pb_icon=USERINFO;
             break;
         case 3://狼人
             //        ui->lb_operate->setText("请选择一位玩家，杀掉他");
-//            ui->tb_message->append("请选择一位玩家，杀掉他");
+            //            ui->tb_message->append("请选择一位玩家，杀掉他");
             ui->pb_lrKillself->setEnabled(false);
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/lrSkyBlack.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
@@ -256,7 +255,7 @@ void roomDialog::slot_skyBlack()
             break;
         case 4://猎人
             //        ui->lb_operate->setText("等待天亮");
-//            ui->tb_message->append("等待天亮");
+            //            ui->tb_message->append("等待天亮");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/waitDayLight.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             m_pb_icon=USERINFO;
@@ -268,12 +267,15 @@ void roomDialog::slot_skyBlack()
             break;
         }
     }
+
+    //3.开始倒计时
     blk=30;
     m_timer_skyBlk->start(1000);
 }
 
 void roomDialog::slot_yyj(int id, int iden)
 {
+    //服务端返回预言家的预言信息
     //    ui->lb_operate->setText(QString("您选择的玩家是%1号，他的身份是:%2").arg(id).arg(BASEIDENTIFY[iden]));
     if(m_d_alive){
         QString idenstr="";
@@ -287,6 +289,7 @@ void roomDialog::slot_yyj(int id, int iden)
 
 void roomDialog::slot_lr(int id, int toid)
 {
+    //狼人们的杀人信息
     if(m_d_alive){
         if(m_user_iden!=3)return;
         ui->tb_message->append(QString("杀人信息：%1号 选择杀掉 %2号").arg(id).arg(toid));
@@ -295,6 +298,7 @@ void roomDialog::slot_lr(int id, int toid)
 
 void roomDialog::slot_nw(int kill)
 {
+    //半夜了，轮到女巫操作
     if(m_d_alive){
         //判断自己是不是女巫
         if(m_user_iden==1){
@@ -306,36 +310,42 @@ void roomDialog::slot_nw(int kill)
                     //QMessageBox::about(this,"死亡信息","昨夜无人死亡");
                     slot_operate_button(NW_NODIE,0);
                 }
-    //            else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
-    //                //救，发送救人信息
-    //                Q_EMIT SIG_nvSilverWater();
-    //                m_d_antidote=false;
-    //                return;
-    //            }
+                //            else if(QMessageBox::question(this,"死亡信息",QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill))==QMessageBox::Yes){
+                //                //救，发送救人信息
+                //                Q_EMIT SIG_nvSilverWater();
+                //                m_d_antidote=false;
+                //                return;
+                //            }
                 else slot_operate_button(NW_RESCUE,kill);
+            }else{
+                //没有解药，判断有没有毒药
+                if(m_d_poison){
+                    //有毒药，询问是否毒人
+                    slot_operate_button(NW_POISON,0);
+                }
             }
             //不救，没有解药，没有杀人
             //判断有没有毒药
-    //        if(m_d_poison){
-    //            //询问是否毒人（将按钮状态设置成女巫），发送操作信息
-    //            if(QMessageBox::question(this,"提示",QString("你有一瓶毒药，是否毒人？"))==QMessageBox::Yes){
-    //                //毒
-    //                //ui->lb_operate->setText("选择一位玩家，毒死他");
-    //                ui->tb_message->append("选择一位玩家，毒死他");
-    //                for(int i=1;i<=m_count;i++){
-    //                    if(&m_mapIdToPlayer[i]->alive){//活着
-    //                        m_mapIdToPlayer[i]->setAbleToVoted(true);
-    //                    }else m_mapIdToPlayer[i]->setAbleToVoted(false);
-    //                }
-    //                m_pb_icon=SKYBLK_NW;
-    //                return;
-    //            }
-    //            slot_operate_button(1,0);
-    //        }
-    //        //        ui->lb_operate->setText("等待天亮");
-    //        ui->tb_message->append("等待天亮");
-    //        m_pb_icon=USERINFO;
-    //
+            //        if(m_d_poison){
+            //            //询问是否毒人（将按钮状态设置成女巫），发送操作信息
+            //            if(QMessageBox::question(this,"提示",QString("你有一瓶毒药，是否毒人？"))==QMessageBox::Yes){
+            //                //毒
+            //                //ui->lb_operate->setText("选择一位玩家，毒死他");
+            //                ui->tb_message->append("选择一位玩家，毒死他");
+            //                for(int i=1;i<=m_count;i++){
+            //                    if(&m_mapIdToPlayer[i]->alive){//活着
+            //                        m_mapIdToPlayer[i]->setAbleToVoted(true);
+            //                    }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+            //                }
+            //                m_pb_icon=SKYBLK_NW;
+            //                return;
+            //            }
+            //            slot_operate_button(1,0);
+            //        }
+            //        //        ui->lb_operate->setText("等待天亮");
+            //        ui->tb_message->append("等待天亮");
+            //        m_pb_icon=USERINFO;
+            //
         }
         //不是忽略
     }
@@ -343,20 +353,16 @@ void roomDialog::slot_nw(int kill)
 
 void roomDialog::slot_skyWhite(int *die)
 {
-    for(int i=1;i<=m_count;i++){
-        if(m_mapIdToPlayer[i]->m_id!=m_seat){
-            m_mapIdToPlayer[i]->resumeVoted();
-        }else m_mapIdToPlayer[i]->setInfo(i,true);
-    }
+    slot_resume();
     ui->pb_0_begin->setText("点击发言");
     ui->pb_0_begin->setEnabled(false);
-    //判断死的是不是自己
+
     QString show="昨晚死亡的玩家是：";
     for(int i=0;i<2;i++){
-        //是自己,不能在进行操作TODO
+        //1.判断死的是不是自己,是自己,不能在进行操作
         if(die[i]==m_seat){
             if(m_d_bePolice){
-                //自己是警长，选择是否移交警徽TODO
+                //2.如果自己是警长，选择是否移交警徽
                 //操作栏询问是否移交警徽
                 ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/turnPolice.png")));
                 ui->pb_operate_up->setIconSize(QSize(280,40));
@@ -374,7 +380,7 @@ void roomDialog::slot_skyWhite(int *die)
             m_mapIdToPlayer[m_seat]->setImage("000");
             m_mapIdToPlayer[m_seat]->alive=false;
         }
-        //显示死亡信息
+        //3.显示死亡信息
         if(die[i]!=0){
             show+=QString("%1号 ").arg(die[i]);
             m_mapIdToPlayer[die[i]]->setImage("000");
@@ -382,6 +388,7 @@ void roomDialog::slot_skyWhite(int *die)
             m_mapIdToPlayer[die[i]]->setJing(0);
         }
     }
+    if(die[0]==0&&die[1]==0)show="昨夜无人死亡";
     ui->tb_message->append("天亮了！！！！");
     ui->tb_message->append(show);
     if(m_d_alive&&m_user_iden==3)ui->pb_lrKillself->setEnabled(true);
@@ -389,11 +396,13 @@ void roomDialog::slot_skyWhite(int *die)
 
 void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
 {
+    slot_resume();
     m_speak=rq.seat;
     speak=120;
     m_timer_speak->start(1000);
     ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
     ui->pb_operate_up->setIconSize(QSize(280,40));
+
     //判断发言人是不是自己
     switch(rq.state){
     case 3://白天正常发言
@@ -410,7 +419,7 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
         ui->tb_message->append(QString("请%1号玩家开始发言").arg(rq.seat));
         if(rq.seat==m_seat){
             m_d_speak=1;
-//            ui->tb_message->append("开始发言");
+            //            ui->tb_message->append("开始发言");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/beginSpeak.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             ui->pb_0_begin->setText("点击发言");
@@ -438,7 +447,7 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
             if(m_d_police){
                 //如果上警：发言
                 //ui->lb_operate->setText("开始发言");
-//                ui->tb_message->append("开始发言");
+                //                ui->tb_message->append("开始发言");
                 ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/beginSpeak.png")));
                 ui->pb_operate_up->setIconSize(QSize(280,40));
                 ui->pb_0_begin->setText("点击发言");
@@ -466,7 +475,7 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
         ui->tb_message->append(QString("请%1号玩家开始发言").arg(rq.seat));
         if(rq.seat==m_seat){
             m_d_speak=1;
-//            ui->tb_message->append("开始发言");
+            //            ui->tb_message->append("开始发言");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/beginSpeak.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             ui->pb_0_begin->setText("点击发言");
@@ -493,27 +502,24 @@ void roomDialog::slot_speak(STRU_SPEAK_RQ& rq)
 
 void roomDialog::slot_police()
 {
-    for(int i=1;i<=m_count;i++){
-        if(m_mapIdToPlayer[i]->m_id!=m_seat){
-            m_mapIdToPlayer[i]->resumeVoted();
-        }else m_mapIdToPlayer[i]->setInfo(i,true);
-    }
+    slot_resume();
     ui->pb_0_begin->setText("点击发言");
     ui->pb_0_begin->setEnabled(false);
     police=10;
     m_timer_police->start(1000);
     //询问是否竞选警长
-//    if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
-//        //是：回复竞选
-//        m_d_police=true;
-//        Q_EMIT SIG_police(m_seat,true);
-//    }else m_d_police=false;
+    //    if(QMessageBox::question(this,"提示","是否竞选警长")==QMessageBox::Yes){
+    //        //是：回复竞选
+    //        m_d_police=true;
+    //        Q_EMIT SIG_police(m_seat,true);
+    //    }else m_d_police=false;
     slot_operate_button(WANT_BEPOLICE,0);
     ui->pb_day->setText("竞选阶段");
 }
 
 void roomDialog::slot_bePolice()
 {
+    slot_resume();
     //判断自己有没有竞选
     if(m_d_police){
         //竞选了，自己是警长，发送警长回复包
@@ -538,9 +544,10 @@ void roomDialog::slot_setPolicePlayer(STRU_TOBEPOLICE_RS& rs)
 }
 
 //当选
-void roomDialog::slot_setPolice(STRU_BEPOLICE_RS &rs)
+void roomDialog:: slot_setPolice(STRU_BEPOLICE_RS &rs)
 {
-    //将对应位置的玩家警徽图标设为上警1:上警 2:放手 3:警长
+    slot_resume();
+    //将对应位置的玩家警徽图标设为警长1:上警 2:放手 3:警长
     for(int i=1;i<=m_count;i++){
         if(m_mapIdToPlayer[i]->alive)m_mapIdToPlayer[i]->setJing(0);
     }
@@ -564,43 +571,47 @@ void roomDialog::slot_setPolice(STRU_BEPOLICE_RS &rs)
 
 void roomDialog::slot_beginVote(STRU_SPEAKSTATE_END &end)
 {
-    m_timer_speak->stop();
+    slot_resume();
     vote=10;
     m_timer_vote->start(1000);
     ui->pb_lrKillself->setEnabled(false);
     //判断是哪个阶段的投票
     //根据阶段查找可以被投票的人
-    switch(end.state){
-    case 1://竞选阶段发言结束，开始投票
-        //        ui->lb_operate->setText("开始投票,选出警长");
-//        ui->tb_message->append("开始投票,选出警长");
-        ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/voteToPolice.png")));
-        ui->pb_operate_up->setIconSize(QSize(280,40));
-        m_d_vote=1;
-        if(m_mapIdToPlayer[m_seat]->getJing()==""){
-            m_pb_icon=VOTE_POLICE;
+    ui->tb_message->append("进入投票阶段");
+    if(m_d_alive){
+        switch(end.state){
+        case 1://竞选阶段发言结束，开始投票
+            //        ui->lb_operate->setText("开始投票,选出警长");
+            //        ui->tb_message->append("开始投票,选出警长");
+            ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/voteToPolice.png")));
+            ui->pb_operate_up->setIconSize(QSize(280,40));
+            m_d_vote=1;
+            if(m_mapIdToPlayer[m_seat]->getJing()==""){
+                m_pb_icon=VOTE_POLICE;
+                for(int i=1;i<=m_count;i++){
+                    if(m_mapIdToPlayer[i]->getJing()=="上"){
+                        m_mapIdToPlayer[i]->setAbleToVoted(true);
+                    }else m_mapIdToPlayer[i]->setAbleToVoted(false);
+                }
+            }
+            break;
+        case 2://白天发言结束，开始投票
+            ui->tb_message->append("开始放逐投票，点击头像选择你要放逐的对象");
+            m_d_vote=2;
+            m_pb_icon=VOTE_DAY;
             for(int i=1;i<=m_count;i++){
-                if(m_mapIdToPlayer[i]->getJing()=="上"){
+                if(m_mapIdToPlayer[i]->alive){
                     m_mapIdToPlayer[i]->setAbleToVoted(true);
                 }else m_mapIdToPlayer[i]->setAbleToVoted(false);
             }
+            break;
         }
-        break;
-    case 2://白天发言结束，开始投票
-        ui->tb_message->append("开始放逐投票，点击头像选择你要放逐的对象");
-        m_d_vote=2;
-        m_pb_icon=VOTE_DAY;
-        for(int i=1;i<=m_count;i++){
-            if(m_mapIdToPlayer[i]->alive){
-                m_mapIdToPlayer[i]->setAbleToVoted(true);
-            }else m_mapIdToPlayer[i]->setAbleToVoted(false);
-        }
-        break;
     }
 }
 
 void roomDialog::slot_VoteRs(STRU_VOTE_RS &rs)
 {
+    slot_resume();
     //根据阶段进行操作
     //显示投票结果
     QString res[13];
@@ -673,7 +684,7 @@ void roomDialog::slot_SpeakOrder(STRU_SPEAK_ORDER &order)
         speakOrder=10;
         m_timer_speakOrder->start(1000);
         if(m_d_bePolice&&m_d_alive){
-//            ui->lb_operate->setText("请选择发言顺序");
+            //            ui->lb_operate->setText("请选择发言顺序");
             ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/selectSpeakOrder.png")));
             ui->pb_operate_up->setIconSize(QSize(280,40));
             ui->pb_order->setText("顺序发言");
@@ -694,6 +705,7 @@ void roomDialog::slot_SpeakOrder(STRU_SPEAK_ORDER &order)
 void roomDialog::slot_SpeakStateBegin()
 {
     ui->tb_message->append("---------进入发言阶段---------");
+    m_d_speak=0;
 }
 
 void roomDialog::slot_dayExile(STRU_DAY_EXILE& exile)
@@ -762,6 +774,30 @@ void roomDialog::slot_setPlayer(int id, int icon, int level, QString sex, QStrin
     m_mapIdToPlayer[id]->setZiLiao(level,sex,name,userid,m_count);
 }
 
+void roomDialog::slot_resume()
+{
+    //停止计时
+    m_timer_tips        ->stop();
+    m_timer_ready       ->stop();
+    m_timer_skyBlk      ->stop();
+    m_timer_police      ->stop();
+    m_timer_vote        ->stop();
+    m_timer_speakOrder  ->stop();
+    m_timer_speak       ->stop();
+    m_timer_turnPolice  ->stop();
+    //恢复头像
+    for(int i=1;i<=m_count;i++){
+        if(m_mapIdToPlayer[i]->m_id!=m_seat){
+            m_mapIdToPlayer[i]->resumeVoted();
+        }else m_mapIdToPlayer[i]->setInfo(i,true);
+    }
+    //删除提示信息
+    ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
+    ui->pb_operate_up->setIconSize(QSize(280,40));
+    ui->pb_order->setEnabled(false);
+    ui->pb_deorder->setEnabled(false);
+}
+
 roomDialog::~roomDialog()
 {
     delete ui;
@@ -806,7 +842,7 @@ void roomDialog::slot_click_icon(int id)
         //在收到杀人信息时进行的操作：弹出框显示杀人信息，询问是否救人，如果救，发送救人信息，如果不救，询问是否毒人（将按钮状态设置成女巫），发送操作信息
         //毒人
         Q_EMIT SIG_skyBlkRs(m_user_iden,m_seat,3,id);
-//        ui->lb_operate->setText("等待天亮");
+        //        ui->lb_operate->setText("等待天亮");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/waitDayLight.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         m_d_poison=false;
@@ -865,7 +901,7 @@ void roomDialog::slot_operate_button(int state,int kill)
     //0:女巫救人 1：女巫毒人 2：没死人
     switch(state){
     case NW_RESCUE://女巫救人
-//        ui->lb_operate->setText(QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill));
+        //        ui->lb_operate->setText(QString("昨夜死亡的玩家是%1号，是否救他？").arg(kill));
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/%1die.png").arg(kill)));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         m_pb_oper=NW_RESCUE;
@@ -875,7 +911,7 @@ void roomDialog::slot_operate_button(int state,int kill)
         ui->pb_deorder->setText("否");
         break;
     case NW_POISON://女巫毒人
-//        ui->lb_operate->setText(QString("你有一瓶毒药，是否毒人？"));
+        //        ui->lb_operate->setText(QString("你有一瓶毒药，是否毒人？"));
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/nvPosion.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         m_pb_oper=NW_POISON;
@@ -885,7 +921,7 @@ void roomDialog::slot_operate_button(int state,int kill)
         ui->pb_deorder->setText("否");
         break;
     case NW_NODIE://无人死亡
-//        ui->lb_operate->setText(QString("昨夜无人死亡"));
+        //        ui->lb_operate->setText(QString("昨夜无人死亡"));
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/nvNoDie.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setEnabled(true);
@@ -893,7 +929,7 @@ void roomDialog::slot_operate_button(int state,int kill)
         m_pb_oper=NW_NODIE;
         break;
     case WANT_BEPOLICE:
-//        ui->lb_operate->setText(QString("是否竞选警长？"));
+        //        ui->lb_operate->setText(QString("是否竞选警长？"));
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/policeYesOrNo.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setEnabled(true);
@@ -917,11 +953,11 @@ void roomDialog::on_pb_min_clicked()
 
 void roomDialog::on_pb_close_clicked()
 {
-    if( QMessageBox::question( this , "退出提示","确定退出游戏?" ) == QMessageBox::Yes )
-    {
-        //发送退出房间信号
-        on_pb_quitroom_clicked();
-        //发送退出登录信号
+    QString str=m_playing?"游戏已开始，是否退出游戏？":"是否退出游戏？";
+    if(QMessageBox::question( this ,"退出提示",str ) == QMessageBox::Yes){
+        //发送退出房间信号，如果是房主，就退出到主界面，如果不是，退出到房间列表
+        Q_EMIT SIG_quitRoom(m_mapIdToPlayer[1]->getUserid());//信号中为房主的id，用于在ckernel类中判断退出房间的玩家是不是房主
+        Q_EMIT SIG_Audio(false,false,false);
         Q_EMIT SIG_QUIT();
     }
 }
@@ -934,6 +970,7 @@ void roomDialog::on_pb_quitroom_clicked()
     //发送退出房间信号，如果是房主，就退出到主界面，如果不是，退出到房间列表
     Q_EMIT SIG_quitRoom(m_mapIdToPlayer[1]->getUserid());//信号中为房主的id，用于在ckernel类中判断退出房间的玩家是不是房主
     Q_EMIT SIG_Audio(false,false,false);
+
 }
 
 
@@ -1019,7 +1056,7 @@ void roomDialog::on_pb_order_clicked()
     case NW_RESCUE://救人
         Q_EMIT SIG_nvSilverWater();
         m_d_antidote=false;
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1035,7 +1072,7 @@ void roomDialog::on_pb_order_clicked()
             }else m_mapIdToPlayer[i]->setAbleToVoted(false);
         }
         m_pb_icon=SKYBLK_NW;
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1044,7 +1081,7 @@ void roomDialog::on_pb_order_clicked()
         ui->pb_deorder->setEnabled(false);
         break;
     case NW_NODIE://如果有毒药，询问是否毒人（知道了）
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1058,7 +1095,7 @@ void roomDialog::on_pb_order_clicked()
     case WANT_BEPOLICE://竞选
         m_d_police=true;
         Q_EMIT SIG_police(m_seat,true);
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1067,8 +1104,9 @@ void roomDialog::on_pb_order_clicked()
         ui->pb_deorder->setEnabled(false);
         break;
     case SPEAK_ORDER://顺序
+        m_timer_speakOrder->stop();
         Q_EMIT SIG_speakOrder(m_seat,1);
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1083,7 +1121,7 @@ void roomDialog::on_pb_order_clicked()
             }else m_mapIdToPlayer[i]->setAbleToVoted(false);
         }
         m_pb_icon=TURN_POLICE_ICON;
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/turnPoliceYes.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1099,7 +1137,7 @@ void roomDialog::on_pb_deorder_clicked()
 {//不救，不毒，逆序，不竞选，不移交警徽
     switch(m_pb_oper){
     case NW_RESCUE:
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1113,7 +1151,7 @@ void roomDialog::on_pb_deorder_clicked()
     case NW_POISON:
         ui->tb_message->append("等待天亮");
         m_pb_icon=USERINFO;
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1123,7 +1161,7 @@ void roomDialog::on_pb_deorder_clicked()
         break;
     case WANT_BEPOLICE://不竞选
         m_d_police=false;
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1132,8 +1170,9 @@ void roomDialog::on_pb_deorder_clicked()
         ui->pb_deorder->setEnabled(false);
         break;
     case SPEAK_ORDER://逆序
+        m_timer_speakOrder->stop();
         Q_EMIT SIG_speakOrder(m_seat,-1);
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1143,7 +1182,7 @@ void roomDialog::on_pb_deorder_clicked()
         break;
     case TURN_POLICE://不移交警徽
         Q_EMIT SIG_imPolice(0,2);
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1226,7 +1265,7 @@ void roomDialog::slot_OverTimerPolice()
     //判断是不是房主
     if(police==0){
         if(m_seat==1)Q_EMIT SIG_PoliceEnd();//是房主发送竞选阶段结束包
-//        ui->lb_operate->setText("");
+        //        ui->lb_operate->setText("");
         ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
         ui->pb_operate_up->setIconSize(QSize(280,40));
         ui->pb_order->setText("");
@@ -1256,6 +1295,12 @@ void roomDialog::slot_OverTimerSpeakOrder()
     speakOrder--;
     if(speakOrder==0){
         if(m_seat==1)Q_EMIT SIG_speakOrder(m_d_policer,1);//是房主发送顺序选择结束包
+        ui->pb_operate_up->setIcon(QIcon(QString(":/tupian/kong.png")));
+        ui->pb_operate_up->setIconSize(QSize(280,40));
+        ui->pb_order->setText("");
+        ui->pb_deorder->setText("");
+        ui->pb_order->setEnabled(false);
+        ui->pb_deorder->setEnabled(false);
         m_timer_speakOrder->stop();
         ui->lb_time->setText("");
     }

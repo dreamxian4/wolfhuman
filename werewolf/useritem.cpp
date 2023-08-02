@@ -19,18 +19,40 @@ UserItem::~UserItem()
 }
 
 //设置用户信息
-void UserItem::slot_setInfo(int id, QString name, int state, int iconid, QString feeling)
+void UserItem::slot_setInfo(int userid, QString name, int state, int iconid, QString sex,int level,QString username)
 {
     //1.保存用户信息
-    m_id=id;
+    m_id=userid;
     m_name=name;
     m_state=state;
     m_iconid=iconid;
-    m_feeling=feeling;
+    m_sex=sex;
+    m_level=level;
+    m_username=username;
 
-    //2.设置昵称和签名
+    //2.设置个人信息
     ui->lb_name->setText(m_name);
-    ui->lb_feeling->setText(m_feeling);
+    ui->lb_level->setText(QString("Level.%1").arg(m_level));
+    ui->lb_sex->setText(m_sex);
+    QString str_state="";
+    switch(m_state){//1：在线 2：离线 3：游戏中 4：房间中
+    case 1:
+        str_state="在线";
+        break;
+    case 2:
+        str_state="离线";
+        break;
+    case 3:
+        str_state="游戏中";
+        break;
+    case 4:
+        str_state="房间中";
+        break;
+    default:
+        str_state="行为异常";
+        break;
+    }
+    ui->lb_state->setText(str_state);
 
     //3.设置头像
     QString iconPath=QString(":/tx/%1.png").arg(iconid);
