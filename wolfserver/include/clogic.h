@@ -48,6 +48,9 @@ public:
     void LrKillSelf( sock_fd clientfd, char*szbuf, int nlen );
     void ChatRq( sock_fd clientfd, char*szbuf, int nlen );
     void FriendZiLiao( sock_fd clientfd, char*szbuf, int nlen );
+    void Space( sock_fd clientfd, char*szbuf, int nlen );
+    void SpaceOpt( sock_fd clientfd, char*szbuf, int nlen );
+    void SpaceComment( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:

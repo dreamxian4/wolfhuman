@@ -31,6 +31,9 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_LR_KILLSELF)        = &CLogic::LrKillSelf;
     NetPackMap(DEF_PACK_CHAT_RQ)            = &CLogic::ChatRq;
     NetPackMap(DEF_PACK_FRIEND_ZILIAO_RQ)   = &CLogic::FriendZiLiao;
+    NetPackMap(DEF_PACK_SPACE_RQ)           = &CLogic::Space;
+    NetPackMap(DEF_PACK_SPACE_OPT)          = &CLogic::SpaceOpt;
+    NetPackMap(DEF_PACK_SPACE_COMMENT_RQ)   = &CLogic::SpaceComment;
 }
 
 
@@ -1393,4 +1396,460 @@ void CLogic::FriendZiLiao(sock_fd clientfd, char *szbuf, int nlen)
         rs.state=user->m_state;
     }
     SendData(clientfd,(char*)&rs,sizeof(rs));
+}
+
+void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("Space:%d\n",clientfd);
+    STRU_SPACE_RQ* rq=(STRU_SPACE_RQ*)szbuf;
+    STRU_SPACE_RS rs;
+
+    //一次发十条，点击下一页，发下十条
+
+    list<string>lst;
+    list<string>userLst;
+    list<string>optLst;
+    char sql[1024];
+
+    if(rq->find){
+        //搜索
+        switch(rq->which){
+        case 0://用户昵称
+            //个数
+            //先计算动态的总数，把总数发给客户端，客户端判断一页10条，共需要几页
+            sprintf(sql,"select count(t_space.id) "
+                        "from t_space inner join t_user "
+                        "where t_space.userid=t_user.id and t_user.name like\"\%%%s\%\""
+                    ,rq->str);
+            m_sql->SelectMysql(sql,1,lst);
+            memset(sql,0,1024);
+            rs.spaceNum=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            //查找动态表的相关信息
+            sprintf(sql,"select t_space.id,time,content,userid,good,tui,commentNum "
+                        "from t_space inner join t_user "
+                        "where t_space.userid=t_user.id and t_user.name like\"\%%%s\%\" "
+                        "limit %d,10"
+                    ,rq->str,(rq->page-1)*11);
+            m_sql->SelectMysql(sql,7,lst);
+            memset(sql,0,1024);
+            while(!lst.empty()){
+                rs.spaceid=atoi(lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.time,lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.content,lst.front().c_str());
+                lst.pop_front();
+                rs.userid=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.good=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.tui=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.comment=atoi(lst.front().c_str());
+                lst.pop_front();
+
+
+                //查找用户表的相关信息
+                sprintf(sql,"select id,icon,name from t_user where id=%d",rs.userid);
+                m_sql->SelectMysql(sql,3,userLst);
+                memset(sql,0,1024);
+                userLst.pop_front();
+                rs.icon=atoi(userLst.front().c_str());
+                userLst.pop_front();
+                strcpy(rs.name,userLst.front().c_str());
+                userLst.pop_front();
+
+                //查询点赞等信息
+                if(rs.good||rs.tui){
+                    sprintf(sql,"select good,tui from t_spaceOpt "
+                                "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                    m_sql->SelectMysql(sql,2,optLst);
+                    memset(sql,0,1024);
+                    while(!optLst.empty()){
+                        rs.isgood=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                        rs.istui=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                    }
+                }
+
+                SendData(clientfd,(char*)&rs,sizeof(rs));
+            }
+            break;
+        case 1://动态内容
+            //个数
+            //先计算动态的总数，把总数发给客户端，客户端判断一页10条，共需要几页
+            sprintf(sql,"select count(id) "
+                        "from t_space "
+                        "where  content like\"\%%%s\%\""
+                    ,rq->str);
+            m_sql->SelectMysql(sql,1,lst);
+            memset(sql,0,1024);
+            rs.spaceNum=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            //查找动态表的相关信息
+            sprintf(sql,"select t_space.id,time,content,userid,good,tui,commentNum "
+                        "from t_space "
+                        "where content like\"\%%%s\%\" "
+                        "limit %d,10"
+                    ,rq->str,(rq->page-1)*11);
+            m_sql->SelectMysql(sql,7,lst);
+            memset(sql,0,1024);
+            while(!lst.empty()){
+                rs.spaceid=atoi(lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.time,lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.content,lst.front().c_str());
+                lst.pop_front();
+                rs.userid=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.good=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.tui=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.comment=atoi(lst.front().c_str());
+                lst.pop_front();
+
+
+                //查找用户表的相关信息
+                sprintf(sql,"select id,icon,name from t_user where id=%d",rs.userid);
+                m_sql->SelectMysql(sql,3,userLst);
+                memset(sql,0,1024);
+                userLst.pop_front();
+                rs.icon=atoi(userLst.front().c_str());
+                userLst.pop_front();
+                strcpy(rs.name,userLst.front().c_str());
+                userLst.pop_front();
+
+                //查询点赞等信息
+                if(rs.good||rs.tui){
+                    sprintf(sql,"select good,tui from t_spaceOpt "
+                                "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                    m_sql->SelectMysql(sql,2,optLst);
+                    memset(sql,0,1024);
+                    while(!optLst.empty()){
+                        rs.isgood=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                        rs.istui=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                    }
+                }
+                SendData(clientfd,(char*)&rs,sizeof(rs));
+            }
+            break;
+        }
+    }else{
+        switch(rq->kind){
+        case 1://好友
+            //个数
+            //先计算动态的总数，把总数发给客户端，客户端判断一页10条，共需要几页
+            sprintf(sql,"select count(t_space.id) "
+                        "from t_friend inner join t_space "
+                        "where t_friend.id_a=%d and t_friend.id_b=t_space.userid",rq->id);
+            m_sql->SelectMysql(sql,1,lst);
+            memset(sql,0,1024);
+            rs.spaceNum=atoi(lst.front().c_str());
+            lst.pop_front();
+            //查找动态表的相关信息
+            sprintf(sql,"select id,time,content,userid,good,tui,commentNum "
+                        "from t_friend inner join t_space "
+                        "where t_friend.id_a=%d and t_friend.id_b=t_space.userid limit %d,10"
+                    ,rq->id,(rq->page-1)*11);
+            m_sql->SelectMysql(sql,7,lst);
+            memset(sql,0,1024);
+
+            while(!lst.empty()){
+                rs.spaceid=atoi(lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.time,lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.content,lst.front().c_str());
+                lst.pop_front();
+                rs.userid=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.good=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.tui=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.comment=atoi(lst.front().c_str());
+                lst.pop_front();
+
+                //查找用户表的相关信息
+                sprintf(sql,"select id,icon,name from t_user where id=%d",rs.userid);
+                m_sql->SelectMysql(sql,3,userLst);
+                memset(sql,0,1024);
+                userLst.pop_front();
+                rs.icon=atoi(userLst.front().c_str());
+                userLst.pop_front();
+                strcpy(rs.name,userLst.front().c_str());
+                userLst.pop_front();
+
+                //查询点赞等信息
+                if(rs.good||rs.tui){
+                    sprintf(sql,"select good,tui from t_spaceOpt "
+                                "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                    m_sql->SelectMysql(sql,2,optLst);
+                    memset(sql,0,1024);
+                    while(!optLst.empty()){
+                        rs.isgood=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                        rs.istui=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                    }
+                }
+                SendData(clientfd,(char*)&rs,sizeof(rs));
+            }
+            break;
+        case 2://推荐
+            //个数
+            //先计算动态的总数，把总数发给客户端，客户端判断一页10条，共需要几页
+            sprintf(sql,"select count(id) from t_space");
+            m_sql->SelectMysql(sql,1,lst);
+            memset(sql,0,1024);
+            rs.spaceNum=atoi(lst.front().c_str());
+            lst.pop_front();
+            //查找动态表的相关信息
+            sprintf(sql,"select id,time,content,userid,good,tui,commentNum from t_space limit %d,10"
+                    ,(rq->page-1)*11);
+            m_sql->SelectMysql(sql,7,lst);
+            memset(sql,0,1024);
+
+            while(!lst.empty()){
+                rs.spaceid=atoi(lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.time,lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.content,lst.front().c_str());
+                lst.pop_front();
+                rs.userid=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.good=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.tui=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.comment=atoi(lst.front().c_str());
+                lst.pop_front();
+
+                //查找用户表的相关信息
+                sprintf(sql,"select id,icon,name from t_user where id=%d",rs.userid);
+                m_sql->SelectMysql(sql,3,userLst);
+                memset(sql,0,1024);
+                userLst.pop_front();
+                rs.icon=atoi(userLst.front().c_str());
+                userLst.pop_front();
+                strcpy(rs.name,userLst.front().c_str());
+                userLst.pop_front();
+
+                rs.isgood=0;
+                rs.istui=0;
+                //查询点赞等信息
+                if(rs.good||rs.tui){
+                    sprintf(sql,"select good,tui from t_spaceOpt "
+                                "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                    m_sql->SelectMysql(sql,2,optLst);
+                    memset(sql,0,1024);
+                    while(!optLst.empty()){
+                        rs.isgood=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                        rs.istui=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                    }
+                }
+                SendData(clientfd,(char*)&rs,sizeof(rs));
+            }
+            break;
+        case 3://我的
+            //个数
+            //先计算动态的总数，把总数发给客户端，客户端判断一页10条，共需要几页
+            sprintf(sql,"select count(id) from t_space where userid=%d",rq->id);
+            m_sql->SelectMysql(sql,1,lst);
+            memset(sql,0,1024);
+            rs.spaceNum=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            //查找动态表的相关信息
+            sprintf(sql,"select id,time,content,userid,good,tui,commentNum "
+                        "from t_space where userid=%d limit %d,10"
+                    ,rq->id,(rq->page-1)*11);
+            m_sql->SelectMysql(sql,7,lst);
+            memset(sql,0,1024);
+
+            while(!lst.empty()){
+                rs.spaceid=atoi(lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.time,lst.front().c_str());
+                lst.pop_front();
+                strcpy(rs.content,lst.front().c_str());
+                lst.pop_front();
+                rs.userid=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.good=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.tui=atoi(lst.front().c_str());
+                lst.pop_front();
+                rs.comment=atoi(lst.front().c_str());
+                lst.pop_front();
+
+                //查找用户表的相关信息
+                sprintf(sql,"select id,icon,name from t_user where id=%d",rs.userid);
+                m_sql->SelectMysql(sql,3,userLst);
+                memset(sql,0,1024);
+                userLst.pop_front();
+                rs.icon=atoi(userLst.front().c_str());
+                userLst.pop_front();
+                strcpy(rs.name,userLst.front().c_str());
+                userLst.pop_front();
+
+                //查询点赞等信息
+                if(rs.good||rs.tui){
+                    sprintf(sql,"select good,tui from t_spaceOpt "
+                                "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                    m_sql->SelectMysql(sql,2,optLst);
+                    memset(sql,0,1024);
+                    while(!optLst.empty()){
+                        rs.isgood=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                        rs.istui=atoi(optLst.front().c_str());
+                        optLst.pop_front();
+                    }
+                }
+                SendData(clientfd,(char*)&rs,sizeof(rs));
+            }
+            break;
+        }
+    }
+}
+
+void CLogic::SpaceOpt(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("SpaceOpt:%d\n",clientfd);
+    STRU_SPACE_OPT* opt=(STRU_SPACE_OPT*)szbuf;
+
+    char sql[1024];
+    list<string>lst;
+    sprintf(sql,"start transaction;");
+    m_sql->UpdataMysql(sql);
+    memset(sql,0,1024);
+    int num=-1;
+
+    switch(opt->kind){
+    case 1://点赞
+
+        if(opt->opt)num=1;
+
+        //t_spaceOpt
+        //判断数据库里有没有该sid和uid的组合
+        sprintf(sql,"select spaceid from t_spaceOpt where spaceid=%d and userid=%d;",
+                opt->spaceid,opt->userid);
+        m_sql->SelectMysql(sql,1,lst);
+        memset(sql,0,1024);
+
+        if(lst.empty()){//数据库中没有该条记录，应该使用增加语句
+            sprintf(sql,"insert into t_spaceOpt values(%d,%d,%d,0);"
+                    ,opt->spaceid,opt->userid,opt->opt);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+        }else{//数据库中有该条记录，应该使用修改语句
+            lst.pop_front();
+            sprintf(sql,"update t_spaceOpt set good=%d where spaceid=%d and userid=%d;"
+                    ,opt->opt,opt->spaceid,opt->userid);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+        }
+
+
+        //t_space
+        sprintf(sql,"update t_space set good=good+%d,time=time where id=%d;"
+                ,num,opt->spaceid);
+        if(!m_sql->UpdataMysql(sql))return;
+        memset(sql,0,1024);
+
+
+
+        //t_historyOpt
+        if(num){//点赞数增加，需要发送信息给动态主人，并保存到历史信息里
+            sprintf(sql,"insert into t_historyOpt(userid,opt,sendid,goodSpaceid) "
+                        "values(%d,4,%d,%d);",opt->masterid,opt->userid,opt->spaceid);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+        }
+        break;
+    case 2://点踩
+
+        if(opt->opt)num=1;
+
+        //t_spaceOpt
+        //判断数据库里有没有该sid和uid的组合
+        sprintf(sql,"select spaceid from t_spaceOpt where spaceid=%d and userid=%d;",
+                opt->spaceid,opt->userid);
+        if(!m_sql->SelectMysql(sql,1,lst))return;
+        memset(sql,0,1024);
+
+        if(lst.empty()){//数据库中没有该条记录，应该使用增加语句
+            sprintf(sql,"insert into t_spaceOpt values(%d,%d,0,%d);"
+                    ,opt->spaceid,opt->userid,opt->opt);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+        }else{//数据库中有该条记录，应该使用修改语句
+            lst.pop_front();
+            sprintf(sql,"update t_spaceOpt set tui=%d where spaceid=%d and userid=%d;"
+                    ,opt->opt,opt->spaceid,opt->userid);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+        }
+
+
+        //t_space
+        sprintf(sql,"update t_space set tui=tui+%d,time=time where id=%d;"
+                ,num,opt->spaceid);
+        if(!m_sql->UpdataMysql(sql))return;
+        memset(sql,0,1024);
+
+        break;
+    case 3://评论
+
+        //t_comment
+        sprintf(sql,"insert into t_comment values(%d,%d,\"%s\",current_time)"
+                ,opt->spaceid,opt->userid,opt->comment);
+        if(!m_sql->UpdataMysql(sql))return;
+        memset(sql,0,1024);
+
+        //t_space
+        sprintf(sql,"update t_space set commentNum=commentNum+1,time=time where id=%d;"
+                ,opt->spaceid);
+        if(!m_sql->UpdataMysql(sql))return;
+        memset(sql,0,1024);
+
+        break;
+    }
+    sprintf(sql,"commit;");
+    m_sql->UpdataMysql(sql);
+    memset(sql,0,1024);
+}
+
+void CLogic::SpaceComment(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("SpaceComment:%d\n",clientfd);
+    STRU_SPACE_COMMENT_RQ* rq=(STRU_SPACE_COMMENT_RQ*)szbuf;
+    char sql[1024];
+    list<string>lst;
+    STRU_SPACE_COMMENT_RS rs;
+
+    sprintf(sql,"select name,time,content "
+                "from t_comment inner join t_user "
+                "where t_comment.userid=t_user.id and spaceid=%d",rq->spaceid);
+    m_sql->SelectMysql(sql,3,lst);
+    while(!lst.empty()){
+        strcpy(rs.name,lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.time,lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.comment,lst.front().c_str());
+        lst.pop_front();
+        SendData(clientfd,(char*)&rs,sizeof(rs));
+    }
 }

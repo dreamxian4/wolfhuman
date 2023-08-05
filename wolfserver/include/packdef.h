@@ -32,6 +32,19 @@
 #define _DEF_DB_IP      "localhost"
 #define _DEF_DB_USER    "root"
 #define _DEF_DB_PWD     "123456"
+
+/* t_user:id,username,password,sex,icon,name,level,gameNum
+ * 用户信息表：id，用户名，密码，性别，头像，昵称，等级，游戏次数
+ *
+ * t_friend:id_a,id_b
+ * 好友表：用户a，用户b
+ *
+ * t_space:spaceid,userid,content,time,good,tui,commentNum
+ * 动态表：动态id，发布人id，内容，时间，点赞数，点踩数，评论数
+ *
+ * t_comment:spaceid,userid,content,time
+ * 评论表：动态id，评论人id，内容，时间
+*/
 /*
 
 
@@ -161,7 +174,12 @@
 //好友详细信息
 #define DEF_PACK_FRIEND_ZILIAO_RQ       (DEF_PACK_BASE + 51)
 #define DEF_PACK_FRIEND_ZILIAO_RS       (DEF_PACK_BASE + 52)
-
+//动态
+#define DEF_PACK_SPACE_RQ       (DEF_PACK_BASE+53)
+#define DEF_PACK_SPACE_RS       (DEF_PACK_BASE+54)
+#define DEF_PACK_SPACE_OPT      (DEF_PACK_BASE+55)
+#define DEF_PACK_SPACE_COMMENT_RQ  (DEF_PACK_BASE+56)
+#define DEF_PACK_SPACE_COMMENT_RS  (DEF_PACK_BASE+57)
 
 
 
@@ -1114,6 +1132,105 @@ typedef struct STRU_FRIEND_ZILIAO_RS {
     char content[MAX_CONTENT_LEN];//动态内容
     char time[MAX_SIZE];
 }STRU_FRIEND_ZILIAO_RS;
+
+
+//动态
+typedef struct STRU_SPACE_RQ {
+    //协议头  内容 发送人id 接收人id
+    STRU_SPACE_RQ() :type(DEF_PACK_SPACE_RQ) {
+        kind=0;
+        id=0;
+        page=0;
+        memset(str, 0, MAX_SIZE);
+        find=false;
+        which=0;
+    }
+    PackType type;
+    int kind;
+    int id;
+    int page;
+    char str[MAX_SIZE];
+    bool find;
+    int which;
+}STRU_SPACE_RQ;
+
+typedef struct STRU_SPACE_RS {
+    //协议头 结果
+    STRU_SPACE_RS() :type(DEF_PACK_SPACE_RS){
+        icon=0;
+        userid=0;
+        spaceid=0;
+        tui=0;
+        good=0;
+        comment=0;
+        spaceNum=0;
+        isgood=0;
+        istui=0;
+        memset(name, 0, MAX_SIZE);
+        memset(content, 0, MAX_CONTENT_LEN);
+        memset(time, 0, MAX_SIZE);
+    }
+    PackType type;
+    int icon;
+    int userid;
+    int spaceid;
+    char name[MAX_SIZE];
+    int tui;
+    int good;
+    int comment;
+    int spaceNum;
+    int isgood;
+    int istui;
+    char content[MAX_CONTENT_LEN];//动态内容
+    char time[MAX_SIZE];
+}STRU_SPACE_RS;
+
+
+//对动态的操作
+typedef struct STRU_SPACE_OPT {
+    //协议头 结果
+    STRU_SPACE_OPT() :type(DEF_PACK_SPACE_OPT){
+        spaceid=0;
+        userid=0;
+        masterid=0;
+        kind=0;
+        opt=0;
+        memset(comment, 0, MAX_CONTENT_LEN);
+    }
+    PackType type;
+    int spaceid;
+    int userid;
+    int masterid;
+    int kind;
+    int opt;
+    char comment[MAX_CONTENT_LEN];
+}STRU_SPACE_OPT;
+
+
+//获取评论
+typedef struct STRU_SPACE_COMMENT_RQ {
+    //协议头 结果
+    STRU_SPACE_COMMENT_RQ() :type(DEF_PACK_SPACE_COMMENT_RQ){
+        spaceid=0;
+    }
+    PackType type;
+    int spaceid;
+}STRU_SPACE_COMMENT_RQ;
+
+typedef struct STRU_SPACE_COMMENT_RS {
+    //协议头 结果
+    STRU_SPACE_COMMENT_RS() :type(DEF_PACK_SPACE_COMMENT_RS){
+//        commentid=0;
+        memset(name,0,MAX_SIZE);
+        memset(time,0,MAX_SIZE);
+        memset(comment,0,MAX_CONTENT_LEN);
+    }
+    PackType type;
+//    int commentid;
+    char name[MAX_SIZE];
+    char time[MAX_SIZE];
+    char comment[MAX_CONTENT_LEN];
+}STRU_SPACE_COMMENT_RS;
 
 
 ////注册音频

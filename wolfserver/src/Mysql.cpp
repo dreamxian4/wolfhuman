@@ -17,7 +17,10 @@ int CMysql::ConnectMysql(const char* server,const char* user,const char* passwor
 int CMysql::SelectMysql(char* szSql,int nColumn,list<string>& lst)
 {
     MYSQL_RES * results = NULL;
-    if(mysql_query(conn,szSql))return FALSE;
+    if(mysql_query(conn,szSql)){
+        cout<<endl<<mysql_error((conn))<<endl;
+        return FALSE;
+    }
     results = mysql_store_result(conn);
     if(NULL == results)return FALSE;
     MYSQL_ROW record;
@@ -36,7 +39,10 @@ int CMysql::SelectMysql(char* szSql,int nColumn,list<string>& lst)
 int CMysql::UpdataMysql(char *szsql)
 {
     if(!szsql)return FALSE;
-    if(mysql_query(conn,szsql))return FALSE;
+    if(mysql_query(conn,szsql)){
+        cout<<endl<<mysql_error((conn))<<endl;
+        return FALSE;
+    }
 
     return TRUE;
 }
