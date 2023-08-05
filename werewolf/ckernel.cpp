@@ -39,6 +39,7 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
     m_roomListDialog=new roomListDialog;
     audioRead=new AudioRead;
     m_ziliao=new ZiLiaoDialog;
+    m_comment=new commentDialog;
 
 
     connect(m_startDialog,SIGNAL(SIG_joinGame()),
@@ -69,6 +70,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
             this,SLOT(slot_quitLogin()));
     connect(m_mainDialog,SIGNAL(SIG_QUITlogin()),
             this,SLOT(slot_quitClogin()));
+    connect(m_mainDialog,SIGNAL(SIG_getSpace(int,bool,int,QString,int)),
+            this,SLOT(slot_sendGetSpace(int,bool,int,QString,int)));
 
 
     connect(m_createRoomDialog,SIGNAL(SIG_CANCEL()),
@@ -135,6 +138,9 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
             this,SLOT(slot_qie_ziliaoToSendMag(int)));
     connect(m_ziliao,SIGNAL(SIG_joinRoom(int)),
             this,SLOT(slot_sendJoinRoomRq(int)));
+
+    connect(m_comment,SIGNAL(SIG_sendComment(int,QString)),
+            this,SLOT(slot_sendSpaceComment(int,QString)));
 }
 
 
@@ -197,7 +203,6 @@ void ckernel::slot_qie_joinGame()
     //连接网络
     if(!m_client->OpenNet(m_serverIp.toStdString().c_str(),8080)){
         QMessageBox::information(m_startDialog,"提示","服务器连接失败,请稍后再试~~~");
-        return;
     }
     //隐藏启动窗口
     m_startDialog->hide();
@@ -275,6 +280,51 @@ void ckernel::slot_sendUserZiLiaoRq(int id)
     rq.friendid=id;
     SendData(0,(char*)&rq,sizeof(rq));
 }
+
+void ckernel::slot_sendGetSpace(int kind,bool find,int which,QString str,int page)
+{
+    STRU_SPACE_RQ rq;
+    rq.id=m_id;
+    rq.kind=kind;
+    rq.find=find;
+    rq.page=page;
+    strcpy(rq.str,str.toStdString().c_str());
+    rq.which=which;
+    m_mainDialog->slot_clearSpace();
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+void ckernel::slot_sendSpaceOpt(int spaceid, int userid,int kind, int opt)
+{
+    STRU_SPACE_OPT sopt;
+    sopt.spaceid=spaceid;
+    sopt.userid=m_id;
+    sopt.kind=kind;
+    sopt.opt=opt;
+    sopt.masterid=userid;
+    SendData(0,(char*)&sopt,sizeof(sopt));
+}
+
+void ckernel::slot_sendGetComment(int spaceid, int icon, QString name, QString time, QString content,int id)
+{
+    STRU_SPACE_COMMENT_RQ rq;
+    rq.spaceid=spaceid;
+    m_comment->slot_setInfo(icon,name,time,content,id);
+    m_comment->slot_clearwidget();
+    m_comment->showNormal();
+    SendData(0,(char*)&rq,sizeof(rq));
+}
+
+void ckernel::slot_sendSpaceComment(int spaceid, QString content)
+{
+    STRU_SPACE_OPT sopt;
+    sopt.spaceid=spaceid;
+    sopt.userid=m_id;
+    sopt.kind=3;
+    strcpy(sopt.comment,content.toStdString().c_str());
+    SendData(0,(char*)&sopt,sizeof(sopt));
+}
+
 
 void ckernel::slot_qie_chatItemSend(int id)
 {
@@ -1033,6 +1083,33 @@ void ckernel::slot_DealFriendZiLiao(unsigned int lSendIP, char *buf, int nlen)
     m_ziliao->show();
 }
 
+void ckernel::slot_DealSpace(unsigned int lSendIP, char *buf, int nlen)
+{
+    m_mainDialog->slot_setSpace((STRU_SPACE_RS*)buf);
+
+    spaceForm *space=new spaceForm;
+    connect(space,SIGNAL(SIG_Getdetail(int)),
+            this,SLOT(slot_sendUserZiLiaoRq(int)));
+    connect(space,SIGNAL(SIG_SpaceOpt(int,int,int,int)),
+            this,SLOT(slot_sendSpaceOpt(int,int,int,int)));
+    connect(space,SIGNAL(SIG_GetComment(int,int,QString,QString,QString,int)),
+            this,SLOT(slot_sendGetComment(int,int,QString,QString,QString,int)));
+
+    space->setInfo((STRU_SPACE_RS*)buf);
+    m_mainDialog->slot_addSpace(space);
+}
+
+void ckernel::slot_DealSpaceComment(unsigned int lSendIP, char *buf, int nlen)
+{
+    //在评论窗口添加组件并显示
+    STRU_SPACE_COMMENT_RS* rs=(STRU_SPACE_COMMENT_RS*)buf;
+    commentForm* form=new commentForm;
+
+    form->slot_setInfo(QString::fromStdString(rs->name),
+                       QString::fromStdString(rs->time),QString::fromStdString(rs->comment));
+    m_comment->slot_addwidget(form);
+}
+
 
 void ckernel::slot_DealPolicePlayerRs(unsigned int lSendIP, char *buf, int nlen)
 {
@@ -1116,6 +1193,8 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_CHAT_RQ)=&ckernel::slot_DealChatRq;
     netMap(DEF_PACK_CHAT_RS)=&ckernel::slot_DealChatRs;
     netMap(DEF_PACK_FRIEND_ZILIAO_RS)=&ckernel::slot_DealFriendZiLiao;
+    netMap(DEF_PACK_SPACE_RS)=&ckernel::slot_DealSpace;
+    netMap(DEF_PACK_SPACE_COMMENT_RS)=&ckernel::slot_DealSpaceComment;
 }
 
 void ckernel::slot_quitLogin()

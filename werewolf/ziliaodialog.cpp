@@ -59,9 +59,6 @@ void ZiLiaoDialog::slot_setInfo(STRU_FRIEND_ZILIAO_RS &rs)
     ui->tb_level->setText(QString("level.%1").arg(rs.level));
     //游戏场数
     ui->tb_gameNum->setText(QString("%1场").arg(rs.gameNum));
-
-    //动态
-    ui->lb_space->setText(QString::fromStdString(rs.content));
 }
 
 void ZiLiaoDialog::on_pb_min_clicked()

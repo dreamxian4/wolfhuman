@@ -12,6 +12,8 @@ SOURCES += \
     chatdialog.cpp \
     chatitem.cpp \
     ckernel.cpp \
+    commentdialog.cpp \
+    commentform.cpp \
     createroomform.cpp \
     logindialog.cpp \
     main.cpp \
@@ -22,7 +24,7 @@ SOURCES += \
     roomlistdialog.cpp \
     roomlistform.cpp \
     roomplayerform.cpp \
-    spqceform.cpp \
+    spaceform.cpp \
     startdialog.cpp \
     useritem.cpp \
     ziliaodialog.cpp
@@ -31,6 +33,8 @@ HEADERS += \
     chatdialog.h \
     chatitem.h \
     ckernel.h \
+    commentdialog.h \
+    commentform.h \
     createroomform.h \
     logindialog.h \
     maindialog.h \
@@ -40,7 +44,7 @@ HEADERS += \
     roomlistdialog.h \
     roomlistform.h \
     roomplayerform.h \
-    spqceform.h \
+    spaceform.h \
     startdialog.h \
     useritem.h \
     ziliaodialog.h
@@ -48,6 +52,8 @@ HEADERS += \
 FORMS += \
     chatdialog.ui \
     chatitem.ui \
+    commentdialog.ui \
+    commentform.ui \
     createroomform.ui \
     logindialog.ui \
     maindialog.ui \
@@ -57,7 +63,7 @@ FORMS += \
     roomlistdialog.ui \
     roomlistform.ui \
     roomplayerform.ui \
-    spqceform.ui \
+    spaceform.ui \
     startdialog.ui \
     useritem.ui \
     ziliaodialog.ui

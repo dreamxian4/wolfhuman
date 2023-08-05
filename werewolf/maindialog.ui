@@ -22,8 +22,11 @@
      <height>21</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);</string>
+   </property>
    <property name="text">
-    <string>昵称</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#ffffff;&quot;&gt;昵称&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_0_sex">
@@ -51,8 +54,11 @@
      <height>31</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(121, 255, 84);</string>
+   </property>
    <property name="text">
-    <string>LV1</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; color:#00ff7f;&quot;&gt;LV1&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_0_gold">
@@ -76,6 +82,9 @@
      <width>51</width>
      <height>16</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(255, 255, 255);</string>
    </property>
    <property name="text">
     <string>100000</string>
@@ -102,6 +111,9 @@
      <width>61</width>
      <height>16</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(254, 254, 254);</string>
    </property>
    <property name="text">
     <string>100000</string>
@@ -165,6 +177,10 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
+     </property>
      <property name="text">
       <string>官方群</string>
      </property>
@@ -172,14 +188,16 @@
     <widget class="QPushButton" name="pb_1_random">
      <property name="geometry">
       <rect>
-       <x>140</x>
+       <x>70</x>
        <y>690</y>
-       <width>201</width>
+       <width>331</width>
        <height>51</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true">background-color: rgb(0, 115, 115);
+font: 20pt &quot;方正舒体&quot;;
+color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
       <string>随机匹配</string>
@@ -188,14 +206,16 @@
     <widget class="QPushButton" name="pb_1_createRoom">
      <property name="geometry">
       <rect>
-       <x>140</x>
-       <y>550</y>
-       <width>201</width>
+       <x>70</x>
+       <y>470</y>
+       <width>331</width>
        <height>51</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgb(0, 115, 115);</string>
+      <string notr="true">background-color: rgb(0, 115, 115);
+font: 20pt &quot;方正舒体&quot;;
+color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
       <string>创建房间</string>
@@ -204,14 +224,16 @@
     <widget class="QPushButton" name="pb_1_roomList">
      <property name="geometry">
       <rect>
-       <x>140</x>
-       <y>620</y>
-       <width>201</width>
+       <x>70</x>
+       <y>580</y>
+       <width>331</width>
        <height>51</height>
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true">background-color: rgb(0, 115, 115);</string>
+      <string notr="true">background-color: rgb(0, 115, 115);
+font: 20pt &quot;方正舒体&quot;;
+color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
       <string>房间列表</string>
@@ -226,6 +248,10 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
+     </property>
      <property name="text">
       <string>排行</string>
      </property>
@@ -238,6 +264,10 @@
        <width>61</width>
        <height>31</height>
       </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
       <string>教程</string>
@@ -252,6 +282,10 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
+     </property>
      <property name="text">
       <string>抽奖</string>
      </property>
@@ -265,22 +299,54 @@
        <height>31</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
+     </property>
      <property name="text">
       <string>任务</string>
      </property>
     </widget>
+    <widget class="QLabel" name="label_2">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>60</y>
+       <width>481</width>
+       <height>261</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="pixmap">
+      <pixmap resource="resources.qrc">:/tupian/main.png</pixmap>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
+     </property>
+    </widget>
+    <zorder>label_2</zorder>
+    <zorder>pb_1_qqgroup</zorder>
+    <zorder>pb_1_random</zorder>
+    <zorder>pb_1_createRoom</zorder>
+    <zorder>pb_1_roomList</zorder>
+    <zorder>pb_1_rank</zorder>
+    <zorder>pb_1_course</zorder>
+    <zorder>pb_1_reward</zorder>
+    <zorder>pb_1_task</zorder>
    </widget>
    <widget class="QWidget" name="tb_space">
     <attribute name="title">
-     <string>  动态  </string>
+     <string>  社区  </string>
     </attribute>
     <widget class="QScrollArea" name="scrollArea_3">
      <property name="geometry">
       <rect>
        <x>0</x>
-       <y>0</y>
+       <y>80</y>
        <width>471</width>
-       <height>871</height>
+       <height>741</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -295,7 +361,7 @@
         <x>0</x>
         <y>0</y>
         <width>471</width>
-        <height>871</height>
+        <height>741</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -336,6 +402,152 @@
        </item>
       </layout>
      </widget>
+    </widget>
+    <widget class="QPushButton" name="pb_2_friend">
+     <property name="geometry">
+      <rect>
+       <x>-10</x>
+       <y>40</y>
+       <width>161</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true"/>
+     </property>
+     <property name="text">
+      <string>好友</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_suggest">
+     <property name="geometry">
+      <rect>
+       <x>160</x>
+       <y>40</y>
+       <width>151</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>推荐</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_mine">
+     <property name="geometry">
+      <rect>
+       <x>320</x>
+       <y>40</y>
+       <width>161</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>我的</string>
+     </property>
+    </widget>
+    <widget class="QLineEdit" name="le_2_findstr">
+     <property name="geometry">
+      <rect>
+       <x>70</x>
+       <y>0</y>
+       <width>311</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="inputMask">
+      <string/>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="placeholderText">
+      <string/>
+     </property>
+    </widget>
+    <widget class="QComboBox" name="cmb_2_findSpace">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>61</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <item>
+      <property name="text">
+       <string>用户</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>内容</string>
+      </property>
+     </item>
+    </widget>
+    <widget class="QPushButton" name="pb_2_findSpace">
+     <property name="geometry">
+      <rect>
+       <x>390</x>
+       <y>0</y>
+       <width>81</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>查找动态</string>
+     </property>
+    </widget>
+    <widget class="QLabel" name="lb_2_pageNum">
+     <property name="geometry">
+      <rect>
+       <x>190</x>
+       <y>830</y>
+       <width>61</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>1/100页</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_nextPage">
+     <property name="geometry">
+      <rect>
+       <x>250</x>
+       <y>830</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>下一页</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_lastPage">
+     <property name="geometry">
+      <rect>
+       <x>130</x>
+       <y>830</y>
+       <width>51</width>
+       <height>21</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>上一页</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_addSpace">
+     <property name="geometry">
+      <rect>
+       <x>380</x>
+       <y>820</y>
+       <width>93</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>发布帖子</string>
+     </property>
     </widget>
    </widget>
    <widget class="QWidget" name="tb_chat">
@@ -560,6 +772,10 @@
        <height>51</height>
       </rect>
      </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
+     </property>
      <property name="text">
       <string>修改个人信息</string>
      </property>
@@ -574,7 +790,8 @@
       </rect>
      </property>
      <property name="styleSheet">
-      <string notr="true"/>
+      <string notr="true">background-color: rgb(30, 138, 18);
+color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
       <string>退出当前账号</string>
@@ -750,7 +967,42 @@ border-color: rgb(36, 53, 81);</string>
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>40</y>
+     <width>481</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(0, 170, 127);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap resource="resources.qrc">:/tx/34.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <zorder>label</zorder>
+  <zorder>lb_0_name</zorder>
+  <zorder>pb_0_sex</zorder>
+  <zorder>lb_0_level</zorder>
+  <zorder>pb_0_gold</zorder>
+  <zorder>lb_0_gold</zorder>
+  <zorder>pb_0_diamond</zorder>
+  <zorder>lb_0_diamond</zorder>
+  <zorder>tb</zorder>
+  <zorder>wdg_title</zorder>
+  <zorder>pb_0_icon</zorder>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

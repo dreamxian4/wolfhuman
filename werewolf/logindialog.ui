@@ -21,8 +21,8 @@
   <widget class="QLineEdit" name="le_passwd">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>800</y>
+     <x>180</x>
+     <y>480</y>
      <width>201</width>
      <height>31</height>
     </rect>
@@ -37,8 +37,8 @@
   <widget class="QPushButton" name="pb_login">
    <property name="geometry">
     <rect>
-     <x>270</x>
-     <y>840</y>
+     <x>290</x>
+     <y>540</y>
      <width>93</width>
      <height>28</height>
     </rect>
@@ -57,7 +57,7 @@
    <property name="geometry">
     <rect>
      <x>420</x>
-     <y>900</y>
+     <y>160</y>
      <width>51</width>
      <height>28</height>
     </rect>
@@ -75,8 +75,8 @@
   <widget class="QPushButton" name="pb_register">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>840</y>
+     <x>180</x>
+     <y>540</y>
      <width>93</width>
      <height>28</height>
     </rect>
@@ -95,7 +95,7 @@
    <property name="geometry">
     <rect>
      <x>100</x>
-     <y>800</y>
+     <y>480</y>
      <width>51</width>
      <height>31</height>
     </rect>
@@ -108,14 +108,14 @@
     </font>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#ffffff;&quot;&gt;密码&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#000000;&quot;&gt;用户名&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLabel" name="lb_username">
    <property name="geometry">
     <rect>
      <x>80</x>
-     <y>750</y>
+     <y>430</y>
      <width>81</width>
      <height>31</height>
     </rect>
@@ -129,14 +129,14 @@
     </font>
    </property>
    <property name="text">
-    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#ffffff;&quot;&gt;用户名&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+    <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:14pt; color:#000000;&quot;&gt;用户名&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="le_username">
    <property name="geometry">
     <rect>
-     <x>160</x>
-     <y>750</y>
+     <x>180</x>
+     <y>430</y>
      <width>201</width>
      <height>31</height>
     </rect>
@@ -303,7 +303,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap resource="resources.qrc">:/tupian/startBackGround.jpg</pixmap>
+    <pixmap resource="resources.qrc">:/tupian/load.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>

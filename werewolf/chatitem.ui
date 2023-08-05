@@ -19,6 +19,9 @@
   <property name="windowTitle">
    <string>Form</string>
   </property>
+  <property name="styleSheet">
+   <string notr="true">border-bottom-color: rgb(0, 0, 0);</string>
+  </property>
   <widget class="QLabel" name="lb_name">
    <property name="geometry">
     <rect>
@@ -67,7 +70,7 @@
    <property name="geometry">
     <rect>
      <x>100</x>
-     <y>30</y>
+     <y>40</y>
      <width>291</width>
      <height>31</height>
     </rect>
@@ -146,6 +149,30 @@
     <string/>
    </property>
   </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>0</y>
+     <width>16</width>
+     <height>16</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(255, 63, 46);</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <zorder>lb_content</zorder>
+  <zorder>lb_name</zorder>
+  <zorder>pb_icon</zorder>
+  <zorder>pb_chat</zorder>
+  <zorder>pb_sex</zorder>
+  <zorder>lb_notice</zorder>
+  <zorder>lb_state</zorder>
+  <zorder>label</zorder>
  </widget>
  <resources/>
  <connections/>

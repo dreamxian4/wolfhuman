@@ -30,11 +30,12 @@ public:
     void slot_setlist(int mode, int method, int roomid, int count,
                                int current, bool pass, QString passwd, bool state, int level);
 
+    void slot_clearList();
+
 private slots:
     void on_pb_refresh_clicked();
 
     void on_pb_joinRoom_clicked();
-    void slot_clearList();
 
     void on_pb_min_clicked();
 

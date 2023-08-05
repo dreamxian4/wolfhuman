@@ -18,20 +18,37 @@
 #include"chatdialog.h"
 #include"chatitem.h"
 #include"ziliaodialog.h"
+#include"spaceform.h"
+#include"commentdialog.h"
+#include"commentform.h"
 
 //////////////////////////////////////////////////////
 ///
 ///数据库:
+///时间：timestamp     表结构：desc    当前时间：current_time
 ///
-/// t_user 用户信息：id username password sex icon name level
-///                 用户id 用户名 密码 性别 头像 昵称 等级
+/// t_user 用户信息表：id username password sex icon name level gameNum
+///                 用户id 用户名 密码 性别 头像 昵称 等级 游戏场数
 ///
-/// t_space 动态：id time content user_id
-///                 动态id 发布时间 内容 发布人id
+/// t_space 动态表：id time content userid good tui commentNum
+///                 动态id 发布时间 内容 发布人id 点赞数 点踩数 评论个数
 ///
-/// t_friend 好友：id_a id_b
+/// t_friend 好友表：id_a id_b
 ///                 用户a 用户b
 ///
+/// t_spaceOpt 动态操作表：spaceid userid good tui
+///                    动态id 用户id 赞 踩
+///
+/// t_comment 评论表：spaceid userid content time
+///                 动态id 用户id 评论内容 时间
+///
+/// offLineOpt 离线操作表：userid opt sendid chatMsg addContent addResult goodSpaceid spaceComment
+///                      接收用户id 操作 操作人id 离线信息 验证信息 验证结果 点赞动态id 评论信息
+///
+/// t_historyOpt 历史操作表：同上
+///
+/// t_chatMsg 聊天记录表：sendid recvid time content
+///                     发送人id 接收人id 时间 内容
 //////////////////////////////////////////////////////
 
 class ckernel;
@@ -109,6 +126,10 @@ public slots:
     void slot_sendLrKillSelf();
     void slot_SendChatMsg(int friendID, QString content);
     void slot_sendUserZiLiaoRq(int id);
+    void slot_sendGetSpace(int kind,bool find,int which,QString str,int page);
+    void slot_sendSpaceOpt(int spaceid,int userid,int kind,int opt);
+    void slot_sendGetComment(int spaceid,int icon,QString name,QString time,QString content,int id);
+    void slot_sendSpaceComment(int spaceid,QString content);
 
 
 
@@ -183,6 +204,10 @@ public slots:
     void slot_DealChatRs( unsigned int lSendIP , char* buf , int nlen );
     //好友资料
     void slot_DealFriendZiLiao( unsigned int lSendIP , char* buf , int nlen );
+    //动态信息
+    void slot_DealSpace( unsigned int lSendIP , char* buf , int nlen );
+    //动态评论
+    void slot_DealSpaceComment( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -209,6 +234,7 @@ private:
     roomListDialog* m_roomListDialog;//房间列表窗口
     TcpClientMediator* m_client;//网络
     ZiLiaoDialog* m_ziliao;//好友详细资料
+    commentDialog* m_comment;//评论窗口
 
 
     PFUN m_netMap[_DEF_PROTOCOL_COUNT];//协议映射表

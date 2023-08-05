@@ -264,27 +264,6 @@
     <string>退出房间</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pb_look">
-   <property name="geometry">
-    <rect>
-     <x>190</x>
-     <y>80</y>
-     <width>93</width>
-     <height>20</height>
-    </rect>
-   </property>
-   <property name="font">
-    <font>
-     <pointsize>6</pointsize>
-    </font>
-   </property>
-   <property name="text">
-    <string>您处于观战模式</string>
-   </property>
-   <property name="flat">
-    <bool>false</bool>
-   </property>
-  </widget>
   <widget class="QWidget" name="widget" native="true">
    <property name="geometry">
     <rect>
@@ -486,6 +465,40 @@ color: rgb(255, 255, 255);</string>
     <bool>true</bool>
    </property>
   </widget>
+  <widget class="QLabel" name="label">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>40</y>
+     <width>481</width>
+     <height>71</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <zorder>label</zorder>
+  <zorder>wdg_title</zorder>
+  <zorder>pb_day</zorder>
+  <zorder>lb_num</zorder>
+  <zorder>lb_roomNum</zorder>
+  <zorder>lb_type</zorder>
+  <zorder>lb_roomType</zorder>
+  <zorder>pb_set</zorder>
+  <zorder>wdg_left</zorder>
+  <zorder>wdg_right</zorder>
+  <zorder>pb_quitroom</zorder>
+  <zorder>widget</zorder>
+  <zorder>lb_tip</zorder>
+  <zorder>lb_ready</zorder>
+  <zorder>tb_message</zorder>
+  <zorder>lb_time</zorder>
+  <zorder>pb_operate</zorder>
+  <zorder>pb_order</zorder>
+  <zorder>pb_deorder</zorder>
+  <zorder>pb_operate_up</zorder>
+  <zorder>pb_lrKillself</zorder>
  </widget>
  <customwidgets>
   <customwidget>
