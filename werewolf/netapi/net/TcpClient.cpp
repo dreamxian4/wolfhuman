@@ -57,6 +57,7 @@ bool TcpClient::InitNet(const char *szBufIP, unsigned short port)
 	{
 		UnInitNet();
         qDebug()<<"连接失败";
+        exit(0);
         return false;
     }
     //设置客户端发送缓冲区
