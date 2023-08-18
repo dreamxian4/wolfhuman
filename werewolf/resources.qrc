@@ -73,5 +73,7 @@
         <file>tupian/load.png</file>
         <file>tupian/mainImg.png</file>
         <file>tupian/main.png</file>
+        <file>tupian/audio.png</file>
+        <file>tupian/video.png</file>
     </qresource>
 </RCC>

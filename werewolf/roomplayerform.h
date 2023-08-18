@@ -18,6 +18,7 @@ class roomPlayerform : public QWidget
 
 signals:
     void SIG_click_icon(int id);
+    void SIG_YaoQingFri();
 
 public:
     explicit roomPlayerform(QWidget *parent = nullptr);

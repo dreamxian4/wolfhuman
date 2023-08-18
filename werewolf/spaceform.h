@@ -15,12 +15,13 @@ class spaceForm : public QWidget
 signals:
     void SIG_Getdetail(int);//userid
     void SIG_SpaceOpt(int,int,int,int);//spaceid userid 赞/踩 +1/-1
-    void SIG_GetComment(int,int,QString,QString,QString,int);//spaceid,iaon,name,time,content,spaceid
+    void SIG_GetComment(int,int,QString,QString,QString,int);//spaceid,iaon,name,time,content,masterid
+    void SIG_AddFriend(int);
 
 public:
     explicit spaceForm(QWidget *parent = nullptr);
     ~spaceForm();
-    void setInfo(STRU_SPACE_RS* rs);
+    void setInfo(STRU_SPACE_RS* rs,int fri);
 
 private slots:
     void on_pb_icon_clicked();
@@ -30,6 +31,8 @@ private slots:
     void on_pb_tui_clicked();
 
     void on_pb_comment_clicked();
+
+    void on_pb_addFriend_clicked();
 
 private:
     Ui::spaceForm *ui;
@@ -45,6 +48,7 @@ private:
     QString name;
     QString time;
     QString content;
+    bool m_fri;
 };
 
 #endif // SPACEFORM_H

@@ -71,6 +71,8 @@ signals:
     void SIG_dayExile(int);//白天放逐
     void SIG_Audio(bool,bool,bool);//开始/停止语音;是否给服务器发送包；是否为狼人夜间发言
     void SIG_lrKillSelf();//狼人自爆
+    void SIG_getPlayerZL(int);//获取玩家资料
+    void SIG_YaoQingFri(int);//邀请好友
 
 
 public:
@@ -132,6 +134,8 @@ private slots:
     void slot_addPlayer(QWidget* player,int id);
     void slot_removePlayer(QWidget* player,int id);
     void slot_click_icon(int id);
+    //邀请好友
+    void slot_yaoqingFri();
     void slot_operate_button(int state,int kill);//0:女巫救人 1：女巫毒人 2：发言顺序
     void on_pb_min_clicked();
     void on_pb_close_clicked();

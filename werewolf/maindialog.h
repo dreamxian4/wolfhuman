@@ -25,23 +25,36 @@ signals:
     void SIG_QUIT();
     void SIG_QUITlogin();
     //添加好友的信号
-    void SIG_FindUser(QString,int);//0 用户名 1 昵称
+    void SIG_FindUser(QString,int,int);//0 用户名 1 昵称
     //获取动态
     void SIG_getSpace(int,bool,int,QString,int);//种类（1好友 2推荐 3我的），是否为搜索，按（用户，内容）搜索，昵称/内容，页数
+    void SIG_sendSpace();
+//    void SIG_FindFriend(QString find);
+    void SIG_getSpaceEmail();
+    void SIG_getFriEmail();
 
 public:
     mainDialog(QWidget *parent = nullptr);
     ~mainDialog();
     void slot_setInfo(int userid,int icon,QString name,QString sex,QString username,int level);
-    //添加好友
+
     void slot_setSpace(STRU_SPACE_RS* rs);
     void slot_clearSpace();
-    void slot_addFriend(UserItem* userItem);
-    void slot_addChat(ChatItem* chatItem);
     void slot_addSpace(spaceForm* spaceform);
     void slot_removeSpace(spaceForm* spaceform);
 
+    void slot_addFriend(UserItem* userItem);
+    void slot_removeFriend(UserItem* useritem);
+    void slot_onlineFriend(UserItem* useritem);
+    void slot_offlineFriend(UserItem* useritem);
+
+    void slot_addChat(ChatItem* chatItem);
+    void slot_removeChat(ChatItem* chatitem);
+    void slot_upChat(ChatItem* chatitem);
+
     void slot_getDetail(int userid);
+    void slot_setNoreadSpace(bool noread);
+    void slot_setNoreadFriend(bool noread);
 
 private slots:
     void on_pb_1_createRoom_clicked();
@@ -72,6 +85,16 @@ private slots:
 
     void on_pb_2_lastPage_clicked();
 
+    void on_pb_2_addSpace_clicked();
+
+    void on_pb_2_refresh_clicked();
+
+//    void on_pb_2_findUser_clicked();
+
+    void on_pushButton_clicked();
+
+    void on_pb_3_friendRq_clicked();
+
 private:
     Ui::mainDialog *ui;
     int m_userid;
@@ -83,5 +106,7 @@ private:
     int page;//当前页数
     int pageNum;//总页数
     QList<spaceForm*>spaceLst;
+    int onlineNum;//在线好友人数
+//    int offLineNum;//离线好友人数
 };
 #endif // MAINDIALOG_H

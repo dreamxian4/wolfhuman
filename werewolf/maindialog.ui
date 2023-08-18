@@ -123,9 +123,9 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>110</y>
-     <width>481</width>
-     <height>891</height>
+     <y>120</y>
+     <width>491</width>
+     <height>881</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -200,7 +200,7 @@ font: 20pt &quot;方正舒体&quot;;
 color: rgb(255, 255, 255);</string>
      </property>
      <property name="text">
-      <string>随机匹配</string>
+      <string>随机加入</string>
      </property>
     </widget>
     <widget class="QPushButton" name="pb_1_createRoom">
@@ -345,8 +345,8 @@ color: rgb(255, 255, 255);</string>
       <rect>
        <x>0</x>
        <y>80</y>
-       <width>471</width>
-       <height>741</height>
+       <width>481</width>
+       <height>721</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -360,8 +360,8 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>471</width>
-        <height>741</height>
+        <width>481</width>
+        <height>721</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_3">
@@ -448,9 +448,9 @@ color: rgb(255, 255, 255);</string>
     <widget class="QLineEdit" name="le_2_findstr">
      <property name="geometry">
       <rect>
-       <x>70</x>
+       <x>100</x>
        <y>0</y>
-       <width>311</width>
+       <width>281</width>
        <height>31</height>
       </rect>
      </property>
@@ -467,7 +467,7 @@ color: rgb(255, 255, 255);</string>
     <widget class="QComboBox" name="cmb_2_findSpace">
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>40</x>
        <y>0</y>
        <width>61</width>
        <height>31</height>
@@ -501,7 +501,7 @@ color: rgb(255, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>190</x>
-       <y>830</y>
+       <y>820</y>
        <width>61</width>
        <height>21</height>
       </rect>
@@ -514,7 +514,7 @@ color: rgb(255, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>250</x>
-       <y>830</y>
+       <y>820</y>
        <width>51</width>
        <height>21</height>
       </rect>
@@ -527,7 +527,7 @@ color: rgb(255, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>130</x>
-       <y>830</y>
+       <y>820</y>
        <width>51</width>
        <height>21</height>
       </rect>
@@ -540,13 +540,58 @@ color: rgb(255, 255, 255);</string>
      <property name="geometry">
       <rect>
        <x>380</x>
-       <y>820</y>
+       <y>810</y>
        <width>93</width>
        <height>41</height>
       </rect>
      </property>
      <property name="text">
       <string>发布帖子</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_refresh">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>31</width>
+       <height>31</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>刷</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pushButton">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>810</y>
+       <width>71</width>
+       <height>41</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string>消息</string>
+     </property>
+    </widget>
+    <widget class="QPushButton" name="pb_2_noread">
+     <property name="geometry">
+      <rect>
+       <x>60</x>
+       <y>810</y>
+       <width>16</width>
+       <height>16</height>
+      </rect>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background:transparent;</string>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="flat">
+      <bool>false</bool>
      </property>
     </widget>
    </widget>
@@ -559,8 +604,8 @@ color: rgb(255, 255, 255);</string>
       <rect>
        <x>0</x>
        <y>0</y>
-       <width>471</width>
-       <height>861</height>
+       <width>481</width>
+       <height>851</height>
       </rect>
      </property>
      <property name="frameShape">
@@ -574,8 +619,8 @@ color: rgb(255, 255, 255);</string>
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>471</width>
-        <height>861</height>
+        <width>481</width>
+        <height>851</height>
        </rect>
       </property>
       <layout class="QVBoxLayout" name="verticalLayout_2">
@@ -643,8 +688,8 @@ color: rgb(255, 255, 255);</string>
         <rect>
          <x>0</x>
          <y>50</y>
-         <width>471</width>
-         <height>801</height>
+         <width>481</width>
+         <height>731</height>
         </rect>
        </property>
        <property name="frameShape">
@@ -658,8 +703,8 @@ color: rgb(255, 255, 255);</string>
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>471</width>
-          <height>801</height>
+          <width>481</width>
+          <height>731</height>
          </rect>
         </property>
         <layout class="QVBoxLayout" name="verticalLayout">
@@ -746,16 +791,38 @@ color: rgb(255, 255, 255);</string>
         </property>
        </item>
       </widget>
-     </widget>
-     <widget class="QWidget" name="page_3_group">
-      <attribute name="title">
-       <string>      群组      </string>
-      </attribute>
-     </widget>
-     <widget class="QWidget" name="page_3_space">
-      <attribute name="title">
-       <string>       空间       </string>
-      </attribute>
+      <widget class="QPushButton" name="pb_3_friendRq">
+       <property name="geometry">
+        <rect>
+         <x>370</x>
+         <y>790</y>
+         <width>93</width>
+         <height>31</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>好友申请</string>
+       </property>
+      </widget>
+      <widget class="QPushButton" name="pb_3_noread">
+       <property name="geometry">
+        <rect>
+         <x>450</x>
+         <y>790</y>
+         <width>16</width>
+         <height>16</height>
+        </rect>
+       </property>
+       <property name="styleSheet">
+        <string notr="true">background:transparent;</string>
+       </property>
+       <property name="text">
+        <string/>
+       </property>
+       <property name="flat">
+        <bool>false</bool>
+       </property>
+      </widget>
      </widget>
     </widget>
    </widget>

@@ -12,6 +12,7 @@ roomPlayerform::roomPlayerform(QWidget *parent) :
     ui->setupUi(this);
     setImage("0");
     ui->pb_edge->setEnabled(false);
+    m_userid=0;
 }
 
 roomPlayerform::~roomPlayerform()
@@ -192,6 +193,9 @@ void roomPlayerform::setMe(bool is)
 
 void roomPlayerform::on_pb_icon_clicked()
 {
-    Q_EMIT SIG_click_icon(m_id);
+    if(!m_userid){
+        Q_EMIT SIG_YaoQingFri();
+    }
+    else Q_EMIT SIG_click_icon(m_id);
 }
 

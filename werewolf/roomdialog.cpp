@@ -125,6 +125,8 @@ void roomDialog::slot_setInfo(int roomid, int mode, int method,
         roomPlayerform* player=new roomPlayerform;
         connect(player,SIGNAL(SIG_click_icon(int)),
                 this,SLOT(slot_click_icon(int)));
+        connect(player,SIGNAL(SIG_YaoQingFri()),
+                this,SLOT(slot_yaoqingFri()));
         player->setInfo(i,false);
         player->setIden(-1);
         player->setJing(-1);
@@ -737,6 +739,11 @@ void roomDialog::slot_gameOver()
     ui->tb_message->append("游戏结束");
 }
 
+void roomDialog::slot_yaoqingFri()
+{
+    Q_EMIT SIG_YaoQingFri(m_roomid);
+}
+
 void roomDialog:: slot_playerSpeak(int seat,bool speak)
 {
     if(m_mapIdToPlayer.count(seat)>0)m_mapIdToPlayer[seat]->setSpeak(speak);
@@ -811,11 +818,13 @@ roomDialog::~roomDialog()
 //玩家头像被点击
 void roomDialog::slot_click_icon(int id)
 {
+    int userid;
     //判断当前是什么状态
     switch(m_pb_icon){
     case USERINFO://玩家信息
-        //显示玩家资料TODO
-        QMessageBox::about(this,"资料","xxxxx");
+        //显示玩家资料
+        userid=m_mapIdToPlayer[id]->getUserid();
+        Q_EMIT SIG_getPlayerZL(userid);
         break;
     case SKYBLK_YYJ://预言家夜晚
         //直接发送选择，TODO:等待计时结束，将最后一个选择的发送出去
