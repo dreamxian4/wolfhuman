@@ -34,6 +34,20 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_SPACE_RQ)           = &CLogic::Space;
     NetPackMap(DEF_PACK_SPACE_OPT)          = &CLogic::SpaceOpt;
     NetPackMap(DEF_PACK_SPACE_COMMENT_RQ)   = &CLogic::SpaceComment;
+    NetPackMap(DEF_PACK_SPACE_ADD)          = &CLogic::SpaceAdd;
+    NetPackMap(DEF_PACK_USER_FIND_RQ)       = &CLogic::UserFind;
+    NetPackMap(DEF_PACK_EMAIL_RQ)           = &CLogic::Email;
+    NetPackMap(DEF_PACK_EMAIL_CLEAR)        = &CLogic::EmailClear;
+    NetPackMap(DEF_PACK_FRIEND_ADD_RQ)      = &CLogic::AddFriend;
+    NetPackMap(DEF_PACK_FRIEND_ADD_RS)      = &CLogic::AddFriendRs;
+    NetPackMap(DEF_PACK_FRIEND_DELETE)      = &CLogic::DeleteFriend;
+    NetPackMap(DEF_PACK_CHAT_MSG)           = &CLogic::ChatMsg;
+    NetPackMap(DEF_PACK_YAOQING)            = &CLogic::YaoQing;
+    NetPackMap(DEF_PACK_AUDIO_RQ)           = &CLogic::AudioRq;
+    NetPackMap(DEF_PACK_AUDIO_RS)           = &CLogic::AudioRs;
+    NetPackMap(DEF_PACK_VIDEO_RQ)           = &CLogic::VideoRq;
+    NetPackMap(DEF_PACK_VIDEO_RS)           = &CLogic::VideoRs;
+    NetPackMap(DEF_PACK_AUDIO_WITH_FRAME)   = &CLogic::VideoWithFrame;
 }
 
 
@@ -227,6 +241,56 @@ void CLogic::LoginRq(sock_fd clientfd, char *szbuf, int nlen)
                 //9.如果好友在线，取出好友的套接字，给好友发送登陆人的上线通知
                 SendData(friendIf->m_sockfd, (char*)&loginInfo, sizeof(loginInfo));
             }
+            //离线信息
+            STRU_CHAT_HO horq;
+            char msql[1024];
+            list<string>mlst;
+            sprintf(msql,"select sendid,chatMsg,time from offLineOpt "
+                         "where userid=%d and opt=1",user->m_id);
+            m_sql->SelectMysql(msql,3,mlst);
+            memset(msql,0,1024);
+            if(mlst.empty()){
+                //have not offline msg,send historyMsg.
+                sprintf(msql,"select id,sendid,recvid,time,content "
+                             " from t_chatMsg where (sendid=%d or recvid=%d) and look!=%d"
+                             " order by id desc limit 0,10"
+                        ,user->m_id,user->m_id,user->m_id);
+                m_sql->SelectMysql(msql,5,mlst);
+                memset(msql,0,1024);
+                while(!mlst.empty()){
+                    horq.me=true;
+                    strcpy(horq.content,mlst.back().c_str());
+                    mlst.pop_back();
+                    strcpy(horq.time,mlst.back().c_str());
+                    mlst.pop_back();
+                    if(atoi(mlst.back().c_str())==user->m_id)horq.me=false;
+                    else horq.userid=atoi(mlst.back().c_str());
+                    mlst.pop_back();
+                    if(!horq.me)horq.userid=atoi(mlst.back().c_str());
+                    mlst.pop_back();
+                    mlst.pop_back();
+                    horq.his=true;
+                    SendData(clientfd,(char*)&horq,sizeof(horq));
+                }
+            }else{
+                list<string>llst;
+                while(!mlst.empty()){
+                    //send all offline msg
+                    horq.his=false;
+                    horq.userid=atoi(mlst.front().c_str());
+                    mlst.pop_front();
+                    strcpy(horq.content,mlst.front().c_str());
+                    mlst.pop_front();
+                    strcpy(horq.time,mlst.front().c_str());
+                    mlst.pop_front();
+                    SendData(clientfd,(char*)&horq,sizeof(horq));
+                }
+            }
+
+            sprintf(msql,"delete from offLineOpt "
+                         "where userid=%d and opt=1",user->m_id);
+            m_sql->UpdataMysql(msql);
+            memset(msql,0,1024);
         }else rs.result=password_error;
     }
     //返回结果
@@ -282,7 +346,56 @@ void CLogic::QuitLogin(sock_fd clientfd, char *szbuf, int nlen)
     }
     if(m_mapIdToUserInfo.IsExist(id))m_mapIdToUserInfo.erase(id);
 
-    //TODO:给好友发送离线申请
+    //给好友发送离线信息
+    STRU_TCP_FRIEND_INFO friendInfo;
+    list<string> resultList;
+    char sqlBuf[1024] = "";
+    sprintf(sqlBuf, "select username,sex,icon,name,level from t_user where id=%d;", rq->m_UserID);
+    if (!m_sql->SelectMysql(sqlBuf, 5, resultList)) {
+        cout << "selectMysql error:" << sqlBuf << endl;
+        return;
+    }
+    memset(sqlBuf,0,1024);
+    //3.遍历查询结果
+    if (resultList.size() == 5) {
+        strcpy(friendInfo.username, resultList.front().c_str());
+        resultList.pop_front();
+
+        strcpy(friendInfo.sex, resultList.front().c_str());
+        resultList.pop_front();
+
+        friendInfo.icon = atoi(resultList.front().c_str());
+        resultList.pop_front();
+
+        strcpy(friendInfo.name, resultList.front().c_str());
+        resultList.pop_front();
+
+        friendInfo.level = atoi(resultList.front().c_str());
+        resultList.pop_front();
+    }
+    friendInfo.state=2;
+    friendInfo.userid=rq->m_UserID;
+    //4.根据用户id查找所有的好友id
+    list<string> friendlst;
+    sprintf(sqlBuf, "select id_b from t_friend where id_a = %d;", rq->m_UserID);
+    if (!m_sql->SelectMysql(sqlBuf, 1, friendlst)) {
+        cout << "selectMysql error:" << sqlBuf << endl;
+        return;
+    }
+
+    //5.遍历查找结果
+    int friendId=0;
+    UserInfo* friendIf=nullptr;
+    while (!friendlst.empty()) {
+        //6.取出好友id，根据好友id查找好友信息
+        friendId = atoi(friendlst.front().c_str());
+        friendlst.pop_front();
+        //4.判断用户是否存在
+        if (m_mapIdToUserInfo.find(friendId,friendIf)) {//在线
+            //7.信息发给好友
+            SendData(friendIf->m_sockfd, (char*)&friendInfo, sizeof(friendInfo));
+        }
+    }
 }
 
 void CLogic::CreateRoom(sock_fd clientfd, char *szbuf, int nlen)
@@ -1144,7 +1257,7 @@ void CLogic::SpeakOrder(sock_fd clientfd, char *szbuf, int nlen)
     speakRq.state=3;
     MyMap<int,int>seat;
     if(!m_mapRoomidToSeatidToSockfd.find(room->m_roomid,seat))return;
-//    int next=(order->seat+order->next)%(room->m_beginNum+1)<=0?room->m_beginNum:(order->seat+order->next)%(room->m_beginNum+1);
+    //    int next=(order->seat+order->next)%(room->m_beginNum+1)<=0?room->m_beginNum:(order->seat+order->next)%(room->m_beginNum+1);
     int next=(order->seat+order->next)%(room->m_beginNum+1);
     int a;
     bool key=true;
@@ -1316,6 +1429,8 @@ void CLogic::ChatRq(sock_fd clientfd, char *szbuf, int nlen)
     printf("ChatRq:%d\n",clientfd);
     //1.拆包
     STRU_CHAT_RQ* rq = (STRU_CHAT_RQ*)szbuf;
+    char sql[1024];
+
 
     //2.看接收方是否在线
     UserInfo* user=nullptr;
@@ -1324,13 +1439,18 @@ void CLogic::ChatRq(sock_fd clientfd, char *szbuf, int nlen)
         SendData(user->m_sockfd, szbuf, nlen);
     }
     else {
-        //4.如果对方不在线，回复客户端好友不在线
-        STRU_CHAT_RS rs;
-        rs.result = send_error;
-        rs.userid = rq->userid;
-        rs.friendid = rq->friendid;
-        SendData(clientfd, (char*)&rs, sizeof(rs));
+        //offlineOpt
+        sprintf(sql,"insert into offLineOpt(userid,opt,sendid,chatMsg)"
+                    " values(%d,1,%d,\"\%s\")",
+                rq->friendid,rq->userid,rq->content);
+        m_sql->UpdataMysql(sql);
+        memset(sql,0,1024);
     }
+    //t_chatMsg
+    sprintf(sql,"insert into t_chatMsg(sendid,recvid,time,content) values(%d,%d,current_time,\"\%s\")",
+            rq->userid,rq->friendid,rq->content);
+    m_sql->UpdataMysql(sql);
+    memset(sql,0,1024);
 }
 
 void CLogic::FriendZiLiao(sock_fd clientfd, char *szbuf, int nlen)
@@ -1375,18 +1495,18 @@ void CLogic::FriendZiLiao(sock_fd clientfd, char *szbuf, int nlen)
     rs.gameNum=atoi(lst.front().c_str());
     lst.pop_front();
 
-    //从空间表查询
-    sprintf(sql,"select content,time from t_space where id=%d order by time limit 1"
-            ,rq->friendid);
-    m_sql->SelectMysql(sql,2,lst);
-    if(!lst.empty()){
-        rs.space=true;
-        strcpy(rs.content,lst.front().c_str());
-        lst.pop_front();
-        printf("%s\n",lst.front().c_str());
-        strcpy(rs.time,lst.front().c_str());
-        lst.pop_front();
-    }else rs.space=false;
+    //    //从空间表查询
+    //    sprintf(sql,"select content,time from t_space where id=%d order by time limit 1"
+    //            ,rq->friendid);
+    //    m_sql->SelectMysql(sql,2,lst);
+    //    if(!lst.empty()){
+    //        rs.space=true;
+    //        strcpy(rs.content,lst.front().c_str());
+    //        lst.pop_front();
+    //        printf("%s\n",lst.front().c_str());
+    //        strcpy(rs.time,lst.front().c_str());
+    //        lst.pop_front();
+    //    }else rs.space=false;
 
     //根据在线信息查询用户状态
     UserInfo* user=nullptr;
@@ -1411,6 +1531,60 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
     list<string>optLst;
     char sql[1024];
 
+    if(rq->user){
+        rs.user=true;
+        //查找用户表的相关信息
+        sprintf(sql,"select id,icon,name from t_user where id=%d",rq->beiid);
+        m_sql->SelectMysql(sql,3,userLst);
+        memset(sql,0,1024);
+        userLst.pop_front();
+        rs.icon=atoi(userLst.front().c_str());
+        userLst.pop_front();
+        strcpy(rs.name,userLst.front().c_str());
+        userLst.pop_front();
+        //查找动态表的相关信息
+        sprintf(sql,"select id,time,content,userid,good,tui,commentNum "
+                    "from t_space "
+                    "where userid=%d "
+                ,rq->beiid);
+        m_sql->SelectMysql(sql,7,lst);
+        memset(sql,0,1024);
+        while(!lst.empty()){
+            rs.spaceid=atoi(lst.front().c_str());
+            lst.pop_front();
+            strcpy(rs.time,lst.front().c_str());
+            lst.pop_front();
+            strcpy(rs.content,lst.front().c_str());
+            lst.pop_front();
+            rs.userid=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.good=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.tui=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.comment=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            rs.isgood=0;
+            rs.istui=0;
+            //查询点赞等信息
+            if(rs.good||rs.tui){
+                sprintf(sql,"select good,tui from t_spaceOpt "
+                            "where spaceid=%d and userid=%d",rs.spaceid,rq->id);
+                m_sql->SelectMysql(sql,2,optLst);
+                memset(sql,0,1024);
+                while(!optLst.empty()){
+                    rs.isgood=atoi(optLst.front().c_str());
+                    optLst.pop_front();
+                    rs.istui=atoi(optLst.front().c_str());
+                    optLst.pop_front();
+                }
+            }
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+        return;
+    }
+
     if(rq->find){
         //搜索
         switch(rq->which){
@@ -1430,7 +1604,7 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
             sprintf(sql,"select t_space.id,time,content,userid,good,tui,commentNum "
                         "from t_space inner join t_user "
                         "where t_space.userid=t_user.id and t_user.name like\"\%%%s\%\" "
-                        "limit %d,10"
+                        "order by id desc limit %d,10"
                     ,rq->str,(rq->page-1)*11);
             m_sql->SelectMysql(sql,7,lst);
             memset(sql,0,1024);
@@ -1461,6 +1635,9 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
                 strcpy(rs.name,userLst.front().c_str());
                 userLst.pop_front();
 
+
+                rs.isgood=0;
+                rs.istui=0;
                 //查询点赞等信息
                 if(rs.good||rs.tui){
                     sprintf(sql,"select good,tui from t_spaceOpt "
@@ -1494,7 +1671,7 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
             sprintf(sql,"select t_space.id,time,content,userid,good,tui,commentNum "
                         "from t_space "
                         "where content like\"\%%%s\%\" "
-                        "limit %d,10"
+                        "order by id desc limit %d,10"
                     ,rq->str,(rq->page-1)*11);
             m_sql->SelectMysql(sql,7,lst);
             memset(sql,0,1024);
@@ -1525,6 +1702,9 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
                 strcpy(rs.name,userLst.front().c_str());
                 userLst.pop_front();
 
+
+                rs.isgood=0;
+                rs.istui=0;
                 //查询点赞等信息
                 if(rs.good||rs.tui){
                     sprintf(sql,"select good,tui from t_spaceOpt "
@@ -1557,7 +1737,8 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
             //查找动态表的相关信息
             sprintf(sql,"select id,time,content,userid,good,tui,commentNum "
                         "from t_friend inner join t_space "
-                        "where t_friend.id_a=%d and t_friend.id_b=t_space.userid limit %d,10"
+                        "where t_friend.id_a=%d and t_friend.id_b=t_space.userid "
+                        "order by id desc limit %d,10"
                     ,rq->id,(rq->page-1)*11);
             m_sql->SelectMysql(sql,7,lst);
             memset(sql,0,1024);
@@ -1588,6 +1769,8 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
                 strcpy(rs.name,userLst.front().c_str());
                 userLst.pop_front();
 
+                rs.isgood=0;
+                rs.istui=0;
                 //查询点赞等信息
                 if(rs.good||rs.tui){
                     sprintf(sql,"select good,tui from t_spaceOpt "
@@ -1613,7 +1796,8 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
             rs.spaceNum=atoi(lst.front().c_str());
             lst.pop_front();
             //查找动态表的相关信息
-            sprintf(sql,"select id,time,content,userid,good,tui,commentNum from t_space limit %d,10"
+            sprintf(sql,"select id,time,content,userid,good,tui,commentNum from t_space "
+                        "order by id desc limit %d,10"
                     ,(rq->page-1)*11);
             m_sql->SelectMysql(sql,7,lst);
             memset(sql,0,1024);
@@ -1673,7 +1857,7 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
 
             //查找动态表的相关信息
             sprintf(sql,"select id,time,content,userid,good,tui,commentNum "
-                        "from t_space where userid=%d limit %d,10"
+                        "from t_space where userid=%d order by id desc limit %d,10"
                     ,rq->id,(rq->page-1)*11);
             m_sql->SelectMysql(sql,7,lst);
             memset(sql,0,1024);
@@ -1704,6 +1888,8 @@ void CLogic::Space(sock_fd clientfd, char *szbuf, int nlen)
                 strcpy(rs.name,userLst.front().c_str());
                 userLst.pop_front();
 
+                rs.isgood=0;
+                rs.istui=0;
                 //查询点赞等信息
                 if(rs.good||rs.tui){
                     sprintf(sql,"select good,tui from t_spaceOpt "
@@ -1731,6 +1917,7 @@ void CLogic::SpaceOpt(sock_fd clientfd, char *szbuf, int nlen)
 
     char sql[1024];
     list<string>lst;
+    list<string>userlst;
     sprintf(sql,"start transaction;");
     m_sql->UpdataMysql(sql);
     memset(sql,0,1024);
@@ -1740,7 +1927,6 @@ void CLogic::SpaceOpt(sock_fd clientfd, char *szbuf, int nlen)
     case 1://点赞
 
         if(opt->opt)num=1;
-
         //t_spaceOpt
         //判断数据库里有没有该sid和uid的组合
         sprintf(sql,"select spaceid from t_spaceOpt where spaceid=%d and userid=%d;",
@@ -1771,11 +1957,44 @@ void CLogic::SpaceOpt(sock_fd clientfd, char *szbuf, int nlen)
 
 
         //t_historyOpt
-        if(num){//点赞数增加，需要发送信息给动态主人，并保存到历史信息里
-            sprintf(sql,"insert into t_historyOpt(userid,opt,sendid,goodSpaceid) "
-                        "values(%d,4,%d,%d);",opt->masterid,opt->userid,opt->spaceid);
-            if(!m_sql->UpdataMysql(sql))return;
-            memset(sql,0,1024);
+        if(num==1){//点赞数增加，需要发送信息给动态主人，并保存到历史信息里
+            if(opt->userid!=opt->masterid)//not herself
+            {
+                UserInfo* user=nullptr;
+                //online->send pack
+                if(m_mapIdToUserInfo.find(opt->masterid,user)){
+                    sprintf(sql,"insert into t_historyOpt(userid,opt,sendid,goodSpaceid) "
+                                "values(%d,4,%d,%d);",opt->masterid,opt->userid,opt->spaceid);
+                    if(!m_sql->UpdataMysql(sql))return;
+                    memset(sql,0,1024);
+
+                    STRU_EMAIL_RS rs;
+                    sprintf(sql,"select icon,name "
+                                "from t_user "
+                                "where id=%d",opt->userid);
+                    m_sql->SelectMysql(sql,2,userlst);
+                    memset(sql,0,1024);
+                    rs.icon=atoi(userlst.front().c_str());
+                    userlst.pop_front();
+                    strcpy(rs.name,userlst.front().c_str());
+                    userlst.pop_front();
+                    rs.userid=opt->userid;
+                    rs.NEW=true;
+                    rs.which=4;
+                    sprintf(sql,"select content from t_space where id=%d",opt->spaceid);
+                    m_sql->SelectMysql(sql,1,userlst);
+                    memset(sql,0,1024);
+                    strcpy(rs.spaceCnt,userlst.front().c_str());
+                    userlst.pop_front();
+                    SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+                }else{
+                    //offline->insert into offLineOpt table
+                    sprintf(sql,"insert into offLineOpt(userid,opt,sendid,goodSpaceid) "
+                                "values(%d,4,%d,%d);",opt->masterid,opt->userid,opt->spaceid);
+                    if(!m_sql->UpdataMysql(sql))return;
+                    memset(sql,0,1024);
+                }
+            }
         }
         break;
     case 2://点踩
@@ -1824,6 +2043,44 @@ void CLogic::SpaceOpt(sock_fd clientfd, char *szbuf, int nlen)
         if(!m_sql->UpdataMysql(sql))return;
         memset(sql,0,1024);
 
+        //t_historyOpt
+        UserInfo* user=nullptr;
+        if(opt->userid!=opt->masterid){
+            if(m_mapIdToUserInfo.find(opt->masterid,user)){
+                sprintf(sql,"insert into t_historyOpt(userid,opt,sendid,goodSpaceid,spaceComment) "
+                            "values(%d,5,%d,%d,\"\%s\");"
+                        ,opt->masterid,opt->userid,opt->spaceid,opt->comment);
+                if(!m_sql->UpdataMysql(sql))return;
+                memset(sql,0,1024);
+                STRU_EMAIL_RS rs;
+                sprintf(sql,"select icon,name "
+                            "from t_user "
+                            "where id=%d",opt->userid);
+                m_sql->SelectMysql(sql,2,userlst);
+                memset(sql,0,1024);
+                rs.icon=atoi(userlst.front().c_str());
+                userlst.pop_front();
+                strcpy(rs.name,userlst.front().c_str());
+                userlst.pop_front();
+                rs.userid=opt->userid;
+                rs.NEW=true;
+                rs.which=5;
+                sprintf(sql,"select content from t_space where id=%d",opt->spaceid);
+                m_sql->SelectMysql(sql,1,userlst);
+                memset(sql,0,1024);
+                strcpy(rs.spaceCnt,userlst.front().c_str());
+                strcpy(rs.msg,opt->comment);
+                userlst.pop_front();
+                SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+            }else{
+                sprintf(sql,"insert into offLineOpt(userid,opt,sendid,goodSpaceid,spaceComment) "
+                            "values(%d,5,%d,%d,\"\%s\");"
+                        ,opt->masterid,opt->userid,opt->spaceid,opt->comment);
+                if(!m_sql->UpdataMysql(sql))return;
+                memset(sql,0,1024);
+            }
+        }
+
         break;
     }
     sprintf(sql,"commit;");
@@ -1852,4 +2109,549 @@ void CLogic::SpaceComment(sock_fd clientfd, char *szbuf, int nlen)
         lst.pop_front();
         SendData(clientfd,(char*)&rs,sizeof(rs));
     }
+}
+
+void CLogic::SpaceAdd(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("SpaceAdd:%d\n",clientfd);
+    STRU_SPACE_ADD* add=(STRU_SPACE_ADD*)szbuf;
+    char sql[1024];
+    list<string>lst;
+    sprintf(sql,"insert into t_space(userid,content) values(%d,\"%s\");"
+            ,add->userid,add->content);
+    m_sql->UpdataMysql(sql);
+    memset(sql,0,1024);
+}
+
+void CLogic::UserFind(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("UserFind:%d\n",clientfd);
+    STRU_USER_FIND_RQ* rq=(STRU_USER_FIND_RQ*)szbuf;
+
+    char sql[1024];
+    list<string>lst;
+
+    switch(rq->which){
+    case 0://用户名
+        sprintf(sql,"select id,username,name,level,sex,icon "
+                    "from t_user "
+                    "where username like \"\%%%s\%\""
+                ,rq->str);
+        break;
+    case 1://昵称
+        sprintf(sql,"select id,username,name,level,sex,icon "
+                    "from t_user "
+                    "where name like \"\%%%s\%\""
+                ,rq->str);
+        break;
+    }
+
+    STRU_USER_FIND_RS rs;
+    m_sql->SelectMysql(sql,6,lst);
+    while(!lst.empty()){
+        rs.userid=atoi(lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.username,lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.name,lst.front().c_str());
+        lst.pop_front();
+        rs.level=atoi(lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.sex,lst.front().c_str());
+        lst.pop_front();
+        rs.icon=atoi(lst.front().c_str());
+        lst.pop_front();
+        if(rs.userid==rq->id)continue;
+        SendData(clientfd,(char*)&rs,sizeof(rs));
+    }
+}
+
+void CLogic::Email(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("Email:%d\n",clientfd);
+    STRU_EMAIL_RQ* rq=(STRU_EMAIL_RQ*)szbuf;
+
+    char sql[1024];
+    list<string>lst;
+    list<string>userLst;
+    list<string>spaceLst;
+    STRU_EMAIL_RS rs;
+    if(rq->space){
+        sprintf(sql,"select opt,sendid,goodSpaceid "
+                    "from t_historyOpt "
+                    "where userid=%d and opt =4",rq->id);
+        m_sql->SelectMysql(sql,3,lst);
+        memset(sql,0,1024);
+        while(!lst.empty()){
+            rs.which=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.userid=atoi(lst.front().c_str());
+            lst.pop_front();
+            int spaceid=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            sprintf(sql,"select icon,name "
+                        "from t_user "
+                        "where id=%d",rs.userid);
+            m_sql->SelectMysql(sql,2,userLst);
+            memset(sql,0,1024);
+            rs.icon=atoi(userLst.front().c_str());
+            userLst.pop_front();
+            strcpy(rs.name,userLst.front().c_str());
+            userLst.pop_front();
+
+            sprintf(sql,"select content "
+                        "from t_space "
+                        "where id=%d",spaceid);
+            m_sql->SelectMysql(sql,1,spaceLst);
+            memset(sql,0,1024);
+            strcpy(rs.spaceCnt,spaceLst.front().c_str());
+            spaceLst.pop_front();
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+
+        sprintf(sql,"select opt,sendid,goodSpaceid,spaceComment "
+                    "from t_historyOpt "
+                    "where userid=%d and opt =5",rq->id);
+        m_sql->SelectMysql(sql,4,lst);
+        memset(sql,0,1024);
+        while(!lst.empty()){
+            rs.which=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.userid=atoi(lst.front().c_str());
+            lst.pop_front();
+            int spaceid=atoi(lst.front().c_str());
+            lst.pop_front();
+            strcpy(rs.msg,lst.front().c_str());
+            lst.pop_front();
+
+            sprintf(sql,"select icon,name "
+                        "from t_user "
+                        "where id=%d",rs.userid);
+            m_sql->SelectMysql(sql,2,userLst);
+            memset(sql,0,1024);
+            rs.icon=atoi(userLst.front().c_str());
+            userLst.pop_front();
+            strcpy(rs.name,userLst.front().c_str());
+            userLst.pop_front();
+
+            sprintf(sql,"select content "
+                        "from t_space "
+                        "where id=%d",spaceid);
+            m_sql->SelectMysql(sql,1,spaceLst);
+            memset(sql,0,1024);
+            strcpy(rs.spaceCnt,spaceLst.front().c_str());
+            spaceLst.pop_front();
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+    }else{
+        sprintf(sql,"select opt,sendid,addContent "
+                    "from t_historyOpt "
+                    "where userid=%d and opt =2",rq->id);
+        m_sql->SelectMysql(sql,3,lst);
+        memset(sql,0,1024);
+        while(!lst.empty()){
+            rs.which=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.userid=atoi(lst.front().c_str());
+            lst.pop_front();
+            strcpy(rs.msg,lst.front().c_str());
+            lst.pop_front();
+
+            sprintf(sql,"select icon,name "
+                        "from t_user "
+                        "where id=%d",rs.userid);
+            m_sql->SelectMysql(sql,2,userLst);
+            memset(sql,0,1024);
+            rs.icon=atoi(userLst.front().c_str());
+            userLst.pop_front();
+            strcpy(rs.name,userLst.front().c_str());
+            userLst.pop_front();
+
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+
+        sprintf(sql,"select opt,sendid,addResult "
+                    "from t_historyOpt "
+                    "where userid=%d and opt =3",rq->id);
+        m_sql->SelectMysql(sql,3,lst);
+        memset(sql,0,1024);
+        while(!lst.empty()){
+            rs.which=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.userid=atoi(lst.front().c_str());
+            lst.pop_front();
+            rs.result=atoi(lst.front().c_str());
+            lst.pop_front();
+
+            sprintf(sql,"select icon,name "
+                        "from t_user "
+                        "where id=%d",rs.userid);
+            m_sql->SelectMysql(sql,2,userLst);
+            memset(sql,0,1024);
+            rs.icon=atoi(userLst.front().c_str());
+            userLst.pop_front();
+            strcpy(rs.name,userLst.front().c_str());
+            userLst.pop_front();
+
+            SendData(clientfd,(char*)&rs,sizeof(rs));
+        }
+    }
+}
+
+void CLogic::EmailClear(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("EmailClear:%d\n",clientfd);
+    STRU_EMAIL_CLEAR* clear=(STRU_EMAIL_CLEAR*)szbuf;
+    char sql[1024];
+    if(clear->space){
+        sprintf(sql,"delete from t_historyOpt "
+                    "where userid=%d and opt in (4,5)"
+                ,clear->userid);
+    }else{
+        sprintf(sql,"delete from t_historyOpt "
+                    "where userid=%d and opt in (2,3)"
+                ,clear->userid);
+    }
+    m_sql->UpdataMysql(sql);
+}
+
+void CLogic::AddFriend(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("AddFriend:%d\n",clientfd);
+    STRU_FRIEND_ADD_RQ* rq=(STRU_FRIEND_ADD_RQ*)szbuf;
+
+    char sql[1024];
+    list<string>lst;
+    UserInfo* user=nullptr;
+
+    if(m_mapIdToUserInfo.find(rq->beiid,user)){
+        //发送邮件
+        STRU_EMAIL_RS rs;
+        rs.NEW=true;
+        rs.which=2;
+        rs.userid=rq->id;
+        strcpy(rs.msg,rq->content);
+        sprintf(sql,"select icon,name "
+                    "from t_user "
+                    "where id=%d",rs.userid);
+        m_sql->SelectMysql(sql,2,lst);
+        memset(sql,0,1024);
+        rs.icon=atoi(lst.front().c_str());
+        lst.pop_front();
+        strcpy(rs.name,lst.front().c_str());
+        lst.pop_front();
+        SendData(user->m_sockfd,(char*)&rs,sizeof(rs));
+
+        sprintf(sql,"insert into t_historyOpt(userid,sendid,opt,addContent) "
+                    "values(%d,%d,2,\"\%s\")",rq->beiid,rq->id,rq->content);
+        m_sql->UpdataMysql(sql);
+        memset(sql,0,1024);
+    }else{
+        //将信息放到离线信息里，等用户上线了再发送过去
+        sprintf(sql,"insert into offLineOpt(userid,opt,sendid,addContent) "
+                    "values(%d,2,%d,\"\%s\");"
+                ,rq->beiid,rq->id,rq->content);
+        m_sql->UpdataMysql(sql);
+    }
+}
+
+void CLogic::AddFriendRs(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("AddFriend:%d\n",clientfd);
+    STRU_FRIEND_ADD_RS* rs=(STRU_FRIEND_ADD_RS*)szbuf;
+    char sql[1024];
+    list<string>lst;
+
+
+    //判断两人是否已经互为好友
+    sprintf(sql,"select id_a from t_friend where id_a=%d and id_b=%d;",rs->id,rs->beiid);
+    m_sql->SelectMysql(sql,1,lst);
+    memset(sql,0,1024);
+
+    if(lst.empty()){
+
+        if(rs->result){
+            //t_friend
+            sprintf(sql,"start transaction;");
+            m_sql->UpdataMysql(sql);
+            memset(sql,0,1024);
+            sprintf(sql,"insert into t_friend "
+                        "values(%d,%d)",rs->id,rs->beiid);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+            sprintf(sql,"insert into t_friend "
+                        "values(%d,%d)",rs->beiid,rs->id);
+            if(!m_sql->UpdataMysql(sql))return;
+            memset(sql,0,1024);
+            sprintf(sql,"commit;");
+            m_sql->UpdataMysql(sql);
+            memset(sql,0,1024);
+        }
+
+        //offLineOpt or send
+        UserInfo* user=nullptr;
+        UserInfo* beiuser=nullptr;
+        STRU_TCP_FRIEND_INFO info;
+        STRU_TCP_FRIEND_INFO beiinfo;
+        UserInfo* uuu=nullptr;
+
+        if(rs->result){
+            if(m_mapIdToUserInfo.find(rs->id,user)){
+                //给用户发送好友信息
+                sprintf(sql, "select username,sex,icon,name,level from t_user where id=%d;", rs->beiid);
+                if (!m_sql->SelectMysql(sql, 5, lst)) {
+                    cout << "selectMysql error:" << sql << endl;
+                    return;
+                }
+                memset(sql,0,1024);
+
+                //3.遍历查询结果
+                if (lst.size() == 5) {
+                    strcpy(beiinfo.username, lst.front().c_str());
+                    lst.pop_front();
+
+                    strcpy(beiinfo.sex, lst.front().c_str());
+                    lst.pop_front();
+
+                    beiinfo.icon = atoi(lst.front().c_str());
+                    lst.pop_front();
+
+                    strcpy(beiinfo.name, lst.front().c_str());
+                    lst.pop_front();
+
+                    beiinfo.level = atoi(lst.front().c_str());
+                    lst.pop_front();
+                }
+                //4.判断用户是否存在
+                if (m_mapIdToUserInfo.find(rs->beiid,uuu)) {
+                    beiinfo.state = 1;		//在线
+                }
+                else {
+                    beiinfo.state = 2;		//不在线
+                }
+
+                beiinfo.userid=rs->beiid;
+
+                //7.把好友信息发给客户端
+                SendData(user->m_sockfd, (char*)&beiinfo, sizeof(beiinfo));
+            }
+        }
+
+        if(m_mapIdToUserInfo.find(rs->beiid,beiuser)){// send friendinfo
+            if(rs->result){
+                //给用户发送好友信息
+                sprintf(sql, "select username,sex,icon,name,level from t_user where id=%d;", rs->id);
+                if (!m_sql->SelectMysql(sql, 5, lst)) {
+                    cout << "selectMysql error:" << sql << endl;
+                    return;
+                }
+                memset(sql,0,1024);
+
+                //3.遍历查询结果
+                if (lst.size() == 5) {
+                    strcpy(info.username, lst.front().c_str());
+                    lst.pop_front();
+
+                    strcpy(info.sex, lst.front().c_str());
+                    lst.pop_front();
+
+                    info.icon = atoi(lst.front().c_str());
+                    lst.pop_front();
+
+                    strcpy(info.name, lst.front().c_str());
+                    lst.pop_front();
+
+                    info.level = atoi(lst.front().c_str());
+                    lst.pop_front();
+                }
+                //4.判断用户是否存在
+                if (m_mapIdToUserInfo.find(rs->id,uuu)) {
+                    info.state = 1;		//在线
+                }
+                else {
+                    info.state = 2;		//不在线
+                }
+
+                info.userid=rs->id;
+
+                //7.把好友信息发给客户端
+                SendData(beiuser->m_sockfd, (char*)&info, sizeof(info));
+            }
+            //stru email
+            STRU_EMAIL_RS ers;
+            ers.userid=rs->id;
+            ers.NEW=true;
+            ers.icon=info.icon;
+            strcpy(ers.name,info.name);
+            ers.which=3;
+            ers.result=rs->result;
+            SendData(beiuser->m_sockfd,(char*)&ers,sizeof(ers));
+
+            //t_historyOpt
+            sprintf(sql,"insert into t_historyOpt(userid,sendid,opt,addResult) "
+                        "values(%d,%d,3,%d)",rs->beiid,rs->id,rs->result);
+            m_sql->UpdataMysql(sql);
+            memset(sql,0,1024);
+
+        }else{//put offLineOpt
+            sprintf(sql,"insert into offLineOpt(userid,opt,sendid,addResult) "
+                        "values(%d,3,%d,%d);"
+                    ,rs->beiid,rs->id,rs->result);
+            m_sql->UpdataMysql(sql);
+        }
+    }
+}
+
+void CLogic::DeleteFriend(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("DeleteFriend:%d\n",clientfd);
+    STRU_FRIEND_DELETE* del=(STRU_FRIEND_DELETE*)szbuf;
+    UserInfo* user=nullptr;
+    if(m_mapIdToUserInfo.find(del->beiid,user)){
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+
+    char sql[1024];
+    //delete t_friend
+    sprintf(sql,"start transaction;");
+    if(!m_sql->UpdataMysql(sql))return;
+    memset(sql,0,1024);
+
+    sprintf(sql,"delete from t_friend where id_a=%d and id_b=%d;",del->beiid,del->userid);
+    if(!m_sql->UpdataMysql(sql))return;
+    memset(sql,0,1024);
+
+    sprintf(sql,"delete from t_friend where id_a=%d and id_b=%d;",del->userid,del->beiid);
+    if(!m_sql->UpdataMysql(sql))return;
+    memset(sql,0,1024);
+
+    //delete t_chatMsg
+    sprintf(sql,"delete from t_chatMsg where sendid=%d and recvid=%d;",del->beiid,del->userid);
+    if(!m_sql->UpdataMysql(sql))return;
+    memset(sql,0,1024);
+
+    sprintf(sql,"delete from t_chatMsg where sendid=%d and recvid=%d;",del->userid,del->beiid);
+    if(!m_sql->UpdataMysql(sql))return;
+    memset(sql,0,1024);
+
+    sprintf(sql,"commit;");
+    m_sql->UpdataMysql(sql);
+    memset(sql,0,1024);
+}
+
+void CLogic::ChatMsg(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("ChatMsg:%d\n",clientfd);
+    STRU_CHAT_MSG* msg=(STRU_CHAT_MSG*)szbuf;
+    char msql[1024];
+    list<string>mlst;
+    if(msg->del){
+        sprintf(msql,"delete from t_chatMsg "
+                     "where ((sendid=%d and recvid=%d) or (recvid=%d and sendid=%d)) and look not in(%d,0)",
+                msg->userid,msg->beiid,msg->userid,msg->beiid,msg->userid);
+        m_sql->UpdataMysql(msql);
+        memset(msql,0,1024);
+        sprintf(msql,"update t_chatMsg set look=%d "
+                     "where (sendid=%d and recvid=%d) or (recvid=%d and sendid=%d) and look=0",
+                msg->userid,msg->userid,msg->beiid,msg->userid,msg->beiid);
+        m_sql->UpdataMysql(msql);
+        memset(msql,0,1024);
+    }else{
+        sprintf(msql,"select sendid,recvid,time,content "
+                     " from t_chatMsg where ((sendid=%d and recvid=%d) or (recvid=%d and sendid=%d)) "
+                     "and look!=%d "
+                     "order by id desc"
+                ,msg->userid,msg->beiid,msg->userid,msg->beiid,msg->userid);
+        m_sql->SelectMysql(msql,4,mlst);
+        memset(msql,0,1024);
+        STRU_CHAT_HO horq;
+        horq.msg=true;
+        while(!mlst.empty()){
+            horq.me=true;
+            strcpy(horq.content,mlst.back().c_str());
+            mlst.pop_back();
+            strcpy(horq.time,mlst.back().c_str());
+            mlst.pop_back();
+            if(atoi(mlst.back().c_str())==msg->userid)horq.me=false;
+            else horq.userid=atoi(mlst.back().c_str());
+            mlst.pop_back();
+            if(!horq.me)horq.userid=atoi(mlst.back().c_str());
+            mlst.pop_back();
+            SendData(clientfd,(char*)&horq,sizeof(horq));
+        }
+    }
+}
+
+void CLogic::YaoQing(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("YaoQing:%d\n",clientfd);
+    STRU_YAOQING* yq=(STRU_YAOQING*)szbuf;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(yq->beiid,user))return;
+    SendData(user->m_sockfd,szbuf,nlen);
+}
+
+void CLogic::AudioRq(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("AudioRq:%d\n",clientfd);
+    STRU_AUDIO_RQ* rq=(STRU_AUDIO_RQ*)szbuf;
+    STRU_AUDIO_RS rs;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->beiid,user)){
+        rs.result=false;
+        SendData(clientfd,(char*)&rs,sizeof(rs));
+    }else{
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::AudioRs(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("AudioRs:%d\n",clientfd);
+    STRU_AUDIO_RS* rs=(STRU_AUDIO_RS*)szbuf;
+    UserInfo* user=nullptr;
+    if(m_mapIdToUserInfo.find(rs->beiid,user)){
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::VideoRq(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("VideoRq:%d\n",clientfd);
+    STRU_VIDEO_RQ* rq=(STRU_VIDEO_RQ*)szbuf;
+    STRU_VIDEO_RS rs;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(rq->beiid,user)){
+        rs.result=false;
+        SendData(clientfd,(char*)&rs,sizeof(rs));
+    }else{
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::VideoRs(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("VideoRs:%d\n",clientfd);
+    STRU_VIDEO_RS* rs=(STRU_VIDEO_RS*)szbuf;
+    UserInfo* user=nullptr;
+    if(m_mapIdToUserInfo.find(rs->beiid,user)){
+        SendData(user->m_sockfd,szbuf,nlen);
+    }
+}
+
+void CLogic::VideoWithFrame(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("VideoWithFrame:%d\n",clientfd);
+    //拆包
+    char* tmp=szbuf;
+    //反序列化
+    tmp+=sizeof(int);
+    int id=*(int*)tmp;//按照四个字节读
+    tmp+=sizeof(int);
+    int beiid=*(int*)tmp;
+    //roomid->列表
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(beiid,user))return;
+    SendData(user->m_sockfd,szbuf,nlen);
 }

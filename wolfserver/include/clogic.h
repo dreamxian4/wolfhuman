@@ -51,6 +51,20 @@ public:
     void Space( sock_fd clientfd, char*szbuf, int nlen );
     void SpaceOpt( sock_fd clientfd, char*szbuf, int nlen );
     void SpaceComment( sock_fd clientfd, char*szbuf, int nlen );
+    void SpaceAdd( sock_fd clientfd, char*szbuf, int nlen );
+    void UserFind( sock_fd clientfd, char*szbuf, int nlen );
+    void Email( sock_fd clientfd, char*szbuf, int nlen );
+    void EmailClear( sock_fd clientfd, char*szbuf, int nlen );
+    void AddFriend( sock_fd clientfd, char*szbuf, int nlen );
+    void AddFriendRs( sock_fd clientfd, char*szbuf, int nlen );
+    void DeleteFriend( sock_fd clientfd, char*szbuf, int nlen );
+    void ChatMsg( sock_fd clientfd, char*szbuf, int nlen );
+    void YaoQing( sock_fd clientfd, char*szbuf, int nlen );
+    void AudioRq( sock_fd clientfd, char*szbuf, int nlen );
+    void AudioRs( sock_fd clientfd, char*szbuf, int nlen );
+    void VideoRq( sock_fd clientfd, char*szbuf, int nlen );
+    void VideoRs( sock_fd clientfd, char*szbuf, int nlen );
+    void VideoWithFrame( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
