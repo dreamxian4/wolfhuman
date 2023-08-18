@@ -3,7 +3,7 @@
 #include<QIcon>
 
 commentDialog::commentDialog(QWidget *parent) :
-    QDialog(parent),
+    QDialog(parent),masterid(0),
     ui(new Ui::commentDialog)
 {
     ui->setupUi(this);
@@ -18,9 +18,10 @@ commentDialog::~commentDialog()
     delete ui;
 }
 
-void commentDialog::slot_setInfo(int icon, QString name, QString time, QString content,int id)
+void commentDialog::slot_setInfo(int icon, QString name, QString time, QString content,int id,int mid)
 {
     spaceid=id;
+    masterid=mid;
     ui->pb_icon->setIcon(QIcon(QString(":/tx/%1.png").arg(icon)));
     ui->pb_icon->setIconSize(QSize(60,60));
     ui->lb_name->setText(name);
@@ -55,7 +56,7 @@ void commentDialog::slot_clearwidget()
 void commentDialog::on_pb_sendComment_clicked()
 {
     if(ui->le_input->text().size()==0)return;
-    Q_EMIT SIG_sendComment(spaceid,ui->le_input->text());
+    Q_EMIT SIG_sendComment(spaceid,ui->le_input->text(),masterid);
     ui->le_input->setText("");
 }
 

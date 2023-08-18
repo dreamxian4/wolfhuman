@@ -42,7 +42,7 @@ bool TcpClient::InitNet(const char *szBufIP, unsigned short port)
 
     m_isConnected = false;
 	//2.雇人-- 创建套接字 进程与外界网络通信需要的接口 决定了与外界通讯的方式(tcp udp)
-	m_sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ); // ipv4 udp
+    m_sock = socket( AF_INET , SOCK_STREAM , IPPROTO_TCP ); // ipv4 tcp
 	if ( m_sock == INVALID_SOCKET) {
 		WSACleanup();
         return false;

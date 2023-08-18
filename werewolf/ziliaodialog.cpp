@@ -10,6 +10,7 @@ ZiLiaoDialog::ZiLiaoDialog(QWidget *parent) :
     ui(new Ui::ZiLiaoDialog),friendId(0),roomid(0)
 {
     ui->setupUi(this);
+    isfri=false;
 }
 
 ZiLiaoDialog::~ZiLiaoDialog()
@@ -17,7 +18,7 @@ ZiLiaoDialog::~ZiLiaoDialog()
     delete ui;
 }
 
-void ZiLiaoDialog::slot_setInfo(STRU_FRIEND_ZILIAO_RS &rs)
+void ZiLiaoDialog::slot_setInfo(STRU_FRIEND_ZILIAO_RS &rs,bool fri,bool game)
 {
     friendId=rs.friendid;
 
@@ -59,6 +60,22 @@ void ZiLiaoDialog::slot_setInfo(STRU_FRIEND_ZILIAO_RS &rs)
     ui->tb_level->setText(QString("level.%1").arg(rs.level));
     //游戏场数
     ui->tb_gameNum->setText(QString("%1场").arg(rs.gameNum));
+
+    if(!fri){
+        isfri=false;
+        ui->pb_sendMess->setText("添加好友");
+        ui->pb_delete->setText("");
+        ui->pb_delete->setEnabled(false);
+        ui->pb_delete->setStyleSheet("background:transparent;");
+    }else{
+        isfri=true;
+        ui->pb_sendMess->setText("发消息");
+        if(game)ui->pb_sendMess->setEnabled(false);
+        else ui->pb_sendMess->setEnabled(true);
+        ui->pb_delete->setText("删除好友");
+        ui->pb_delete->setEnabled(true);
+        ui->pb_delete->setStyleSheet("background-color: rgb(225, 225, 225);");
+    }
 }
 
 void ZiLiaoDialog::on_pb_min_clicked()
@@ -75,7 +92,8 @@ void ZiLiaoDialog::on_pb_close_clicked()
 
 void ZiLiaoDialog::on_pb_sendMess_clicked()
 {
-    Q_EMIT SIG_sendMsg(friendId);
+    if(isfri)Q_EMIT SIG_sendMsg(friendId);
+    else Q_EMIT SIG_addFri(friendId);
 }
 
 
@@ -89,6 +107,13 @@ void ZiLiaoDialog::on_pb_followRoom_clicked()
 
 void ZiLiaoDialog::on_pb_space_clicked()
 {
+    Q_EMIT SIG_getSpace(friendId);
+}
 
+
+void ZiLiaoDialog::on_pb_delete_clicked()
+{
+    if(QMessageBox::question(this,"提示","是否确认删除好友？")==QMessageBox::Yes)
+    Q_EMIT SIG_deleteFriend(friendId);
 }
 

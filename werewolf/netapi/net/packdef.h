@@ -5,6 +5,34 @@
 #define _DEF_CONTENT_SIZE	(1024)
 #define _MAX_SIZE	(40)
 
+//ok删除好友：客户端发请求，服务端收到后在好友表中删除好友关系，客户端发送后删除好友组件，
+//          服务端判断被删人在线的话，发送好友组件删除的请求,客户端收到后，删除该好友
+//ok离线信息：在用户登录的时候，服务端判断有没有要发给给用户的离线信息
+//     （添加进离线信息就不能添加在历史记录了，在离线信息发送出去并从表中删除的时候，再添加进历史信息）
+//      如果有离线信息，先发送历史信息，再发送离线信息，客户端只要收到邮件，就不用再发送邮件请求了
+//ok动态消息：点赞评论都要判断主人是否在线，在线发送点赞信息，不在线将信息添加到离线消息，其他同上
+//ok动态回复：客户端收到动态的时候，判断主人是否为好友，如果是好友，去掉加好友按钮
+//ok动态加好友：在动态页面点击加好友之后，获取验证信息，按钮文本变为已申请，发送信号
+//ok聊天：发送聊天信息，判断对方是否在线，在线发送信息、添加信息到聊天记录表；
+//                                不在线将信息添加到离线信息表
+//      用户登录的时候，如果某好友有离线信息，直接发离线信息；如果没有，从聊天记录表获取十条发过去
+//ok聊天记录：客户端有聊天记录按钮，点击可以获取所有聊天记录，其内有一键清除按钮
+//游戏内邀请好友：判断头像状态，如果是邀请好友状态，弹出邀请列表，列出所有在线好友，
+//             点击邀请，给好友发送邀请信息，好友接收后，给房间发送进入申请
+//ok游戏内获取用户信息：判断头像状态，发送资料请求
+//ok进入游戏后，关闭所有其他窗口
+//服务端保存每局游戏的身份信息，在游戏结束后发送给房内成员
+//客户端收到用户资料后，判断是不是好友，是好友显示发消息，不是好友显示加 好友，
+//          如果本人在游戏中的话，不能点击发消息(可以弹出动态，写界面)
+//把跟举报有关的删掉
+//用户个人信息修改
+//okbug:同意好友申请后，重新登录，好友申请信息还是有同意拒绝符号
+//快速加入房间
+//好友进入房间或游戏中给好友发送
+
+//赢了的玩家加20经验 输了的玩家加10经验
+//100经验2级，250经验3级，450，700，1000，1350...满级30级：（最后写吧）
+
 ////玩法
 //视频模式
 #define _GAME_MODE_VIDEO (1)
@@ -125,7 +153,33 @@
 #define DEF_PACK_SPACE_OPT      (_DEF_PACK_BASE+55)
 #define DEF_PACK_SPACE_COMMENT_RQ  (_DEF_PACK_BASE+56)
 #define DEF_PACK_SPACE_COMMENT_RS  (_DEF_PACK_BASE+57)
-
+#define DEF_PACK_SPACE_ADD      (_DEF_PACK_BASE+58)
+//查找用户
+#define DEF_PACK_USER_FIND_RQ      (_DEF_PACK_BASE+59)
+#define DEF_PACK_USER_FIND_RS      (_DEF_PACK_BASE+60)
+//邮件
+#define DEF_PACK_EMAIL_RQ       (_DEF_PACK_BASE+61)
+#define DEF_PACK_EMAIL_RS       (_DEF_PACK_BASE+62)
+#define DEF_PACK_EMAIL_CLEAR    (_DEF_PACK_BASE+63)
+//添加好友
+#define DEF_PACK_FRIEND_ADD_RQ     (_DEF_PACK_BASE+64)
+#define DEF_PACK_FRIEND_ADD_RS     (_DEF_PACK_BASE+65)
+//删除好友
+#define DEF_PACK_FRIEND_DELETE      (_DEF_PACK_BASE+66)
+//离线信息/历史信息
+#define DEF_PACK_CHAT_HISorOFF      (_DEF_PACK_BASE+67)
+//聊天记录
+#define DEF_PACK_CHAT_MSG      (_DEF_PACK_BASE+68)
+//邀请进入房间
+#define DEF_PACK_YAOQING        (_DEF_PACK_BASE+69)
+//视频/语音邀请
+#define DEF_PACK_AUDIO_RQ     (_DEF_PACK_BASE+70)
+#define DEF_PACK_AUDIO_RS     (_DEF_PACK_BASE+71)
+#define DEF_PACK_VIDEO_RQ     (_DEF_PACK_BASE+72)
+#define DEF_PACK_VIDEO_RS     (_DEF_PACK_BASE+73)
+//音频数据
+#define DEF_PACK_AUDIO_WITH_FRAME   (_DEF_PACK_BASE+74)
+#define DEF_PACK_VIDEO_WITH_FRAME   (_DEF_PACK_BASE+75)
 
 
 
@@ -965,13 +1019,13 @@ typedef struct STRU_FRIEND_ZILIAO_RS {
         roomid=0;
         level=0;
         gameNum=0;
-        space=false;
+//        space=false;
         state=0;
         memset(name, 0, _MAX_SIZE);
         memset(username, 0, _MAX_SIZE);
         memset(sex, 0, _MAX_SIZE);
-        memset(content, 0, _DEF_CONTENT_SIZE);
-        memset(time, 0, _MAX_SIZE);
+//        memset(content, 0, _DEF_CONTENT_SIZE);
+//        memset(time, 0, _MAX_SIZE);
     }
     PackType type;
     int friendid;
@@ -983,9 +1037,9 @@ typedef struct STRU_FRIEND_ZILIAO_RS {
     char sex[_MAX_SIZE];
     int level;
     int gameNum;//游戏次数
-    bool space;//是否有动态
-    char content[_DEF_CONTENT_SIZE];//动态内容
-    char time[_MAX_SIZE];
+//    bool space;//是否有动态
+//    char content[_DEF_CONTENT_SIZE];//动态内容
+//    char time[_MAX_SIZE];
 }STRU_FRIEND_ZILIAO_RS;
 
 
@@ -998,6 +1052,8 @@ typedef struct STRU_SPACE_RQ {
         memset(str, 0, _MAX_SIZE);
         find=false;
         which=0;
+        user=false;
+        beiid=0;
     }
     PackType type;
     int kind;
@@ -1005,7 +1061,9 @@ typedef struct STRU_SPACE_RQ {
     int page;
     char str[_MAX_SIZE];
     bool find;
+    bool user;
     int which;
+    int beiid;
 }STRU_SPACE_RQ;
 
 typedef struct STRU_SPACE_RS {
@@ -1023,6 +1081,7 @@ typedef struct STRU_SPACE_RS {
         memset(name, 0, _MAX_SIZE);
         memset(content, 0, _DEF_CONTENT_SIZE);
         memset(time, 0, _MAX_SIZE);
+        user=false;
     }
     PackType type;
     int icon;
@@ -1037,6 +1096,7 @@ typedef struct STRU_SPACE_RS {
     int istui;
     char content[_DEF_CONTENT_SIZE];//动态内容
     char time[_MAX_SIZE];
+    bool user;
 }STRU_SPACE_RS;
 
 //对动态的操作
@@ -1058,6 +1118,7 @@ typedef struct STRU_SPACE_OPT {
     int opt;
     char comment[_DEF_CONTENT_SIZE];
 }STRU_SPACE_OPT;
+
 
 
 //获取评论
@@ -1085,6 +1146,236 @@ typedef struct STRU_SPACE_COMMENT_RS {
     char comment[_DEF_CONTENT_SIZE];
 }STRU_SPACE_COMMENT_RS;
 
+
+
+//发布动态
+typedef struct STRU_SPACE_ADD {
+    //协议头 结果
+    STRU_SPACE_ADD() :type(DEF_PACK_SPACE_ADD){
+        userid=0;
+        memset(content, 0, _DEF_CONTENT_SIZE);
+    }
+    PackType type;
+    int userid;
+    char content[_DEF_CONTENT_SIZE];
+}STRU_SPACE_ADD;
+
+
+//查找用户
+typedef struct STRU_USER_FIND_RQ {
+    STRU_USER_FIND_RQ() :type(DEF_PACK_USER_FIND_RQ) {
+        id=0;
+        page=0;
+        memset(str, 0, _MAX_SIZE);
+        which=0;
+    }
+    PackType type;
+    int id;
+    int page;
+    char str[_MAX_SIZE];
+    int which;
+}STRU_USER_FIND_RQ;
+
+typedef struct STRU_USER_FIND_RS {
+    STRU_USER_FIND_RS() :type(DEF_PACK_USER_FIND_RS), userid(0), icon(0) {
+        memset(username, 0, _MAX_SIZE);
+        memset(name, 0, _MAX_SIZE);
+        memset(sex, 0, _MAX_SIZE);
+        level=0;
+    }
+    PackType type;
+    int userid;
+    int icon;
+//    int state;//1：在线 2：离线 3：游戏中 4：房间中
+    char username[_MAX_SIZE];
+    char name[_MAX_SIZE];
+    char level;
+    char sex[_MAX_SIZE];
+}STRU_USER_FIND_RS;
+
+
+//邮件
+typedef struct STRU_EMAIL_RQ {
+    STRU_EMAIL_RQ() :type(DEF_PACK_EMAIL_RQ) {
+        id=0;
+        space=false;
+    }
+    PackType type;
+    int id;
+    bool space;
+}STRU_EMAIL_RQ;
+
+typedef struct STRU_EMAIL_RS {
+    STRU_EMAIL_RS() :type(DEF_PACK_EMAIL_RS), userid(0), icon(0) {
+        which=0;
+        result=false;
+        NEW=false;
+        memset(name, 0, _MAX_SIZE);
+        memset(msg, 0, _DEF_CONTENT_SIZE);
+        memset(spaceCnt, 0, _DEF_CONTENT_SIZE);
+    }
+    PackType type;
+    int which;//2好友申请信息 3申请结果 4点赞动态 5评论动态
+    int icon;
+//    int state;//1：在线 2：离线 3：游戏中 4：房间中
+    char name[_MAX_SIZE];
+    int userid;
+    bool result;
+    bool NEW;
+    char spaceCnt[_DEF_CONTENT_SIZE];
+    char msg[_DEF_CONTENT_SIZE];
+}STRU_EMAIL_RS;
+
+//清空邮件
+typedef struct STRU_EMAIL_CLEAR {
+    //协议头 结果
+    STRU_EMAIL_CLEAR() :type(DEF_PACK_EMAIL_CLEAR){
+        userid=0;
+        space=false;
+    }
+    PackType type;
+    int userid;
+    bool space;
+}STRU_EMAIL_CLEAR;
+
+
+//添加好友
+typedef struct STRU_FRIEND_ADD_RQ {
+    STRU_FRIEND_ADD_RQ() :type(DEF_PACK_FRIEND_ADD_RQ) {
+        id=0;
+        beiid=0;
+        memset(content,0,_DEF_CONTENT_SIZE);
+    }
+    PackType type;
+    int id;
+    int beiid;
+    char content[_DEF_CONTENT_SIZE];
+}STRU_FRIEND_ADD_RQ;
+
+typedef struct STRU_FRIEND_ADD_RS {
+    STRU_FRIEND_ADD_RS() :type(DEF_PACK_FRIEND_ADD_RS) {
+        id=0;
+        beiid=0;
+        bool result;
+    }
+    PackType type;
+    int id;
+    int beiid;
+    bool result;
+}STRU_FRIEND_ADD_RS;
+
+
+//离线或历史信息
+typedef struct STRU_CHAT_HO {
+    //协议头  内容 发送人id 接收人id
+    STRU_CHAT_HO() :type(DEF_PACK_CHAT_HISorOFF), userid(0){
+        memset(content, 0, _DEF_CONTENT_SIZE);
+        me=false;
+        his=false;
+        msg=false;
+        memset(time,0,_MAX_SIZE);
+    }
+    PackType type;
+    int userid;
+    bool me;
+    bool his;
+    bool msg;
+    char content[_DEF_CONTENT_SIZE];
+    char time[_MAX_SIZE];
+}STRU_CHAT_HO;
+
+
+//删除好友
+typedef struct STRU_FRIEND_DELETE {
+    //协议头 结果
+    STRU_FRIEND_DELETE() :type(DEF_PACK_FRIEND_DELETE){
+        userid=0;
+        beiid=0;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+}STRU_FRIEND_DELETE;
+
+
+//聊天记录
+typedef struct STRU_CHAT_MSG {
+    //协议头 结果
+    STRU_CHAT_MSG() :type(DEF_PACK_CHAT_MSG){
+        userid=0;
+        beiid=0;
+        del=false;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+    bool del;
+}STRU_CHAT_MSG;
+
+
+//邀请进入房间
+typedef struct STRU_YAOQING {
+    //协议头 结果
+    STRU_YAOQING() :type(DEF_PACK_YAOQING){
+        userid=0;
+        beiid=0;
+        roomid=0;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+    int roomid;
+}STRU_YAOQING;
+
+
+//语音视频邀请
+typedef struct STRU_AUDIO_RQ {
+    //协议头 结果
+    STRU_AUDIO_RQ() :type(DEF_PACK_AUDIO_RQ){
+        userid=0;
+        beiid=0;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+}STRU_AUDIO_RQ;
+
+typedef struct STRU_AUDIO_RS {
+    //协议头 结果
+    STRU_AUDIO_RS() :type(DEF_PACK_AUDIO_RS){
+        userid=0;
+        beiid=0;
+        result=false;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+    bool result;
+}STRU_AUDIO_RS;
+
+typedef struct STRU_VIDEO_RQ {
+    //协议头 结果
+    STRU_VIDEO_RQ() :type(DEF_PACK_VIDEO_RQ){
+        userid=0;
+        beiid=0;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+}STRU_VIDEO_RQ;
+
+typedef struct STRU_VIDEO_RS {
+    //协议头 结果
+    STRU_VIDEO_RS() :type(DEF_PACK_VIDEO_RS){
+        userid=0;
+        beiid=0;
+        result=false;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+    bool result;
+}STRU_VIDEO_RS;
 
 
 ////注册音频

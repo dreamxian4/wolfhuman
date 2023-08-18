@@ -90,6 +90,22 @@ void ChatDialog::slot_getMsg(int id)
 
 }
 
+void ChatDialog::slot_HO(bool me, QString time, QString content)
+{
+    if(me){
+        ui->tb_chat->append(QString("[我] %1").arg(time));
+        ui->tb_chat->append(content);
+    }else{
+        ui->tb_chat->append(QString("[%1] %2").arg(m_name).arg(time));
+        ui->tb_chat->append(content);
+    }
+}
+
+void ChatDialog::slot_deleteMsg()
+{
+    ui->tb_chat->clear();
+}
+
 void ChatDialog::on_pb_min_2_clicked()
 {
     this->showMinimized();
@@ -99,5 +115,23 @@ void ChatDialog::on_pb_min_2_clicked()
 void ChatDialog::on_pb_close_2_clicked()
 {
     Q_EMIT SIG_quitChat(m_id);
+}
+
+
+void ChatDialog::on_pb_chatMsg_clicked()
+{
+    Q_EMIT SIG_GetChatMsg(m_id);
+}
+
+
+void ChatDialog::on_pb_audio_clicked()
+{
+    Q_EMIT SIG_audioFri(m_id);
+}
+
+
+void ChatDialog::on_pb_video_clicked()
+{
+    Q_EMIT SIG_videoFri(m_id);
 }
 

@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>480</width>
-    <height>448</height>
+    <height>500</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -97,8 +97,8 @@
   <widget class="QPushButton" name="pb_sendMess">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>350</y>
+     <x>160</x>
+     <y>360</y>
      <width>151</width>
      <height>28</height>
     </rect>
@@ -110,8 +110,8 @@
   <widget class="QPushButton" name="pb_space">
    <property name="geometry">
     <rect>
-     <x>60</x>
-     <y>390</y>
+     <x>160</x>
+     <y>400</y>
      <width>151</width>
      <height>28</height>
     </rect>
@@ -120,27 +120,17 @@
     <string>他的动态</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pb_report">
-   <property name="geometry">
-    <rect>
-     <x>260</x>
-     <y>350</y>
-     <width>151</width>
-     <height>28</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string>举报</string>
-   </property>
-  </widget>
   <widget class="QPushButton" name="pb_delete">
    <property name="geometry">
     <rect>
-     <x>260</x>
-     <y>390</y>
+     <x>160</x>
+     <y>440</y>
      <width>151</width>
      <height>28</height>
     </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(225, 225, 225);</string>
    </property>
    <property name="text">
     <string>删除好友</string>

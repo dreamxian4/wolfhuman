@@ -25,7 +25,7 @@
   <widget class="QLabel" name="lb_name">
    <property name="geometry">
     <rect>
-     <x>90</x>
+     <x>110</x>
      <y>0</y>
      <width>171</width>
      <height>31</height>
@@ -38,13 +38,13 @@
     </font>
    </property>
    <property name="text">
-    <string/>
+    <string>走开</string>
    </property>
   </widget>
   <widget class="QPushButton" name="pb_icon">
    <property name="geometry">
     <rect>
-     <x>9</x>
+     <x>29</x>
      <y>9</y>
      <width>41</width>
      <height>41</height>
@@ -69,9 +69,9 @@
   <widget class="QLabel" name="lb_content">
    <property name="geometry">
     <rect>
-     <x>100</x>
-     <y>40</y>
-     <width>291</width>
+     <x>120</x>
+     <y>30</y>
+     <width>231</width>
      <height>31</height>
     </rect>
    </property>
@@ -80,6 +80,11 @@
      <family>楷体</family>
      <pointsize>11</pointsize>
     </font>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(85, 255, 0);
+color: rgb(63, 188, 0);
+color: rgb(0, 0, 0);</string>
    </property>
    <property name="text">
     <string/>
@@ -101,7 +106,7 @@
   <widget class="QPushButton" name="pb_sex">
    <property name="geometry">
     <rect>
-     <x>60</x>
+     <x>80</x>
      <y>0</y>
      <width>31</width>
      <height>31</height>
@@ -114,26 +119,10 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QPushButton" name="lb_notice">
-   <property name="geometry">
-    <rect>
-     <x>0</x>
-     <y>40</y>
-     <width>21</width>
-     <height>21</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="flat">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QLabel" name="lb_state">
    <property name="geometry">
     <rect>
-     <x>50</x>
+     <x>70</x>
      <y>30</y>
      <width>41</width>
      <height>31</height>
@@ -149,17 +138,18 @@
     <string/>
    </property>
   </widget>
-  <widget class="QLabel" name="label">
+  <widget class="QLabel" name="lb_noread">
    <property name="geometry">
     <rect>
-     <x>40</x>
+     <x>60</x>
      <y>0</y>
      <width>16</width>
      <height>16</height>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">background-color: rgb(255, 63, 46);</string>
+    <string notr="true">background-color: rgb(255, 63, 46);
+background:transparent</string>
    </property>
    <property name="text">
     <string/>
@@ -170,9 +160,8 @@
   <zorder>pb_icon</zorder>
   <zorder>pb_chat</zorder>
   <zorder>pb_sex</zorder>
-  <zorder>lb_notice</zorder>
   <zorder>lb_state</zorder>
-  <zorder>label</zorder>
+  <zorder>lb_noread</zorder>
  </widget>
  <resources/>
  <connections/>

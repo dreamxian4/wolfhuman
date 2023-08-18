@@ -9,12 +9,17 @@ CONFIG += c++11
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    addspacedialog.cpp \
     chatdialog.cpp \
     chatitem.cpp \
+    chatmsgdialog.cpp \
     ckernel.cpp \
     commentdialog.cpp \
     commentform.cpp \
     createroomform.cpp \
+    emaildialog.cpp \
+    emailmsgform.cpp \
+    finddialog.cpp \
     logindialog.cpp \
     main.cpp \
     maindialog.cpp \
@@ -27,15 +32,24 @@ SOURCES += \
     spaceform.cpp \
     startdialog.cpp \
     useritem.cpp \
+    userspacedialog.cpp \
+    videoaudiodialog.cpp \
+    yaoqingform.cpp \
+    yaoqingfridialog.cpp \
     ziliaodialog.cpp
 
 HEADERS += \
+    addspacedialog.h \
     chatdialog.h \
     chatitem.h \
+    chatmsgdialog.h \
     ckernel.h \
     commentdialog.h \
     commentform.h \
     createroomform.h \
+    emaildialog.h \
+    emailmsgform.h \
+    finddialog.h \
     logindialog.h \
     maindialog.h \
     mychatdialog.h \
@@ -47,14 +61,23 @@ HEADERS += \
     spaceform.h \
     startdialog.h \
     useritem.h \
+    userspacedialog.h \
+    videoaudiodialog.h \
+    yaoqingform.h \
+    yaoqingfridialog.h \
     ziliaodialog.h
 
 FORMS += \
+    addspacedialog.ui \
     chatdialog.ui \
     chatitem.ui \
+    chatmsgdialog.ui \
     commentdialog.ui \
     commentform.ui \
     createroomform.ui \
+    emaildialog.ui \
+    emailmsgform.ui \
+    finddialog.ui \
     logindialog.ui \
     maindialog.ui \
     mychatdialog.ui \
@@ -66,6 +89,10 @@ FORMS += \
     spaceform.ui \
     startdialog.ui \
     useritem.ui \
+    userspacedialog.ui \
+    videoaudiodialog.ui \
+    yaoqingform.ui \
+    yaoqingfridialog.ui \
     ziliaodialog.ui
 
 include(./netapi/netapi.pri)

@@ -18,6 +18,9 @@ signals:
 
     void SIG_SendChatMsg(int id,QString content);
     void SIG_quitChat(int);
+    void SIG_GetChatMsg(int);
+    void SIG_audioFri(int);
+    void SIG_videoFri(int);
 
 public:
     explicit ChatDialog(QWidget *parent = nullptr);
@@ -32,6 +35,10 @@ public:
     void slot_dealMenu(QAction *action);
     //获取聊天内容
     void slot_getMsg(int id/*我的id*/);
+    //显示历史或离线信息
+    void slot_HO(bool me,QString time,QString content);
+    //删除聊天记录
+    void slot_deleteMsg();
 
 private slots:
     void on_pb_send_clicked();
@@ -41,6 +48,12 @@ private slots:
     void on_pb_min_2_clicked();
 
     void on_pb_close_2_clicked();
+
+    void on_pb_chatMsg_clicked();
+
+    void on_pb_audio_clicked();
+
+    void on_pb_video_clicked();
 
 private:
     Ui::ChatDialog *ui;

@@ -16,9 +16,11 @@ signals:
 public:
     explicit ChatItem(QWidget *parent = nullptr);
     ~ChatItem();
-    void slot_setChatMsg(QString content);
+    void slot_setChatMsg(QString content,bool isme);
     void slot_setInfo(QString name,int state,int icon,QString sex,int id);
     QString getname();
+    void setNoRead(bool no);
+    void slot_deleteMsg();
 
 private slots:
     void on_pb_chat_clicked();

@@ -16,11 +16,14 @@ class ZiLiaoDialog : public CustomMoveDialog
 signals:
     void SIG_sendMsg(int id);
     void SIG_joinRoom(int id);
+    void SIG_deleteFriend(int);//firendid
+    void SIG_getSpace(int);
+    void SIG_addFri(int);
 
 public:
     explicit ZiLiaoDialog(QWidget *parent = nullptr);
     ~ZiLiaoDialog();
-    void slot_setInfo(STRU_FRIEND_ZILIAO_RS& rs);
+    void slot_setInfo(STRU_FRIEND_ZILIAO_RS& rs,bool fri,bool game);
 
 private slots:
     void on_pb_min_clicked();
@@ -33,10 +36,13 @@ private slots:
 
     void on_pb_space_clicked();
 
+    void on_pb_delete_clicked();
+
 private:
     Ui::ZiLiaoDialog *ui;
     int friendId;
     int roomid;
+    bool isfri;
 };
 
 #endif // ZILIAODIALOG_H

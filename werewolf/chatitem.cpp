@@ -15,10 +15,22 @@ ChatItem::~ChatItem()
     delete ui;
 }
 
-void ChatItem::slot_setChatMsg(QString content)
+void ChatItem::slot_setChatMsg(QString content,bool isme)
 {
-    ui->lb_content->setText(QString("[%1]%2").arg(QTime::currentTime().toString("hh:mm")).arg(content));
-    ui->lb_notice->setText("1");
+    ui->lb_content->setText(QString("[%1]%2")
+                            .arg(QTime::currentTime().toString("hh:mm")).arg(content));
+    if(isme)ui->lb_content->setStyleSheet("color: rgb(63, 188, 0);");
+    else ui->lb_content->setStyleSheet("color: rgb(0, 0, 0);");
+}
+
+void ChatItem::setNoRead(bool no){
+    if(no) ui->lb_noread->setStyleSheet("background-color: rgb(255, 63, 46);");
+    else ui->lb_noread->setStyleSheet("background:transparent");
+}
+
+void ChatItem::slot_deleteMsg()
+{
+    ui->lb_content->setText("");
 }
 
 void ChatItem::slot_setInfo(QString name, int state, int icon, QString sex,int id)
@@ -28,7 +40,7 @@ void ChatItem::slot_setInfo(QString name, int state, int icon, QString sex,int i
     ui->pb_icon->setIcon(QIcon(QString(":/tx/%1.png").arg(icon)));
     QString sexx=sex=="男"?"boy":"girl";
     ui->pb_sex->setIcon(QIcon(QString(":/tupian/%1.png").arg(sexx)));
-    ui->pb_sex->setIconSize(QSize(50,50));
+//    ui->pb_sex->setIconSize(QSize(50,50));
     ui->pb_sex->setIconSize(QSize(20,20));
 
     QString str_state="";
@@ -40,13 +52,13 @@ void ChatItem::slot_setInfo(QString name, int state, int icon, QString sex,int i
         str_state="离线";
         break;
     case 3:
-        str_state="游戏中";
+        str_state="游戏";
         break;
     case 4:
-        str_state="房间中";
+        str_state="房间";
         break;
     default:
-        str_state="行为异常";
+        str_state="异常";
         break;
     }
     ui->lb_state->setText(str_state);
@@ -74,6 +86,7 @@ QString ChatItem::getname()
 
 void ChatItem::on_pb_chat_clicked()
 {
+    setNoRead(false);
     Q_EMIT SIG_chatItemSend(userid);
 }
 
