@@ -47,7 +47,9 @@ void CLogic::setNetPackMap()
     NetPackMap(DEF_PACK_AUDIO_RS)           = &CLogic::AudioRs;
     NetPackMap(DEF_PACK_VIDEO_RQ)           = &CLogic::VideoRq;
     NetPackMap(DEF_PACK_VIDEO_RS)           = &CLogic::VideoRs;
-    NetPackMap(DEF_PACK_AUDIO_WITH_FRAME)   = &CLogic::VideoWithFrame;
+    NetPackMap(DEF_PACK_AUDIO_WITH_FRAME)   = &CLogic::AudioWithFrame;
+    NetPackMap(DEF_PACK_VIDEO_WITH_FRAME)   = &CLogic::VideoWithFrame;
+    NetPackMap(DEF_PACK_AUVI_QUIT)          = &CLogic::AuViQuit;
 }
 
 
@@ -2640,9 +2642,8 @@ void CLogic::VideoRs(sock_fd clientfd, char *szbuf, int nlen)
     }
 }
 
-void CLogic::VideoWithFrame(sock_fd clientfd, char *szbuf, int nlen)
+void CLogic::AudioWithFrame(sock_fd clientfd, char *szbuf, int nlen)
 {
-    printf("VideoWithFrame:%d\n",clientfd);
     //拆包
     char* tmp=szbuf;
     //反序列化
@@ -2653,5 +2654,29 @@ void CLogic::VideoWithFrame(sock_fd clientfd, char *szbuf, int nlen)
     //roomid->列表
     UserInfo* user=nullptr;
     if(!m_mapIdToUserInfo.find(beiid,user))return;
+    SendData(user->m_sockfd,szbuf,nlen);
+}
+
+void CLogic::VideoWithFrame(sock_fd clientfd, char *szbuf, int nlen)
+{
+    //拆包
+    char* tmp=szbuf;
+    //反序列化
+    tmp+=sizeof(int);
+    int id=*(int*)tmp;//按照四个字节读
+    tmp+=sizeof(int);
+    int beiid=*(int*)tmp;
+    //roomid->列表
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(beiid,user))return;
+    SendData(user->m_sockfd,szbuf,nlen);
+}
+
+void CLogic::AuViQuit(sock_fd clientfd, char *szbuf, int nlen)
+{
+    printf("AuViQuit:%d\n",clientfd);
+    STRU_AUVI_QUIT* quit=(STRU_AUVI_QUIT*)szbuf;
+    UserInfo* user=nullptr;
+    if(!m_mapIdToUserInfo.find(quit->beiid,user))return;
     SendData(user->m_sockfd,szbuf,nlen);
 }

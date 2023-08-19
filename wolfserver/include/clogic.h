@@ -64,7 +64,9 @@ public:
     void AudioRs( sock_fd clientfd, char*szbuf, int nlen );
     void VideoRq( sock_fd clientfd, char*szbuf, int nlen );
     void VideoRs( sock_fd clientfd, char*szbuf, int nlen );
+    void AudioWithFrame( sock_fd clientfd, char*szbuf, int nlen );
     void VideoWithFrame( sock_fd clientfd, char*szbuf, int nlen );
+    void AuViQuit( sock_fd clientfd, char*szbuf, int nlen );
     /*******************************************/
 
 private:
