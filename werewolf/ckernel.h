@@ -161,6 +161,9 @@ public slots:
     void slot_sendVideoWith(int friid);
     void slot_sendgetUserSpace(int friid);
     void slot_sendAudioWithFrame(QByteArray& frame);
+    void slot_refreshVideoImage(QImage &img);
+    void slot_sendVideoFrameData(QByteArray &ba);
+    void slot_sendQuitAu(int id);
 
 
 
@@ -260,6 +263,8 @@ public slots:
     //语音聊天数据
     void slot_DealAudioWithFrame( unsigned int lSendIP , char* buf , int nlen );
     void slot_DealVideoWithFrame( unsigned int lSendIP , char* buf , int nlen );
+    //挂断
+    void slot_DealAuViQuit( unsigned int lSendIP , char* buf , int nlen );
 
 
 
@@ -280,28 +285,26 @@ public slots:
     void slot_videoOpen();
     void slot_audioClose();
     void slot_videoClose();
-    void slot_refreshVideoImage(QImage &img);
-    void slot_sendVideoFrameData(QByteArray &ba);
 
 private:
-    startDialog*    m_startDialog      ;//启动窗口
-    LoginDialog*    m_loginDialog      ;//登录窗口
-    RegisterDialog* m_registerDialog   ;//注册窗口
-    mainDialog*     m_mainDialog       ;//主窗口
-    createRoomForm* m_createRoomDialog ;//创建房间窗口
-    roomDialog*     m_roomDialog       ;//房间窗口
-    roomListDialog* m_roomListDialog   ;//房间列表窗口
- TcpClientMediator* m_client           ;//网络
-    ZiLiaoDialog*   m_ziliao           ;//好友详细资料
-    commentDialog*  m_comment          ;//评论窗口
-    addSpaceDialog* m_addSpace         ;//发布帖子窗口
-    findDialog*     m_find             ;//查找窗口
-    emailDialog*    m_spaceEmail       ;//社区邮件窗口
-    emailDialog*    m_friendEmail      ;//好友邮件窗口
-    ChatMsgDialog*  m_chatmsg           ;//聊天记录窗口
-    YaoQingFriDialog* m_yaoqing         ;//邀请好友窗口
-    UserSpaceDialog* m_userSpace        ;//用户动态窗口
-    VideoAudioDialog* m_viau            ;//语音视频聊天
+    startDialog*        m_startDialog       ;//启动窗口
+    LoginDialog*        m_loginDialog       ;//登录窗口
+    RegisterDialog*     m_registerDialog    ;//注册窗口
+    mainDialog*         m_mainDialog        ;//主窗口
+    createRoomForm*     m_createRoomDialog  ;//创建房间窗口
+    roomDialog*         m_roomDialog        ;//房间窗口
+    roomListDialog*     m_roomListDialog    ;//房间列表窗口
+ TcpClientMediator*     m_client            ;//网络
+    ZiLiaoDialog*       m_ziliao            ;//好友详细资料
+    commentDialog*      m_comment           ;//评论窗口
+    addSpaceDialog*     m_addSpace          ;//发布帖子窗口
+    findDialog*         m_find              ;//查找窗口
+    emailDialog*        m_spaceEmail        ;//社区邮件窗口
+    emailDialog*        m_friendEmail       ;//好友邮件窗口
+    ChatMsgDialog*      m_chatmsg           ;//聊天记录窗口
+    YaoQingFriDialog*   m_yaoqing           ;//邀请好友窗口
+    UserSpaceDialog*    m_userSpace         ;//用户动态窗口
+    VideoAudioDialog*   m_viau              ;//语音视频聊天
 
 
 

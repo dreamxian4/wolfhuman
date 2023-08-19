@@ -32,6 +32,7 @@ SOURCES += \
     spaceform.cpp \
     startdialog.cpp \
     useritem.cpp \
+    usershow.cpp \
     userspacedialog.cpp \
     videoaudiodialog.cpp \
     yaoqingform.cpp \
@@ -61,6 +62,7 @@ HEADERS += \
     spaceform.h \
     startdialog.h \
     useritem.h \
+    usershow.h \
     userspacedialog.h \
     videoaudiodialog.h \
     yaoqingform.h \
@@ -89,6 +91,7 @@ FORMS += \
     spaceform.ui \
     startdialog.ui \
     useritem.ui \
+    usershow.ui \
     userspacedialog.ui \
     videoaudiodialog.ui \
     yaoqingform.ui \

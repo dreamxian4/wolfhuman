@@ -26,44 +26,6 @@
     <string>挂断</string>
    </property>
   </widget>
-  <widget class="QLabel" name="lb_image">
-   <property name="geometry">
-    <rect>
-     <x>10</x>
-     <y>10</y>
-     <width>441</width>
-     <height>371</height>
-    </rect>
-   </property>
-   <property name="styleSheet">
-    <string notr="true"/>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="pixmap">
-    <pixmap resource="resources.qrc">:/tupian/audio.png</pixmap>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-  </widget>
-  <widget class="QLabel" name="lb_minImg">
-   <property name="geometry">
-    <rect>
-     <x>310</x>
-     <y>20</y>
-     <width>131</width>
-     <height>101</height>
-    </rect>
-   </property>
-   <property name="text">
-    <string/>
-   </property>
-   <property name="scaledContents">
-    <bool>true</bool>
-   </property>
-  </widget>
   <widget class="QCheckBox" name="cb_audio">
    <property name="geometry">
     <rect>
@@ -90,9 +52,39 @@
     <string>摄像头</string>
    </property>
   </widget>
+  <widget class="UserShow" name="wdg_bigShow" native="true">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>461</width>
+     <height>381</height>
+    </rect>
+   </property>
+   <widget class="UserShow" name="wdg_small_show" native="true">
+    <property name="geometry">
+     <rect>
+      <x>340</x>
+      <y>0</y>
+      <width>121</width>
+      <height>111</height>
+     </rect>
+    </property>
+   </widget>
+  </widget>
+  <zorder>wdg_bigShow</zorder>
+  <zorder>pb_poweroff</zorder>
+  <zorder>cb_audio</zorder>
+  <zorder>cb_video</zorder>
  </widget>
- <resources>
-  <include location="resources.qrc"/>
- </resources>
+ <customwidgets>
+  <customwidget>
+   <class>UserShow</class>
+   <extends>QWidget</extends>
+   <header>usershow.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
+ <resources/>
  <connections/>
 </ui>

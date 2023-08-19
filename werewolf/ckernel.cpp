@@ -208,6 +208,8 @@ ckernel::ckernel(QObject *parent) : QObject(parent),m_id(0),m_roomid(0),m_wolf(f
             this,SLOT(slot_videoOpen()));
     connect(m_viau,SIGNAL(SIG_videoClose()),
             this,SLOT(slot_videoClose()));
+    connect(m_viau,SIGNAL(SIG_quitAu(int)),
+            this,SLOT(slot_sendQuitAu(int)));
 }
 
 
@@ -545,7 +547,7 @@ void ckernel::slot_sendAudioWith(int friid)
     rq.userid=m_id;
     rq.beiid=friid;
     withUser=friid;
-    m_viau->setinfo(true);
+    m_viau->setinfo(true,friid,m_mapIdToName[friid]);
     m_viau->showNormal();
     SendData(0,(char*)&rq,sizeof(rq));
 }
@@ -556,7 +558,7 @@ void ckernel::slot_sendVideoWith(int friid)
     rq.userid=m_id;
     rq.beiid=friid;
     withUser=friid;
-    m_viau->setinfo(false);
+    m_viau->setinfo(false,friid,m_mapIdToName[friid]);
     m_viau->showNormal();
     SendData(0,(char*)&rq,sizeof(rq));
 }
@@ -1618,7 +1620,7 @@ void ckernel::slot_DealAudioRq(unsigned int lSendIP, char *buf, int nlen)
                              "语音邀请",QString("【%1】邀请你语音聊天").arg(m_mapIdToName[rq->userid]))==QMessageBox::Yes){
         //接受邀请
         withUser=rq->userid;
-        m_viau->setinfo(true);
+        m_viau->setinfo(true,rq->userid,m_mapIdToName[rq->userid]);
         m_viau->showNormal();
     }else{
         //拒绝
@@ -1637,7 +1639,7 @@ void ckernel::slot_DealVideoRq(unsigned int lSendIP, char *buf, int nlen)
                              "语音邀请",QString("【%1】邀请你视频聊天").arg(m_mapIdToName[rq->userid]))==QMessageBox::Yes){
         //接受邀请
         withUser=rq->userid;
-        m_viau->setinfo(false);
+        m_viau->setinfo(false,rq->userid,m_mapIdToName[rq->userid]);
         m_viau->showNormal();
     }else{
         //拒绝
@@ -1744,7 +1746,14 @@ void ckernel::slot_DealVideoWithFrame(unsigned int lSendIP, char *buf, int nlen)
     //视频数据
     QImage img;
     img.loadFromData((uchar*)tmp,imagelen);
-    m_viau->setimage(img);
+    m_viau->slot_setBigImage(img);
+}
+
+void ckernel::slot_DealAuViQuit(unsigned int lSendIP, char *buf, int nlen)
+{
+    m_viau->slot_stoptime();
+    m_viau->hide();
+    QMessageBox::about(m_viau,"提示","对方已挂断");
 }
 
 
@@ -1843,6 +1852,7 @@ void ckernel::setNetMap()
     netMap(DEF_PACK_VIDEO_RS)=&ckernel::slot_DealVideoRs;
     netMap(DEF_PACK_AUDIO_WITH_FRAME)=&ckernel::slot_DealAudioWithFrame;
     netMap(DEF_PACK_VIDEO_WITH_FRAME)=&ckernel::slot_DealVideoWithFrame;
+    netMap(DEF_PACK_AUVI_QUIT)=&ckernel::slot_DealAuViQuit;
 }
 
 void ckernel::slot_quitLogin()
@@ -1900,7 +1910,7 @@ void ckernel::slot_videoClose()
 
 void ckernel::slot_refreshVideoImage(QImage &img)
 {
-
+    m_viau->slot_setSmallImage(img);
 }
 
 void ckernel::slot_sendVideoFrameData(QByteArray &ba)
@@ -1944,5 +1954,15 @@ void ckernel::slot_sendVideoFrameData(QByteArray &ba)
     SendData(0,buf,sizeof(int)*7+len);
     delete[] buf;
 //    //替换为发送信号
-//    Q_EMIT SIG_sendVideoFrame(0,buf,sizeof(int)*7+len);
+    //    Q_EMIT SIG_sendVideoFrame(0,buf,sizeof(int)*7+len);
+}
+
+void ckernel::slot_sendQuitAu(int id)
+{
+    STRU_AUVI_QUIT quit;
+    quit.userid=m_id;
+    quit.beiid=id;
+    m_viau->slot_stoptime();
+    m_viau->hide();
+    SendData(0,(char*)&quit,sizeof(quit));
 }

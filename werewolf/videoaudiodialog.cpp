@@ -1,6 +1,7 @@
 #include "videoaudiodialog.h"
 #include "ui_videoaudiodialog.h"
 #include<QDebug>
+#include<QPainter>
 
 VideoAudioDialog::VideoAudioDialog(QWidget *parent) :
     QDialog(parent),
@@ -14,25 +15,38 @@ VideoAudioDialog::~VideoAudioDialog()
     delete ui;
 }
 
-void VideoAudioDialog::setinfo(bool audio)
+void VideoAudioDialog::setinfo(bool audio,int id,QString name)
 {
+    m_id=id;
     if(audio){
-        ui->lb_image->setPixmap(QPixmap(":/tupian/audio.png"));
-        ui->lb_minImg->setStyleSheet("background:transparent;");
+        ui->wdg_bigShow->slot_setInfo(name,true);
+        ui->wdg_small_show->hide();
     }else{
-        ui->lb_image->setPixmap(QPixmap(":/tupian/video.png"));
-        ui->lb_minImg->setPixmap(QPixmap(":/tupian/video.png"));
+        ui->wdg_bigShow->slot_setInfo(name,false);
+        ui->wdg_small_show->show();
+        ui->wdg_small_show->slot_setInfo("我",false);
     }
 }
 
-void VideoAudioDialog::setimage(QImage &img)
+void VideoAudioDialog::slot_setBigImage(QImage &img)
 {
-    //TODO
+    ui->wdg_bigShow->slot_setImage(img);
+}
+
+void VideoAudioDialog::slot_setSmallImage(QImage &img)
+{
+    ui->wdg_small_show->slot_setImage(img);
+}
+
+void VideoAudioDialog::slot_stoptime()
+{
+    ui->wdg_bigShow->slot_stop();
+    ui->wdg_small_show->slot_stop();
 }
 
 void VideoAudioDialog::on_cb_audio_clicked()
 {
-    if(!ui->cb_audio->isChecked()){//勾了
+    if(!ui->cb_audio->isChecked()){//勾了,点了之后，变成不勾
         ui->cb_audio->setChecked(false);
         Q_EMIT SIG_audioClose();
     }else{
@@ -40,7 +54,6 @@ void VideoAudioDialog::on_cb_audio_clicked()
         Q_EMIT SIG_audioOpen();
     }
 }
-
 
 void VideoAudioDialog::on_cb_video_clicked()
 {
@@ -51,5 +64,11 @@ void VideoAudioDialog::on_cb_video_clicked()
         ui->cb_video->setChecked(true);
         Q_EMIT SIG_videoOpen();
     }
+}
+
+
+void VideoAudioDialog::on_pb_poweroff_clicked()
+{
+    Q_EMIT SIG_quitAu(m_id);
 }
 
