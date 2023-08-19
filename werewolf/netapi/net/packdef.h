@@ -180,6 +180,8 @@
 //音频数据
 #define DEF_PACK_AUDIO_WITH_FRAME   (_DEF_PACK_BASE+74)
 #define DEF_PACK_VIDEO_WITH_FRAME   (_DEF_PACK_BASE+75)
+//挂断
+#define DEF_PACK_AUVI_QUIT          (_DEF_PACK_BASE+76)
 
 
 
@@ -1376,6 +1378,18 @@ typedef struct STRU_VIDEO_RS {
     int beiid;
     bool result;
 }STRU_VIDEO_RS;
+
+typedef struct STRU_AUVI_QUIT {
+    //协议头 结果
+    STRU_AUVI_QUIT() :type(DEF_PACK_AUVI_QUIT){
+        userid=0;
+        beiid=0;
+    }
+    PackType type;
+    int userid;
+    int beiid;
+}STRU_AUVI_QUIT;
+
 
 
 ////注册音频
